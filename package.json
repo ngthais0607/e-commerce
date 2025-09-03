@@ -1,0 +1,19 @@
+{
+  "name": "e-commerce",
+  "version": "1.0.0",
+  "main": "index.js",
+ "scripts": {
+  "dev": "concurrently \"npm --prefix apps/api run dev\" \"npm --prefix apps/web run dev\"",
+  "dev:api": "npm --prefix apps/api run dev",
+  "dev:web": "npm --prefix apps/web run dev",
+  "test": "echo \"Error: no test specified\" && exit 1"
+},
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
