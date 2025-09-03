@@ -1,0 +1,20 @@
+// ---------- GENERATOR ----------
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------- DATASOURCE ----------
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------- MODELS ----------
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  price       Int
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
