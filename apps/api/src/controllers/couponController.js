@@ -100,3 +100,22 @@ export const deleteCoupon = async (req, res, next) => {
     next(error);
   }
 };
+export const validateCoupon = async (req, res, next) => {
+  try {
+    const { code } = req.query;
+
+    if (!code) {
+      return res.status(400).json({ error: "Coupon code is required" });
+    }
+
+    const coupon = await CouponService.getCouponByCode(code);
+
+    if (!coupon) {
+      return res.status(404).json({ error: "Coupon not found" });
+    }
+
+    return res.json({ valid: true, coupon });
+  } catch (error) {
+    next(error);
+  }
+};
