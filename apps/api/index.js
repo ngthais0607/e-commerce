@@ -5,17 +5,25 @@ import { apiLimiter } from './src/middleware/rateLimiter.js';
 import { config } from './src/config/index.js';
 import { testConnection } from './src/config/database.js';
 
-// Routes
-import authRoutes from './src/routes/authRoutes.js';
-import productRoutes from './src/routes/productRoutes.js';
-import categoryRoutes from './src/routes/categoryRoutes.js';
-import orderRoutes from './src/routes/orderRoutes.js';
-import reviewRoutes from './src/routes/reviewRoutes.js';
-import couponRoutes from './src/routes/couponRoutes.js';
-import addressRoutes from './src/routes/addressRoutes.js';
-import wishlistRoutes from './src/routes/wishlistRoutes.js';
-import bannerRoutes from './src/routes/bannerRoutes.js';
-import userRoutes from './src/routes/userRoutes.js';
+// User-facing routes
+import userAuthRoutes from './src/routes/user/auth.routes.js';
+import userProductRoutes from './src/routes/user/product.routes.js';
+import userCategoryRoutes from './src/routes/user/category.routes.js';
+import userOrderRoutes from './src/routes/user/order.routes.js';
+import userReviewRoutes from './src/routes/user/review.routes.js';
+import userCouponRoutes from './src/routes/user/coupon.routes.js';
+import userAddressRoutes from './src/routes/user/address.routes.js';
+import userWishlistRoutes from './src/routes/user/wishlist.routes.js';
+import userBannerRoutes from './src/routes/user/banner.routes.js';
+import userProfileRoutes from './src/routes/user/user.routes.js';
+
+// Admin routes
+import adminProductRoutes from './src/routes/admin/product.routes.js';
+import adminCategoryRoutes from './src/routes/admin/category.routes.js';
+import adminOrderRoutes from './src/routes/admin/order.routes.js';
+import adminCouponRoutes from './src/routes/admin/coupon.routes.js';
+import adminBannerRoutes from './src/routes/admin/banner.routes.js';
+import adminUserRoutes from './src/routes/admin/user.routes.js';
 
 const app = express();
 const PORT = config.port;
@@ -36,17 +44,25 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/coupons', couponRoutes);
-app.use('/api/addresses', addressRoutes);
-app.use('/api/wishlist', wishlistRoutes);
-app.use('/api/banners', bannerRoutes);
-app.use('/api/users', userRoutes);
+// User API Routes
+app.use('/api/auth', userAuthRoutes);
+app.use('/api/products', userProductRoutes);
+app.use('/api/categories', userCategoryRoutes);
+app.use('/api/orders', userOrderRoutes);
+app.use('/api/reviews', userReviewRoutes);
+app.use('/api/coupons', userCouponRoutes);
+app.use('/api/addresses', userAddressRoutes);
+app.use('/api/wishlist', userWishlistRoutes);
+app.use('/api/banners', userBannerRoutes);
+app.use('/api/users', userProfileRoutes);
+
+// Admin API Routes
+app.use('/api/admin/products', adminProductRoutes);
+app.use('/api/admin/categories', adminCategoryRoutes);
+app.use('/api/admin/orders', adminOrderRoutes);
+app.use('/api/admin/coupons', adminCouponRoutes);
+app.use('/api/admin/banners', adminBannerRoutes);
+app.use('/api/admin/users', adminUserRoutes);
 
 // Error handling
 app.use(notFound);

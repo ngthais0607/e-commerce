@@ -55,18 +55,39 @@ git clone <repository-url>
 cd E-Commerce
 ```
 
-2. Start the database (using Docker - recommended)
+2. Setup Database
+
+**Cách 1: Sử dụng scripts trong folder `database/` (Khuyến nghị)**
+
+```bash
+# Windows
+database\setup_database.bat
+
+# Linux/Mac
+bash database/setup_database.sh
+```
+
+Script này sẽ tự động:
+- Tạo database `ecommerce`
+- Tạo user `ecommerce_user` với password `ecommerce_pass`
+- Cấp quyền đầy đủ
+
+Xem `database/README.md` để biết chi tiết.
+
+**Cách 2: Sử dụng Docker (nếu có)**
 ```bash
 docker-compose up -d
 ```
 
-Hoặc cài đặt MySQL thủ công và tạo database:
+**Cách 3: Tạo thủ công bằng SQL**
 ```sql
-CREATE DATABASE ecommerce;
+CREATE DATABASE ecommerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'ecommerce_user'@'localhost' IDENTIFIED BY 'ecommerce_pass';
 GRANT ALL PRIVILEGES ON ecommerce.* TO 'ecommerce_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
+
+⚠️ **Lưu ý:** Bạn PHẢI tạo database trước khi chạy Prisma migrations!
 
 3. Set up the backend
 ```bash
@@ -95,9 +116,9 @@ npm run dev
 
 ### Default Credentials
 
-After running the seed script:
-- Admin: `admin@example.com` / `admin123`
-- Customer: `customer@example.com` / `customer123`
+Sau khi chạy seed script:
+- **Admin**: `admin@admin.com` / `admin1`
+- **Customer**: `user@user.com` / `123456`
 
 ## Project Structure
 
@@ -106,10 +127,18 @@ E-Commerce/
 ├── apps/
 │   ├── api/                 # Backend API
 │   │   ├── src/
-│   │   │   ├── controllers/  # Route controllers
+│   │   │   ├── controllers/  # MVC controllers (admin & user)
+│   │   │   │   ├── admin/
+│   │   │   │   └── user/
+│   │   │   ├── models/       # Prisma data access by scope
+│   │   │   │   ├── admin/
+│   │   │   │   └── user/
+│   │   │   ├── views/        # Response mappers (admin & user)
+│   │   │   ├── routes/       # Express routers (admin & user)
+│   │   │   │   ├── admin/
+│   │   │   │   └── user/
 │   │   │   ├── middleware/   # Auth, error handling, etc.
-│   │   │   ├── routes/       # API routes
-│   │   │   └── utils/        # Utilities
+│   │   │   └── utils/        # Shared helpers
 │   │   ├── prisma/          # Database schema and migrations
 │   │   └── index.js         # Entry point
 │   └── web/                 # Frontend
@@ -119,8 +148,23 @@ E-Commerce/
 │       │   ├── store/      # Zustand stores
 │       │   └── lib/         # Utilities and types
 │       └── vite.config.ts
-└── docker-compose.yml      # Database setup
+├── database/               # Database setup scripts (CHẠY TRƯỚC Prisma migrations!)
+│   ├── README.md          # Hướng dẫn chi tiết
+│   ├── create_database.sql # Script tạo database và user
+│   └── setup_database.*   # Scripts tự động (Windows/Linux)
+└── docker-compose.yml      # Database setup (optional)
 ```
+
+### MVC Layering & Route Split
+
+- User-facing APIs stay under `/api/<resource>` and map to `src/controllers/user`.
+- Admin/Staff APIs live under `/api/admin/<resource>` and leverage `src/controllers/admin`.
+- Each controller only talks to its matching `models/<scope>` file and returns data through a view helper in `views/<scope>`.
+- Example:
+  - `src/controllers/user/product.controller.js` → `models/user/product.model.js` → `views/user/product.view.js`
+  - `src/controllers/admin/product.controller.js` → `models/admin/product.model.js` → `views/admin/product.view.js`
+
+This keeps user flows isolated from admin dashboards while still sharing Prisma logic where it makes sense.
 
 ## API Endpoints
 
@@ -133,19 +177,23 @@ E-Commerce/
 - `GET /api/products` - List products (with filters)
 - `GET /api/products/:id` - Get product by ID
 - `GET /api/products/slug/:slug` - Get product by slug
-- `POST /api/products` - Create product (Admin)
-- `PUT /api/products/:id` - Update product (Admin)
-- `DELETE /api/products/:id` - Delete product (Admin)
+- `POST /api/admin/products` - Create product (Admin)
+- `PUT /api/admin/products/:id` - Update product (Admin)
+- `DELETE /api/admin/products/:id` - Delete product (Admin)
 
 ### Orders
-- `GET /api/orders` - List orders
-- `GET /api/orders/:id` - Get order details
+- `GET /api/orders` - List current user orders
+- `GET /api/orders/:id` - Get order details for current user
 - `POST /api/orders` - Create order
-- `PUT /api/orders/:id/status` - Update order status (Admin)
+- `GET /api/admin/orders` - List all orders (Admin)
+- `GET /api/admin/orders/:id` - Get order details (Admin)
+- `PUT /api/admin/orders/:id/status` - Update order status (Admin)
 
 ### Categories
 - `GET /api/categories` - List categories
-- `POST /api/categories` - Create category (Admin)
+- `POST /api/admin/categories` - Create category (Admin)
+- `PUT /api/admin/categories/:id` - Update category (Admin)
+- `DELETE /api/admin/categories/:id` - Delete category (Admin)
 
 ### Reviews
 - `GET /api/reviews` - List reviews
@@ -154,9 +202,34 @@ E-Commerce/
 - `DELETE /api/reviews/:id` - Delete review
 
 ### Coupons
-- `GET /api/coupons` - List coupons
 - `GET /api/coupons/validate` - Validate coupon
-- `POST /api/coupons` - Create coupon (Admin)
+- `POST /api/coupons/apply` - Apply coupon to cart/orders
+- `GET /api/admin/coupons` - List coupons (Admin)
+- `POST /api/admin/coupons` - Create coupon (Admin)
+- `PUT /api/admin/coupons/:code` - Update coupon (Admin)
+- `DELETE /api/admin/coupons/:code` - Delete coupon (Admin)
+
+> **Admin endpoints** now live under `/api/admin/*` (e.g. `/api/admin/products`, `/api/admin/orders`, `/api/admin/users`), mirroring the controller/model/view folders for the admin scope.
+
+### Database Setup
+
+**⚠️ QUAN TRỌNG:** Folder `database/` chứa scripts để tạo database và user **TRƯỚC** khi chạy Prisma migrations.
+
+**Tại sao cần?**
+- Prisma **KHÔNG tự động tạo database**, chỉ tạo tables trong database đã có
+- Cần tạo database và user trước khi Prisma có thể kết nối
+
+**Các file trong `database/`:**
+- `README.md` - Hướng dẫn chi tiết
+- `create_database.sql` - Script SQL tạo database và user
+- `setup_database.bat` / `.sh` - Scripts tự động (Windows/Linux)
+
+**Cách sử dụng:**
+1. Chạy script setup: `database\setup_database.bat` (Windows) hoặc `bash database/setup_database.sh` (Linux/Mac)
+2. Cấu hình `DATABASE_URL` trong `apps/api/.env`
+3. Chạy Prisma migrations: `npx prisma migrate dev`
+
+Xem `database/README.md` để biết chi tiết.
 
 ### Wishlist
 - `GET /api/wishlist` - Get wishlist
@@ -168,6 +241,12 @@ E-Commerce/
 - `POST /api/addresses` - Create address
 - `PUT /api/addresses/:id` - Update address
 - `DELETE /api/addresses/:id` - Delete address
+
+### Users
+- `PUT /api/users/profile` - Update current user profile
+- `GET /api/admin/users` - List users (Admin)
+- `GET /api/admin/users/:id` - Get user detail (Admin)
+- `PUT /api/admin/users/:id` - Update role/status (Admin)
 
 ## Development
 

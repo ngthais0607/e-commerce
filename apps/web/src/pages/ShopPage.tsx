@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import api from '@/lib/api';
-import type { Product, Category, PaginatedResponse } from '@/lib/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { formatPrice } from '@/lib/utils';
-import { ShoppingCart } from 'lucide-react';
-import { useCartStore } from '@/store/cartStore';
+import { Link } from 'react-router-dom'
+import { ShoppingCart, Sparkles } from 'lucide-react'
+
+import api from '@/services/api'
+import type { Product, Category, PaginatedResponse } from '@/types'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { formatPrice } from '@/lib/utils'
+import { useCartStore } from '@/store/cartStore'
+import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import { cn } from '@/lib/utils'
 
 export default function ShopPage() {
   const [products, setProducts] = useState<PaginatedResponse<Product>>({
@@ -27,6 +32,7 @@ export default function ShopPage() {
     sortBy: 'createdAt',
     sortOrder: 'desc',
     page: 1,
+    pageSize: 12,
   });
   const { addItem } = useCartStore();
 
@@ -50,7 +56,7 @@ export default function ShopPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: filters.page,
         pageSize: filters.pageSize,
         sortBy: filters.sortBy,
@@ -74,155 +80,239 @@ export default function ShopPage() {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
+  const applySort = (sortBy: string, sortOrder: string) => {
+    setFilters((prev) => ({ ...prev, sortBy, sortOrder, page: 1 }));
+  };
+
+  const sortOptions = [
+    { label: 'Newest', value: 'createdAt:desc' },
+    { label: 'Price: Low to High', value: 'price:asc' },
+    { label: 'Price: High to Low', value: 'price:desc' },
+    { label: 'Best Rated', value: 'rating:desc' },
+  ]
+
+  const quickFilters = [
+    { label: 'Best sellers', sortBy: 'rating', sortOrder: 'desc' },
+    { label: 'Biggest discounts', sortBy: 'salePrice', sortOrder: 'asc' },
+    { label: 'New arrivals', sortBy: 'createdAt', sortOrder: 'desc' },
+  ]
+
+  const renderPrice = (product: Product) =>
+    product.salePrice ? (
+      <div>
+        <span className="text-lg font-bold text-primary">{formatPrice(product.salePrice)}</span>
+        <span className="ml-2 text-sm text-muted-foreground line-through">{formatPrice(product.price)}</span>
+      </div>
+    ) : (
+      <span className="text-lg font-semibold">{formatPrice(product.price)}</span>
+    )
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Filters Sidebar */}
-        <aside className="w-full md:w-64 space-y-6">
-          <div>
-            <h3 className="font-semibold mb-4">Categories</h3>
-            <div className="space-y-2">
-              <button
+    <div className="container mx-auto space-y-10 px-4 py-10">
+      <section className="rounded-3xl border bg-gradient-to-br from-primary/5 via-background to-background px-6 py-10 text-center shadow-sm">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4">
+          <Badge variant="secondary" className="gap-2 text-sm">
+            <Sparkles className="h-4 w-4 text-primary" />
+            Curated collections
+          </Badge>
+          <h1 className="text-4xl font-semibold tracking-tight">Shop the latest arrivals</h1>
+          <p className="text-muted-foreground">
+            Discover new drops every week. Filter by category, price, or best-selling rankings and add items to your cart
+            with one click.
+          </p>
+        </div>
+      </section>
+
+      <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
+        <aside className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Categories</CardTitle>
+              <CardDescription>Browse by collection</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={!filters.categoryId ? 'default' : 'outline'}
                 onClick={() => handleFilterChange('categoryId', '')}
-                className={`block w-full text-left px-3 py-2 rounded ${
-                  !filters.categoryId ? 'bg-primary text-primary-foreground' : 'hover:bg-accent'
-                }`}
               >
-                All Categories
-              </button>
+                All
+              </Button>
               {categories.map((cat) => (
-                <button
+                <Button
                   key={cat.id}
-                  onClick={() => handleFilterChange('categoryId', cat.id)}
-                  className={`block w-full text-left px-3 py-2 rounded ${
-                    filters.categoryId === String(cat.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-accent'
-                  }`}
+                  size="sm"
+                  variant={filters.categoryId === String(cat.id) ? 'default' : 'outline'}
+                  onClick={() => handleFilterChange('categoryId', String(cat.id))}
                 >
                   {cat.name}
-                </button>
+                </Button>
               ))}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
 
-          <div>
-            <h3 className="font-semibold mb-4">Price Range</h3>
-            <div className="space-y-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Price range</CardTitle>
+              <CardDescription>Set a comfortable budget</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
               <Input
                 type="number"
-                placeholder="Min Price"
+                placeholder="Minimum"
                 value={filters.minPrice}
                 onChange={(e) => handleFilterChange('minPrice', e.target.value)}
               />
               <Input
                 type="number"
-                placeholder="Max Price"
+                placeholder="Maximum"
                 value={filters.maxPrice}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
               />
-            </div>
-          </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Quick filters</CardTitle>
+              <CardDescription>Popular picks</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {quickFilters.map((filter) => (
+                <Badge
+                  key={filter.label}
+                  variant="outline"
+                  className={cn(
+                    'cursor-pointer',
+                    filters.sortBy === filter.sortBy && filters.sortOrder === filter.sortOrder && 'border-primary text-primary'
+                  )}
+                  onClick={() => applySort(filter.sortBy, filter.sortOrder)}
+                >
+                  {filter.label}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
         </aside>
 
-        {/* Products Grid */}
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-6">
+        <section className="space-y-6">
+          <div className="flex flex-wrap items-center gap-4">
             <Input
-              placeholder="Search products..."
+              placeholder="Search by product, SKU, or keyword..."
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="max-w-sm"
+              className="min-w-[240px] flex-1"
             />
-            <select
+            <Select
               value={`${filters.sortBy}:${filters.sortOrder}`}
-              onChange={(e) => {
-                const [sortBy, sortOrder] = e.target.value.split(':');
-                handleFilterChange('sortBy', sortBy);
-                handleFilterChange('sortOrder', sortOrder);
+              onValueChange={(value) => {
+                const [sortBy, sortOrder] = value.split(':')
+                applySort(sortBy, sortOrder)
               }}
-              className="px-4 py-2 border rounded-md"
             >
-              <option value="createdAt:desc">Newest</option>
-              <option value="price:asc">Price: Low to High</option>
-              <option value="price:desc">Price: High to Low</option>
-              <option value="rating:desc">Best Rated</option>
-            </select>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Sort products" />
+              </SelectTrigger>
+              <SelectContent>
+                {sortOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {loading ? (
-            <div>Loading...</div>
+            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Card key={index} className="space-y-4 p-4">
+                  <Skeleton className="h-48 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-4 w-2/4" />
+                  <Skeleton className="h-10 w-full" />
+                </Card>
+              ))}
+            </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {products.items.map((product) => (
-                  <Card key={product.id} className="overflow-hidden">
-                    <Link to={`/product/${product.slug}`}>
-                      <img
-                        src={product.images[0] || '/placeholder.jpg'}
-                        alt={product.name}
-                        className="w-full h-48 object-cover"
-                      />
-                    </Link>
-                    <CardContent className="p-4">
+              {products.items.length === 0 ? (
+                <Card className="py-12 text-center">
+                  <CardContent>
+                    <p className="text-lg font-medium">No products match these filters yet.</p>
+                    <p className="text-muted-foreground">Try clearing filters or searching for another keyword.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {products.items.map((product) => (
+                    <Card key={product.id} className="overflow-hidden">
                       <Link to={`/product/${product.slug}`}>
-                        <h3 className="font-semibold mb-2 hover:text-primary">{product.name}</h3>
+                        <img
+                          src={product.images[0] || '/placeholder.jpg'}
+                          alt={product.name}
+                          className="h-52 w-full object-cover transition-transform duration-200 hover:scale-[1.02]"
+                          loading="lazy"
+                        />
                       </Link>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          {product.salePrice ? (
-                            <div>
-                              <span className="text-lg font-bold text-primary">
-                                {formatPrice(product.salePrice)}
-                              </span>
-                              <span className="text-sm text-muted-foreground line-through ml-2">
-                                {formatPrice(product.price)}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                      <CardContent className="space-y-3 p-5">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary">{product.category?.name ?? 'Featured'}</Badge>
+                          {product.rating && (
+                            <span className="text-sm text-muted-foreground">{Number(product.rating || 0).toFixed(1)} ★</span>
                           )}
                         </div>
+                        <Link to={`/product/${product.slug}`} className="inline-block text-lg font-semibold">
+                          {product.name}
+                        </Link>
+                        {renderPrice(product)}
                         <Button
-                          size="sm"
+                          className="w-full"
+                          variant="secondary"
                           onClick={() => addItem(product)}
                           disabled={product.stock === 0}
                         >
-                          <ShoppingCart className="h-4 w-4" />
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          {product.stock === 0 ? 'Sold out' : 'Add to cart'}
                         </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
 
-              {/* Pagination */}
               {products.totalPages > 1 && (
-                <div className="flex justify-center gap-2 mt-8">
-                  <Button
-                    variant="outline"
-                    disabled={filters.page === 1}
-                    onClick={() => handleFilterChange('page', filters.page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  <span className="flex items-center px-4">
-                    Page {filters.page} of {products.totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    disabled={filters.page === products.totalPages}
-                    onClick={() => handleFilterChange('page', filters.page + 1)}
-                  >
-                    Next
-                  </Button>
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-6">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {(filters.page - 1) * filters.pageSize + 1}-
+                    {Math.min(filters.page * filters.pageSize, products.total)} of {products.total} products
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      disabled={filters.page === 1}
+                      onClick={() => handleFilterChange('page', filters.page - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm">
+                      Page {filters.page} / {products.totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      disabled={filters.page === products.totalPages}
+                      onClick={() => handleFilterChange('page', filters.page + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
           )}
-        </div>
+        </section>
       </div>
     </div>
-  );
+  )
 }
 

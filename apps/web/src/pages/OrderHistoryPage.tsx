@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '@/lib/api';
-import type { Order, PaginatedResponse } from '@/lib/types';
+import api from '@/services/api';
+import type { Order, PaginatedResponse } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatPrice, formatDate } from '@/lib/utils';
 

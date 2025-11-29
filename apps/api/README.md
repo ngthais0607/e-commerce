@@ -57,8 +57,12 @@ npm install
 
 2. **Cấu hình environment:**
 ```bash
+# Tạo file .env từ template
 cp env.example .env
-# Chỉnh sửa .env với thông tin database của bạn
+# Hoặc tạo thủ công file .env với nội dung:
+# DATABASE_URL="mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce"
+# JWT_SECRET="your-secret-key"
+# PORT=4000
 ```
 
 3. **Tạo database và chạy migrations:**
@@ -79,11 +83,17 @@ npm run dev
 
 ## Environment Variables
 
-Xem file `env.example` để biết các biến môi trường cần thiết.
+Cần cấu hình các biến môi trường sau trong file `.env`:
+
+```env
+DATABASE_URL="mysql://user:password@localhost:3306/ecommerce"
+JWT_SECRET="your-secret-key"
+PORT=4000
+```
 
 ## API Endpoints
 
-Xem file `PROJECT_STRUCTURE.md` ở root để biết chi tiết về các endpoints.
+Xem file `README.md` ở root để biết chi tiết về các endpoints.
 
 ## Development
 

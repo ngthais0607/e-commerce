@@ -3,6 +3,10 @@
 -- ============================================
 -- Chạy script này với quyền root hoặc admin
 -- MySQL 8.0+ required
+-- 
+-- LƯU Ý: Chạy script này TRƯỚC khi chạy Prisma migrations!
+-- Prisma không tự tạo database, chỉ tạo tables trong database đã có.
+-- ============================================
 
 -- 1. Tạo Database
 CREATE DATABASE IF NOT EXISTS ecommerce 
@@ -16,7 +20,7 @@ CREATE USER IF NOT EXISTS 'ecommerce_user'@'localhost'
 -- 3. Cấp quyền cho User
 GRANT ALL PRIVILEGES ON ecommerce.* TO 'ecommerce_user'@'localhost';
 
--- 4. Nếu muốn cho phép kết nối từ xa (optional)
+-- 4. Nếu muốn cho phép kết nối từ xa (optional - uncomment nếu cần)
 -- CREATE USER IF NOT EXISTS 'ecommerce_user'@'%' IDENTIFIED BY 'ecommerce_pass';
 -- GRANT ALL PRIVILEGES ON ecommerce.* TO 'ecommerce_user'@'%';
 
@@ -36,6 +40,14 @@ SELECT user, host FROM mysql.user WHERE user = 'ecommerce_user';
 -- Password: ecommerce_pass
 -- Host: localhost
 -- Port: 3306
--- Connection String: mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce
+-- 
+-- Connection String cho .env:
+-- DATABASE_URL="mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce"
+-- ============================================
+-- 
+-- BƯỚC TIẾP THEO:
+-- 1. Thêm DATABASE_URL vào apps/api/.env
+-- 2. Chạy: cd apps/api && npx prisma migrate dev
+-- 3. Chạy: npm run db:seed
 -- ============================================
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import api from '@/lib/api';
-import type { Order } from '@/lib/types';
+import api from '@/services/api';
+import type { Order } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
@@ -105,7 +105,7 @@ export default function AdminOrderDetail() {
                         Quantity: {item.quantity}
                       </p>
                       <p className="font-semibold mt-2">
-                        {formatPrice(item.price * item.quantity)}
+                        {formatPrice(Number(item.price) * item.quantity)}
                       </p>
                     </div>
                   </div>

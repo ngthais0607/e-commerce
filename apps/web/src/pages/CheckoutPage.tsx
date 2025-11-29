@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import api from '@/lib/api';
+import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -316,13 +316,13 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {items.map((item) => {
-                    const price = item.product.salePrice || item.product.price;
+                    const price = Number(item.product.salePrice || item.product.price);
                     return (
                       <div key={item.productId} className="flex justify-between text-sm">
                         <span>
                           {item.product.name} x {item.quantity}
                         </span>
-                        <span>{formatPrice(price * item.quantity)}</span>
+                        <span>{formatPrice(Number(price) * item.quantity)}</span>
                       </div>
                     );
                   })}

@@ -45,6 +45,8 @@ model Address {
   
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  @@index([userId])
+  @@index([userId, isDefault])
   @@map("addresses")
 }
 
@@ -94,6 +96,10 @@ model Product {
   @@index([categoryId])
   @@index([slug])
   @@index([isActive])
+  @@index([categoryId, isActive])
+  @@index([brand])
+  @@index([createdAt])
+  @@index([rating])
   @@map("products")
 }
 
@@ -125,6 +131,9 @@ model Order {
   @@index([userId])
   @@index([status])
   @@index([orderNumber])
+  @@index([userId, status])
+  @@index([createdAt])
+  @@index([paymentStatus])
   @@map("orders")
 }
 
@@ -137,11 +146,13 @@ model OrderItem {
   quantity  Int
   attributes Json?   // Selected attributes (size, color, etc.)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   
   order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id])
   
   @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 
@@ -161,6 +172,9 @@ model Review {
   
   @@unique([userId, productId])
   @@index([productId])
+  @@index([userId])
+  @@index([productId, rating])
+  @@index([createdAt])
   @@map("reviews")
 }
 
@@ -182,6 +196,8 @@ model Coupon {
   
   orders          Order[]
   
+  @@index([isActive])
+  @@index([isActive, validFrom, validUntil])
   @@map("coupons")
 }
 
@@ -196,6 +212,8 @@ model Banner {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
+  @@index([position, isActive])
+  @@index([position, isActive, sortOrder])
   @@map("banners")
 }
 
@@ -209,6 +227,8 @@ model WishlistItem {
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   
   @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
   @@map("wishlist_items")
 }
 

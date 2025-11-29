@@ -11,6 +11,10 @@ import AccountPage from './pages/AccountPage';
 import OrderHistoryPage from './pages/OrderHistoryPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 import WishlistPage from './pages/WishlistPage';
+import ContactPage from './pages/ContactPage';
+import FaqPage from './pages/FaqPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsPage from './pages/TermsPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
@@ -73,6 +77,10 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="contact" element={<ContactPage />} />
+        <Route path="faq" element={<FaqPage />} />
+        <Route path="privacy" element={<PrivacyPolicyPage />} />
+        <Route path="terms" element={<TermsPage />} />
       </Route>
 
       {/* Admin Routes */}

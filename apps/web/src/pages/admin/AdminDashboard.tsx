@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatPrice } from '@/lib/utils';
 
@@ -27,7 +27,7 @@ export default function AdminDashboard() {
 
       // Calculate revenue from orders (simplified)
       const orders = ordersRes.data.items || [];
-      const revenue = orders.reduce((sum: number, order: any) => sum + order.total, 0);
+      const revenue = orders.reduce((sum: number, order: any) => sum + Number(order.total || 0), 0);
 
       setStats({
         totalOrders: ordersRes.data.total || 0,

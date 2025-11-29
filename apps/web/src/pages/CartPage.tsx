@@ -25,7 +25,7 @@ export default function CartPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => {
-            const price = item.product.salePrice || item.product.price;
+            const price = Number(item.product.salePrice || item.product.price);
             return (
               <Card key={item.productId}>
                 <CardContent className="p-6">
@@ -40,7 +40,7 @@ export default function CartPage() {
                         <h3 className="font-semibold hover:text-primary">{item.product.name}</h3>
                       </Link>
                       <p className="text-muted-foreground mt-1">
-                        {formatPrice(price)} each
+                        {formatPrice(Number(price))} each
                       </p>
                       <div className="flex items-center gap-4 mt-4">
                         <div className="flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function CartPage() {
                     </div>
                     <div className="text-right">
                       <p className="font-semibold text-lg">
-                        {formatPrice(price * item.quantity)}
+                        {formatPrice(Number(price) * item.quantity)}
                       </p>
                     </div>
                   </div>

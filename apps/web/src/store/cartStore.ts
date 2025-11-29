@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CartItem, Product } from '@/lib/types';
+import type { CartItem, Product } from '@/types';
 
 interface CartState {
   items: CartItem[];
@@ -64,7 +64,7 @@ export const useCartStore = create<CartState>()(
 
       getTotal: () => {
         return get().items.reduce((total, item) => {
-          const price = item.product.salePrice || item.product.price;
+          const price = Number(item.product.salePrice || item.product.price);
           return total + price * item.quantity;
         }, 0);
       },
