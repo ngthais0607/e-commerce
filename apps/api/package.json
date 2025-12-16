@@ -4,26 +4,52 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon index.js",
-    "start": "node index.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev --name init",
-    "db:push": "prisma db push",
-    "db:seed": "node prisma/seed.js"
+    "dev": "tsx watch index.js",
+    "start": "tsx index.js",
+    "build": "tsc",
+    "start:prod": "node dist/index.js",
+    "type-check": "tsc --noEmit",
+    "db:test": "tsx scripts/test-db-connection.js",
+    "clear:rate-limit": "tsx scripts/clear-rate-limit.js",
+    "seed:admin": "tsx scripts/seed-admin.js",
+    "seed:test-users": "tsx scripts/seed-test-users.js",
+    "seed:products": "tsx scripts/seed-products.js",
+    "update:banners-fashion": "tsx scripts/update-banners-fashion-2025.js",
+    "update:products-clothing": "tsx scripts/update-products-clothing.js",
+    "cleanup:wishlist": "tsx scripts/cleanup-wishlist.js",
+    "fix:category": "tsx scripts/fix-category-name.js",
+    "clear:cache": "tsx scripts/clear-cache.js"
   },
   "dependencies": {
-    "@prisma/client": "^6.15.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "express-rate-limit": "^7.4.1",
     "express-validator": "^7.2.0",
+    "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
-    "zod": "^3.24.1"
+    "multer": "^2.0.2",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.11",
+    "redis": "^5.10.0",
+    "sharp": "^0.34.5",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.19.0",
+    "zod": "^3.24.1",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^25.0.1",
+    "@types/nodemailer": "^7.0.4",
     "nodemon": "^3.1.10",
-    "prisma": "^6.15.0"
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

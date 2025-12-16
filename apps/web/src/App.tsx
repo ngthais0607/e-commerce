@@ -1,109 +1,208 @@
-import { Routes, Route } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
-import HomePage from './pages/HomePage';
-import ShopPage from './pages/ShopPage';
-import ProductDetailPage from './pages/ProductDetailPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import AccountPage from './pages/AccountPage';
-import OrderHistoryPage from './pages/OrderHistoryPage';
-import OrderDetailPage from './pages/OrderDetailPage';
-import WishlistPage from './pages/WishlistPage';
-import ContactPage from './pages/ContactPage';
-import FaqPage from './pages/FaqPage';
-import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
-import TermsPage from './pages/TermsPage';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminDashboard from './pages/admin/AdminDashboard';
-import AdminProducts from './pages/admin/AdminProducts';
-import AdminProductForm from './pages/admin/AdminProductForm';
-import AdminOrders from './pages/admin/AdminOrders';
-import AdminOrderDetail from './pages/admin/AdminOrderDetail';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminCoupons from './pages/admin/AdminCoupons';
-import AdminCouponForm from './pages/admin/AdminCouponForm';
 import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoadingSpinner from './components/ui/LoadingSpinner';
+import { useAuthStore } from './store/authStore';
+
+// Lazy load pages for code splitting
+const HomePage = lazy(() => import('./pages/HomePage'));
+const ShopPage = lazy(() => import('./pages/ShopPage'));
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
+const CartPage = lazy(() => import('./pages/CartPage'));
+const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const AccountPage = lazy(() => import('./pages/AccountPage'));
+const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage'));
+const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
+const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage'));
+const PaymentFailedPage = lazy(() => import('./pages/PaymentFailedPage'));
+const MockPaymentPage = lazy(() => import('./pages/MockPaymentPage'));
+const BankTransferPage = lazy(() => import('./pages/BankTransferPage'));
+const ContactPage = lazy(() => import('./pages/ContactPage'));
+const FaqPage = lazy(() => import('./pages/FaqPage'));
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage'));
+const TermsPage = lazy(() => import('./pages/TermsPage'));
+
+// Admin pages - lazy loaded
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminProducts = lazy(() => import('./pages/admin/AdminProducts'));
+const AdminProductForm = lazy(() => import('./pages/admin/AdminProductForm'));
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'));
+const AdminOrderDetail = lazy(() => import('./pages/admin/AdminOrderDetail'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
+const AdminCouponForm = lazy(() => import('./pages/admin/AdminCouponForm'));
+const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
+
+function AdminHome() {
+  const { user } = useAuthStore();
+
+  if (user?.role === 'STAFF') {
+    return <StaffDashboard />;
+  }
+
+  return <AdminDashboard />;
+}
 
 function App() {
   return (
-    <Routes>
-      {/* Customer Routes */}
-      <Route path="/" element={<Layout />}>
-        <Route index element={<HomePage />} />
-        <Route path="shop" element={<ShopPage />} />
-        <Route path="product/:slug" element={<ProductDetailPage />} />
-        <Route path="cart" element={<CartPage />} />
-        <Route path="login" element={<LoginPage />} />
-        <Route path="register" element={<RegisterPage />} />
-        <Route
-          path="checkout"
-          element={
-            <ProtectedRoute>
-              <CheckoutPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="account"
-          element={
-            <ProtectedRoute>
-              <AccountPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="orders"
-          element={
-            <ProtectedRoute>
-              <OrderHistoryPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="orders/:id"
-          element={
-            <ProtectedRoute>
-              <OrderDetailPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="wishlist"
-          element={
-            <ProtectedRoute>
-              <WishlistPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="contact" element={<ContactPage />} />
-        <Route path="faq" element={<FaqPage />} />
-        <Route path="privacy" element={<PrivacyPolicyPage />} />
-        <Route path="terms" element={<TermsPage />} />
-      </Route>
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        {/* Customer Routes */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<HomePage />} />
+          <Route path="shop" element={<ShopPage />} />
+          <Route path="product/:slug" element={<ProductDetailPage />} />
+          <Route path="cart" element={<CartPage />} />
+          <Route path="login" element={<LoginPage />} />
+          <Route path="register" element={<RegisterPage />} />
+          <Route
+            path="checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="account"
+            element={
+              <ProtectedRoute>
+                <AccountPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute>
+                <OrderHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/:id"
+            element={
+              <ProtectedRoute>
+                <OrderDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="faq" element={<FaqPage />} />
+          <Route path="privacy" element={<PrivacyPolicyPage />} />
+          <Route path="terms" element={<TermsPage />} />
+          <Route path="payment/success" element={<PaymentSuccessPage />} />
+          <Route path="payment/failed" element={<PaymentFailedPage />} />
+          <Route path="payment/momo" element={<MockPaymentPage />} />
+          <Route path="payment/zalopay" element={<MockPaymentPage />} />
+          <Route
+            path="payment/bank"
+            element={
+              <ProtectedRoute>
+                <BankTransferPage />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute requiredRole="ADMIN">
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route index element={<AdminDashboard />} />
-        <Route path="products" element={<AdminProducts />} />
-        <Route path="products/new" element={<AdminProductForm />} />
-        <Route path="products/:id/edit" element={<AdminProductForm />} />
-        <Route path="orders" element={<AdminOrders />} />
-        <Route path="orders/:id" element={<AdminOrderDetail />} />
-        <Route path="users" element={<AdminUsers />} />
-        <Route path="coupons" element={<AdminCoupons />} />
-        <Route path="coupons/new" element={<AdminCouponForm />} />
-        <Route path="coupons/:code/edit" element={<AdminCouponForm />} />
-      </Route>
-    </Routes>
+        {/* Admin & Staff Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<AdminHome />} />
+          <Route
+            path="products"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminProducts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="products/new"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminProductForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="products/:id/edit"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminProductForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminOrders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="orders/:id"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminOrderDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="users"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminUsers />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="coupons"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminCoupons />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="coupons/new"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminCouponForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="coupons/:code/edit"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminCouponForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="support"
+            element={
+              <ProtectedRoute requiredRole="STAFF">
+                <AdminSupport />
+              </ProtectedRoute>
+            }
+          />
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 

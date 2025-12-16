@@ -6,39 +6,136 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { ArrowLeft } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { getSocket } from '@/lib/socket';
+import { useAuthStore } from '@/store/authStore';
+
+interface OrderMessage {
+  id: number;
+  orderId: number;
+  clientId: number | null;
+  staffId: number | null;
+  senderRole: 'CUSTOMER' | 'STAFF' | 'ADMIN';
+  message: string;
+  createdAt: string;
+}
+
+const ORDER_STATUS_OPTIONS = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+const PAYMENT_STATUS_OPTIONS = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'];
+const PAYMENT_STATUS_TRANSITIONS: Record<string, string[]> = {
+  PENDING: ['PAID', 'FAILED'],
+  FAILED: ['PENDING', 'PAID'],
+  PAID: ['REFUNDED'],
+  REFUNDED: [],
+};
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { token, user } = useAuthStore() as any;
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [messages, setMessages] = useState<OrderMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [newMessage, setNewMessage] = useState('');
+  const { toast } = useToast();
+  const isStaff = user?.role === 'STAFF';
 
   useEffect(() => {
     if (id) {
       fetchOrder();
+      fetchMessages();
+
+      const socket = getSocket(token ?? null);
+      if (socket) {
+        socket.emit('join-order-room', Number(id));
+
+        socket.on('order-message', (payload: { orderId: number; message: OrderMessage }) => {
+          if (payload.orderId === Number(id)) {
+            setMessages((prev) => [...prev, payload.message]);
+          }
+        });
+      }
+
+      return () => {
+        if (socket) {
+          socket.emit('leave-order-room', Number(id));
+          socket.off('order-message');
+        }
+      };
     }
-  }, [id]);
+  }, [id, token]);
+
+  const getAllowedPaymentStatuses = () => {
+    if (!order) return PAYMENT_STATUS_OPTIONS;
+    const next = PAYMENT_STATUS_TRANSITIONS[order.paymentStatus] || [];
+    return Array.from(new Set([order.paymentStatus, ...next]));
+  };
+
+  const isOrderStatusOptionDisabled = (value: string) => {
+    if (!order) return false;
+    if (!isStaff) return false;
+    if (value === order.status) return false;
+    return value !== 'CANCELLED';
+  };
+
+  const isPaymentStatusOptionDisabled = (value: string) => {
+    if (!order) return false;
+    const allowed = new Set(getAllowedPaymentStatuses());
+    if (value === order.paymentStatus) return false;
+    return !allowed.has(value);
+  };
 
   const fetchOrder = async () => {
     try {
-      const res = await api.get(`/orders/${id}`);
+      const res = await api.get(`/admin/orders/${id}`);
       setOrder(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching order:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to fetch order. Please try again.',
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!id) return;
+    try {
+      setLoadingMessages(true);
+      const res = await api.get(`/admin/orders/${id}/messages`);
+      setMessages(res.data.messages || []);
+    } catch (error: any) {
+      console.error('Error fetching order messages:', error);
+    } finally {
+      setLoadingMessages(false);
     }
   };
 
   const updateStatus = async (field: 'status' | 'paymentStatus', value: string) => {
     setUpdating(true);
     try {
-      await api.put(`/orders/${id}/status`, { [field]: value });
+      if (field === 'status') {
+        await api.put(`/admin/orders/${id}/status`, { status: value });
+      } else {
+        await api.put(`/admin/orders/${id}/payment-status`, { status: value });
+      }
+      toast({
+        title: 'Success',
+        description: `Order ${field} updated to ${value}`,
+      });
       await fetchOrder();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating order:', error);
-      alert('Failed to update order');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to update order. Please try again.',
+      });
     } finally {
       setUpdating(false);
     }
@@ -47,13 +144,37 @@ export default function AdminOrderDetail() {
   const updateTracking = async (trackingCode: string) => {
     setUpdating(true);
     try {
-      await api.put(`/orders/${id}/status`, { trackingCode });
+      await api.put(`/admin/orders/${id}/status`, { trackingCode });
+      toast({
+        title: 'Success',
+        description: 'Tracking code updated successfully',
+      });
       await fetchOrder();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating tracking:', error);
-      alert('Failed to update tracking code');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to update tracking code. Please try again.',
+      });
     } finally {
       setUpdating(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!id || !newMessage.trim()) return;
+    try {
+      const res = await api.post(`/admin/orders/${id}/messages`, { message: newMessage.trim() });
+      setMessages((prev) => [...prev, res.data]);
+      setNewMessage('');
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to send message. Please try again.',
+      });
     }
   };
 
@@ -177,12 +298,11 @@ export default function AdminOrderDetail() {
                   disabled={updating}
                   className="w-full px-4 py-2 border rounded-md"
                 >
-                  <option value="PENDING">Pending</option>
-                  <option value="PAID">Paid</option>
-                  <option value="PROCESSING">Processing</option>
-                  <option value="SHIPPED">Shipped</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
+                  {ORDER_STATUS_OPTIONS.map((value) => (
+                    <option key={value} value={value} disabled={isOrderStatusOptionDisabled(value)}>
+                      {value.charAt(0) + value.slice(1).toLowerCase()}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -194,10 +314,11 @@ export default function AdminOrderDetail() {
                   disabled={updating}
                   className="w-full px-4 py-2 border rounded-md"
                 >
-                  <option value="PENDING">Pending</option>
-                  <option value="PAID">Paid</option>
-                  <option value="FAILED">Failed</option>
-                  <option value="REFUNDED">Refunded</option>
+                  {getAllowedPaymentStatuses().map((value) => (
+                    <option key={value} value={value} disabled={isPaymentStatusOptionDisabled(value)}>
+                      {value.charAt(0) + value.slice(1).toLowerCase()}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -214,6 +335,7 @@ export default function AdminOrderDetail() {
                     defaultValue={order.trackingCode || ''}
                     placeholder="Enter tracking code"
                     className="flex-1 px-4 py-2 border rounded-md"
+                    disabled={isStaff}
                     onBlur={(e) => {
                       if (e.target.value !== order.trackingCode) {
                         updateTracking(e.target.value);
@@ -243,6 +365,48 @@ export default function AdminOrderDetail() {
               <p className="text-sm text-muted-foreground">{order.user?.email}</p>
               <p className="text-sm">{order.phone}</p>
               {order.email && <p className="text-sm">{order.email}</p>}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Customer Chat</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="h-64 overflow-y-auto border rounded-md p-3 bg-muted/40">
+                {loadingMessages ? (
+                  <p className="text-sm text-muted-foreground">Loading messages...</p>
+                ) : messages.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No messages yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {messages.map((msg) => (
+                      <div key={msg.id}>
+                        <div className="flex justify-between items-center text-xs text-muted-foreground mb-1">
+                          <span className="font-medium">
+                            {msg.senderRole === 'CUSTOMER' ? 'Customer' : msg.senderRole === 'STAFF' ? 'Staff' : 'Admin'}
+                          </span>
+                          <span>{formatDate(msg.createdAt)}</span>
+                        </div>
+                        <div className="px-3 py-2 rounded-md bg-background border text-sm whitespace-pre-wrap">
+                          {msg.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  className="flex-1 px-3 py-2 border rounded-md text-sm resize-none h-20"
+                  placeholder="Type a message to the customer..."
+                />
+                <Button type="button" onClick={sendMessage} disabled={!newMessage.trim()}>
+                  Send
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>

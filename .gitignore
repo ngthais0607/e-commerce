@@ -9,19 +9,6 @@ node_modules/
 **/.env
 **/.env.local
 
-# Keep .env.example files
-!.env.example
-!**/.env.example
-!**/env.example
-
-# Build outputs
-dist/
-build/
-.next/
-**/.next/
-out/
-*.tsbuildinfo
-
 # Logs
 logs/
 *.log
@@ -29,36 +16,37 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# OS
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
-*~
-
-# IDE
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# Prisma
-**/prisma/migrations/*/
-!**/prisma/migrations/.gitkeep
-**/prisma/migrations/migration_lock.toml
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
 
 # Testing
 coverage/
 .nyc_output/
+*.lcov
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Uploads
+uploads/
+!uploads/.gitkeep
+
+# Prisma
+**/generated/prisma
 
 # Temporary files
-tmp/
-temp/
 *.tmp
+*.temp
+.cache/
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
+# OS files
+Thumbs.db
+desktop.ini

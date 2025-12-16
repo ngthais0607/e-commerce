@@ -1,3 +1,2 @@
-# Folder này chứa scripts setup database ban đầu
-# Xem README.md để biết cách sử dụng
-
+# This file ensures the database folder is tracked by git
+# even when it's empty

@@ -15,8 +15,22 @@ const createCategorySchema = z.object({
 
 export const getCategories = async (req, res, next) => {
   try {
-    const categories = await adminCategoryModel.list(true);
-    res.json(adminCategoryView.list(categories));
+    const filters = {
+      page: req.query.page ? parseInt(req.query.page, 10) : undefined,
+      pageSize: req.query.pageSize ? Math.min(parseInt(req.query.pageSize, 10), 100) : undefined,
+      search: req.query.search?.trim(),
+      parentId: req.query.parentId ? parseInt(req.query.parentId, 10) : undefined,
+    };
+
+    const result = await adminCategoryModel.list(true, filters);
+    
+    // If pagination was used, result has pagination metadata
+    if (result.items) {
+      res.json(adminCategoryView.list(result));
+    } else {
+      // Backward compatibility: result is array
+      res.json(adminCategoryView.list(result));
+    }
   } catch (error) {
     next(error);
   }

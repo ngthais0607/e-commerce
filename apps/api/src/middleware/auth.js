@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
-import { prisma } from '../../prisma/client.js';
+import { verifyToken } from '../utils/jwt.js';
+import { authClientModel } from '../models/client/auth.model.js';
 
 export const authenticate = async (req, res, next) => {
   try {
@@ -9,17 +9,20 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: { id: true, email: true, name: true, role: true, isActive: true }
-    });
+    const decoded = verifyToken(token);
+    const user = await authClientModel.findById(decoded.userId);
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return res.status(401).json({ error: 'Invalid or inactive user' });
     }
 
-    req.user = user;
+    req.user = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      isActive: true,
+    };
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid token' });

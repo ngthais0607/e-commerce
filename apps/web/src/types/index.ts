@@ -12,6 +12,9 @@ export interface User {
   role: UserRole;
   isActive: boolean;
   createdAt: string;
+  _count?: {
+    orders?: number;
+  };
 }
 
 export interface Category {

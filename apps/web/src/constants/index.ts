@@ -31,11 +31,6 @@ export const API_ENDPOINTS = {
     UPDATE: '/cart',
     REMOVE: '/cart',
   },
-  WISHLIST: {
-    LIST: '/wishlist',
-    ADD: '/wishlist',
-    REMOVE: '/wishlist',
-  },
   REVIEWS: {
     LIST: '/reviews',
     CREATE: '/reviews',
@@ -66,7 +61,6 @@ export const ROUTES = {
   REGISTER: '/register',
   ACCOUNT: '/account',
   ORDERS: '/orders',
-  WISHLIST: '/wishlist',
   CONTACT: '/contact',
   FAQ: '/faq',
   PRIVACY: '/privacy',

@@ -1,18 +1,20 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'
-import { ShoppingCart, Sparkles } from 'lucide-react'
-
-import api from '@/services/api'
-import type { Product, Category, PaginatedResponse } from '@/types'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { formatPrice } from '@/lib/utils'
-import { useCartStore } from '@/store/cartStore'
-import { Badge } from '@/components/ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
-import { cn } from '@/lib/utils'
+import { Link } from 'react-router-dom';
+import api from '@/services/api';
+import type { Product, Category, PaginatedResponse } from '@/types';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { formatPrice } from '@/lib/utils';
+import { ShoppingCart, Search, Filter, ChevronDown } from 'lucide-react';
+import { useCartStore } from '@/store/cartStore';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export default function ShopPage() {
   const [products, setProducts] = useState<PaginatedResponse<Product>>({
@@ -49,14 +51,14 @@ export default function ShopPage() {
       const res = await api.get('/categories');
       setCategories(res.data);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error(error);
     }
   };
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const params: Record<string, string | number> = {
+      const params: any = {
         page: filters.page,
         pageSize: filters.pageSize,
         sortBy: filters.sortBy,
@@ -70,249 +72,334 @@ export default function ShopPage() {
       const res = await api.get('/products', { params });
       setProducts(res.data);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
+  const handleFilterChange = (key: string, value: any, resetPage: boolean = true) => {
+    setFilters((prev) => ({ ...prev, [key]: value, ...(resetPage ? { page: 1 } : {}) }));
   };
-
-  const applySort = (sortBy: string, sortOrder: string) => {
-    setFilters((prev) => ({ ...prev, sortBy, sortOrder, page: 1 }));
-  };
-
-  const sortOptions = [
-    { label: 'Newest', value: 'createdAt:desc' },
-    { label: 'Price: Low to High', value: 'price:asc' },
-    { label: 'Price: High to Low', value: 'price:desc' },
-    { label: 'Best Rated', value: 'rating:desc' },
-  ]
-
-  const quickFilters = [
-    { label: 'Best sellers', sortBy: 'rating', sortOrder: 'desc' },
-    { label: 'Biggest discounts', sortBy: 'salePrice', sortOrder: 'asc' },
-    { label: 'New arrivals', sortBy: 'createdAt', sortOrder: 'desc' },
-  ]
-
-  const renderPrice = (product: Product) =>
-    product.salePrice ? (
-      <div>
-        <span className="text-lg font-bold text-primary">{formatPrice(product.salePrice)}</span>
-        <span className="ml-2 text-sm text-muted-foreground line-through">{formatPrice(product.price)}</span>
-      </div>
-    ) : (
-      <span className="text-lg font-semibold">{formatPrice(product.price)}</span>
-    )
 
   return (
-    <div className="container mx-auto space-y-10 px-4 py-10">
-      <section className="rounded-3xl border bg-gradient-to-br from-primary/5 via-background to-background px-6 py-10 text-center shadow-sm">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4">
-          <Badge variant="secondary" className="gap-2 text-sm">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Curated collections
-          </Badge>
-          <h1 className="text-4xl font-semibold tracking-tight">Shop the latest arrivals</h1>
-          <p className="text-muted-foreground">
-            Discover new drops every week. Filter by category, price, or best-selling rankings and add items to your cart
-            with one click.
+    <div className="bg-gradient-to-b from-background via-muted/20 to-background min-h-screen">
+      <div className="container mx-auto px-4 py-8 md:py-12">
+        <div className="mb-8 md:mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 rounded-full border border-indigo-500/20 mb-4">
+            <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Shop</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight bg-gradient-to-r from-foreground via-indigo-600 to-violet-600 bg-clip-text text-transparent mb-3">
+            Shop All Products
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Find the perfect item for your needs from our curated collection.
           </p>
         </div>
-      </section>
 
-      <div className="grid gap-8 lg:grid-cols-[280px,1fr]">
-        <aside className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Categories</CardTitle>
-              <CardDescription>Browse by collection</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant={!filters.categoryId ? 'default' : 'outline'}
-                onClick={() => handleFilterChange('categoryId', '')}
-              >
-                All
-              </Button>
-              {categories.map((cat) => (
-                <Button
-                  key={cat.id}
-                  size="sm"
-                  variant={filters.categoryId === String(cat.id) ? 'default' : 'outline'}
-                  onClick={() => handleFilterChange('categoryId', String(cat.id))}
-                >
-                  {cat.name}
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="flex flex-col lg:flex-row gap-8">
+          <aside className="w-full lg:w-72 space-y-6 flex-shrink-0">
+            <div className="bg-background p-6 rounded-2xl shadow-xl border-2 border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-300">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl shadow-lg">
+                  <Filter className="h-5 w-5 text-white" />
+                </div>
+                <h2 className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Filters</h2>
+              </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Price range</CardTitle>
-              <CardDescription>Set a comfortable budget</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Input
-                type="number"
-                placeholder="Minimum"
-                value={filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-              />
-              <Input
-                type="number"
-                placeholder="Maximum"
-                value={filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-              />
-            </CardContent>
-          </Card>
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-sm font-semibold mb-3 text-gray-700 uppercase tracking-wide">Search</h3>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Search products..."
+                      value={filters.search}
+                      onChange={(e) => handleFilterChange('search', e.target.value)}
+                      className="pl-10 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                    />
+                  </div>
+                </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Quick filters</CardTitle>
-              <CardDescription>Popular picks</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              {quickFilters.map((filter) => (
-                <Badge
-                  key={filter.label}
-                  variant="outline"
-                  className={cn(
-                    'cursor-pointer',
-                    filters.sortBy === filter.sortBy && filters.sortOrder === filter.sortOrder && 'border-primary text-primary'
-                  )}
-                  onClick={() => applySort(filter.sortBy, filter.sortOrder)}
-                >
-                  {filter.label}
-                </Badge>
-              ))}
-            </CardContent>
-          </Card>
-        </aside>
+                <div>
+                  <h3 className="text-sm font-semibold mb-4 text-gray-700 uppercase tracking-wide">Categories</h3>
+                  <div className="space-y-1.5">
+                    <button
+                      onClick={() => handleFilterChange('categoryId', '')}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        !filters.categoryId
+                          ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/30'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
+                      }`}
+                    >
+                      All Categories
+                    </button>
+                    {categories.map((cat) => (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleFilterChange('categoryId', cat.id)}
+                        className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          filters.categoryId === String(cat.id)
+                            ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/30'
+                            : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-        <section className="space-y-6">
-          <div className="flex flex-wrap items-center gap-4">
-            <Input
-              placeholder="Search by product, SKU, or keyword..."
-              value={filters.search}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="min-w-[240px] flex-1"
-            />
-            <Select
-              value={`${filters.sortBy}:${filters.sortOrder}`}
-              onValueChange={(value) => {
-                const [sortBy, sortOrder] = value.split(':')
-                applySort(sortBy, sortOrder)
-              }}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Sort products" />
-              </SelectTrigger>
-              <SelectContent>
-                {sortOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {loading ? (
-            <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <Card key={index} className="space-y-4 p-4">
-                  <Skeleton className="h-48 w-full rounded-lg" />
-                  <Skeleton className="h-4 w-3/4" />
-                  <Skeleton className="h-4 w-2/4" />
-                  <Skeleton className="h-10 w-full" />
-                </Card>
-              ))}
+                <div>
+                  <h3 className="text-sm font-semibold mb-4 text-gray-700 uppercase tracking-wide">Price Range</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                      <Input
+                        type="number"
+                        placeholder="Min"
+                        value={filters.minPrice}
+                        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                        className="pl-7 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
+                      <Input
+                        type="number"
+                        placeholder="Max"
+                        value={filters.maxPrice}
+                        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                        className="pl-7 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          ) : (
-            <>
-              {products.items.length === 0 ? (
-                <Card className="py-12 text-center">
-                  <CardContent>
-                    <p className="text-lg font-medium">No products match these filters yet.</p>
-                    <p className="text-muted-foreground">Try clearing filters or searching for another keyword.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          </aside>
+
+          <div className="flex-1">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+              <div>
+                <p className="text-sm font-medium text-gray-600">
+                  Showing <span className="font-bold text-indigo-600">{products.items.length}</span> of{' '}
+                  <span className="font-bold text-gray-900">{products.total}</span> products
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-gray-600">Sort by:</span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="min-w-[180px] justify-between border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-lg"
+                    >
+                      <span className="font-medium">
+                        {filters.sortBy === 'createdAt'
+                          ? 'Newest Arrivals'
+                          : filters.sortBy === 'price' && filters.sortOrder === 'asc'
+                          ? 'Price: Low to High'
+                          : filters.sortBy === 'price' && filters.sortOrder === 'desc'
+                          ? 'Price: High to Low'
+                          : 'Best Rated'}
+                      </span>
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleFilterChange('sortBy', 'createdAt');
+                        handleFilterChange('sortOrder', 'desc');
+                      }}
+                    >
+                      Newest Arrivals
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleFilterChange('sortBy', 'price');
+                        handleFilterChange('sortOrder', 'asc');
+                      }}
+                    >
+                      Price: Low to High
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleFilterChange('sortBy', 'price');
+                        handleFilterChange('sortOrder', 'desc');
+                      }}
+                    >
+                      Price: High to Low
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        handleFilterChange('sortBy', 'rating');
+                        handleFilterChange('sortOrder', 'desc');
+                      }}
+                    >
+                      Best Rated
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <Card key={i} className="overflow-hidden border-0 shadow-sm bg-white">
+                    <Skeleton className="aspect-[4/3] w-full" />
+                    <CardContent className="p-5">
+                      <Skeleton className="h-5 w-3/4 mb-2" />
+                      <Skeleton className="h-4 w-full mb-2" />
+                      <Skeleton className="h-4 w-2/3 mb-4" />
+                      <div className="flex items-center justify-between pt-2 border-t">
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : products.items.length === 0 ? (
+              <div className="text-center py-20 bg-white rounded-xl border">
+                <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+                <p className="text-muted-foreground mt-2">
+                  Try adjusting your filters or search terms.
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() =>
+                    setFilters({ ...filters, search: '', categoryId: '', minPrice: '', maxPrice: '' })
+                  }
+                >
+                  Clear all filters
+                </Button>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {products.items.map((product) => (
-                    <Card key={product.id} className="overflow-hidden">
-                      <Link to={`/product/${product.slug}`}>
+                    <Card
+                      key={product.id}
+                      className="group overflow-hidden border-2 border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 shadow-lg hover:shadow-2xl transition-all duration-500 bg-background rounded-2xl hover:-translate-y-2"
+                    >
+                      <Link
+                        to={`/product/${product.slug}`}
+                        className="relative block aspect-[4/3] overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200"
+                      >
                         <img
-                          src={product.images[0] || '/placeholder.jpg'}
+                          src={product.images?.[0] || '/placeholder.jpg'}
                           alt={product.name}
-                          className="h-52 w-full object-cover transition-transform duration-200 hover:scale-[1.02]"
+                          className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700 ease-out"
                           loading="lazy"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop';
+                          }}
                         />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/0 via-transparent to-transparent group-hover:from-black/5 transition-opacity duration-300" />
+                        {product.salePrice && (
+                          <div className="absolute top-3 right-3 bg-gradient-to-r from-red-600 to-red-700 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                            -
+                            {Math.round(
+                              ((product.price - product.salePrice) / product.price) * 100,
+                            )}
+                            %
+                          </div>
+                        )}
+                        {product.stock === 0 && (
+                          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                            <span className="text-white font-bold tracking-wider border-2 border-white px-4 py-1">
+                              SOLD OUT
+                            </span>
+                          </div>
+                        )}
                       </Link>
-                      <CardContent className="space-y-3 p-5">
-                        <div className="flex items-center justify-between">
-                          <Badge variant="secondary">{product.category?.name ?? 'Featured'}</Badge>
-                          {product.rating && (
-                            <span className="text-sm text-muted-foreground">{Number(product.rating || 0).toFixed(1)} ★</span>
-                          )}
+                      <CardContent className="p-5">
+                        <div className="mb-2">
+                          <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
+                            {product.category?.name || 'Clothing'}
+                          </p>
+                          <Link to={`/product/${product.slug}`}>
+                            <h3 className="font-semibold text-lg leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">
+                              {product.name}
+                            </h3>
+                          </Link>
                         </div>
-                        <Link to={`/product/${product.slug}`} className="inline-block text-lg font-semibold">
-                          {product.name}
-                        </Link>
-                        {renderPrice(product)}
-                        <Button
-                          className="w-full"
-                          variant="secondary"
-                          onClick={() => addItem(product)}
-                          disabled={product.stock === 0}
-                        >
-                          <ShoppingCart className="mr-2 h-4 w-4" />
-                          {product.stock === 0 ? 'Sold out' : 'Add to cart'}
-                        </Button>
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                          <div className="flex flex-col gap-1">
+                            {product.salePrice ? (
+                              <>
+                                <span className="text-lg font-bold text-red-600">
+                                  {formatPrice(product.salePrice)}
+                                </span>
+                                <span className="text-xs text-muted-foreground line-through">
+                                  {formatPrice(product.price)}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-lg font-bold text-gray-900">
+                                {formatPrice(product.price)}
+                              </span>
+                            )}
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => addItem(product)}
+                            disabled={product.stock === 0}
+                            className="rounded-full px-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" /> Add
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
-              )}
 
-              {products.totalPages > 1 && (
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-6">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {(filters.page - 1) * filters.pageSize + 1}-
-                    {Math.min(filters.page * filters.pageSize, products.total)} of {products.total} products
-                  </div>
-                  <div className="flex items-center gap-2">
+                {products.totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-12">
                     <Button
                       variant="outline"
                       disabled={filters.page === 1}
-                      onClick={() => handleFilterChange('page', filters.page - 1)}
+                      onClick={() => handleFilterChange('page', filters.page - 1, false)}
                     >
                       Previous
                     </Button>
-                    <span className="text-sm">
-                      Page {filters.page} / {products.totalPages}
-                    </span>
+                    <div className="flex items-center gap-1 px-4">
+                      {Array.from({ length: products.totalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => handleFilterChange('page', p, false)}
+                          className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
+                            filters.page === p
+                              ? 'bg-primary text-primary-foreground'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                    </div>
                     <Button
                       variant="outline"
                       disabled={filters.page === products.totalPages}
-                      onClick={() => handleFilterChange('page', filters.page + 1)}
+                      onClick={() => handleFilterChange('page', filters.page + 1, false)}
                     >
                       Next
                     </Button>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </section>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-  )
+  );
 }
-

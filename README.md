@@ -1,315 +1,72 @@
-﻿# E-Commerce Platform
+# E-Commerce Platform
 
-A full-stack e-commerce application built with React + Vite, Express.js, and MySQL.
+Full-stack e-commerce application with an Express + MySQL2 API and a React + Vite frontend.
+
+## Overview
+- Customer features: authentication (JWT), product browse/search, cart, checkout with Stripe/VNPay, addresses, coupons, reviews, wishlist, order history.
+- Admin features: dashboard, product/category/banner CRUD, order/user/coupon management, uploads.
+- Infrastructure: MySQL 8+, optional Redis caching, Swagger docs, image processing with Sharp, email via Nodemailer.
 
 ## Tech Stack
+- Backend: Node.js 18+, Express 5, TypeScript, MySQL2, Redis (optional), Zod + express-validator, Winston, Multer/Sharp, Swagger.
+- Frontend: React 18, Vite, TypeScript, Tailwind CSS, Radix UI, Zustand, React Router, React Hook Form + Zod, PWA (Workbox).
 
-### Frontend
-- React 18
-- Vite
-- TypeScript
-- Tailwind CSS
-- React Router
-- Zustand (State Management)
-- Axios
-
-### Backend
-- Node.js
-- Express.js
-- Prisma ORM
-- MySQL
-- JWT Authentication
-- bcryptjs
-
-## Features
-
-### Customer Features
-- Browse products with filters and search
-- Product detail pages with reviews
-- Shopping cart
-- Checkout process
-- User authentication (register/login)
-- Order history
-- Wishlist
-- Address management
-
-### Admin Features
-- Product management (CRUD)
-- Order management with status updates
-- User management
-- Coupon/promotion management
-- Dashboard with statistics
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- MySQL 8.0+ (hoặc dùng Docker)
-- Docker (optional, recommended for database)
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd E-Commerce
-```
-
-2. Setup Database
-
-**Cách 1: Sử dụng scripts trong folder `database/` (Khuyến nghị)**
-
-```bash
-# Windows
-database\setup_database.bat
-
-# Linux/Mac
-bash database/setup_database.sh
-```
-
-Script này sẽ tự động:
-- Tạo database `ecommerce`
-- Tạo user `ecommerce_user` với password `ecommerce_pass`
-- Cấp quyền đầy đủ
-
-Xem `database/README.md` để biết chi tiết.
-
-**Cách 2: Sử dụng Docker (nếu có)**
-```bash
-docker-compose up -d
-```
-
-**Cách 3: Tạo thủ công bằng SQL**
-```sql
-CREATE DATABASE ecommerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'ecommerce_user'@'localhost' IDENTIFIED BY 'ecommerce_pass';
-GRANT ALL PRIVILEGES ON ecommerce.* TO 'ecommerce_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-⚠️ **Lưu ý:** Bạn PHẢI tạo database trước khi chạy Prisma migrations!
-
-3. Set up the backend
-```bash
-cd apps/api
-npm install
-cp env.example .env
-# Chỉnh sửa .env với thông tin database của bạn
-# DATABASE_URL="mysql://user:password@localhost:3306/ecommerce"
-npx prisma generate
-npx prisma migrate dev
-npm run db:seed
-npm run dev
-```
-
-4. Set up the frontend
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-5. Access the application
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:4000
-- Health Check: http://localhost:4000/health
-
-### Default Credentials
-
-Sau khi chạy seed script:
-- **Admin**: `admin@admin.com` / `admin1`
-- **Customer**: `user@user.com` / `123456`
+## Requirements
+- Node.js >= 18, npm >= 9
+- MySQL >= 8.0
+- Redis >= 6 (optional; app still runs without it)
 
 ## Project Structure
-
 ```
 E-Commerce/
 ├── apps/
-│   ├── api/                 # Backend API
-│   │   ├── src/
-│   │   │   ├── controllers/  # MVC controllers (admin & user)
-│   │   │   │   ├── admin/
-│   │   │   │   └── user/
-│   │   │   ├── models/       # Prisma data access by scope
-│   │   │   │   ├── admin/
-│   │   │   │   └── user/
-│   │   │   ├── views/        # Response mappers (admin & user)
-│   │   │   ├── routes/       # Express routers (admin & user)
-│   │   │   │   ├── admin/
-│   │   │   │   └── user/
-│   │   │   ├── middleware/   # Auth, error handling, etc.
-│   │   │   └── utils/        # Shared helpers
-│   │   ├── prisma/          # Database schema and migrations
-│   │   └── index.js         # Entry point
-│   └── web/                 # Frontend
-│       ├── src/
-│       │   ├── components/  # React components
-│       │   ├── pages/       # Page components
-│       │   ├── store/      # Zustand stores
-│       │   └── lib/         # Utilities and types
-│       └── vite.config.ts
-├── database/               # Database setup scripts (CHẠY TRƯỚC Prisma migrations!)
-│   ├── README.md          # Hướng dẫn chi tiết
-│   ├── create_database.sql # Script tạo database và user
-│   └── setup_database.*   # Scripts tự động (Windows/Linux)
-└── docker-compose.yml      # Database setup (optional)
+│   ├── api/   # Express API (TypeScript + JS)
+│   └── web/   # React frontend (TypeScript)
+├── database/  # SQL schemas and setup scripts
+└── package.json
 ```
 
-### MVC Layering & Route Split
-
-- User-facing APIs stay under `/api/<resource>` and map to `src/controllers/user`.
-- Admin/Staff APIs live under `/api/admin/<resource>` and leverage `src/controllers/admin`.
-- Each controller only talks to its matching `models/<scope>` file and returns data through a view helper in `views/<scope>`.
-- Example:
-  - `src/controllers/user/product.controller.js` → `models/user/product.model.js` → `views/user/product.view.js`
-  - `src/controllers/admin/product.controller.js` → `models/admin/product.model.js` → `views/admin/product.view.js`
-
-This keeps user flows isolated from admin dashboards while still sharing Prisma logic where it makes sense.
-
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user
-
-### Products
-- `GET /api/products` - List products (with filters)
-- `GET /api/products/:id` - Get product by ID
-- `GET /api/products/slug/:slug` - Get product by slug
-- `POST /api/admin/products` - Create product (Admin)
-- `PUT /api/admin/products/:id` - Update product (Admin)
-- `DELETE /api/admin/products/:id` - Delete product (Admin)
-
-### Orders
-- `GET /api/orders` - List current user orders
-- `GET /api/orders/:id` - Get order details for current user
-- `POST /api/orders` - Create order
-- `GET /api/admin/orders` - List all orders (Admin)
-- `GET /api/admin/orders/:id` - Get order details (Admin)
-- `PUT /api/admin/orders/:id/status` - Update order status (Admin)
-
-### Categories
-- `GET /api/categories` - List categories
-- `POST /api/admin/categories` - Create category (Admin)
-- `PUT /api/admin/categories/:id` - Update category (Admin)
-- `DELETE /api/admin/categories/:id` - Delete category (Admin)
-
-### Reviews
-- `GET /api/reviews` - List reviews
-- `POST /api/reviews` - Create review
-- `PUT /api/reviews/:id` - Update review
-- `DELETE /api/reviews/:id` - Delete review
-
-### Coupons
-- `GET /api/coupons/validate` - Validate coupon
-- `POST /api/coupons/apply` - Apply coupon to cart/orders
-- `GET /api/admin/coupons` - List coupons (Admin)
-- `POST /api/admin/coupons` - Create coupon (Admin)
-- `PUT /api/admin/coupons/:code` - Update coupon (Admin)
-- `DELETE /api/admin/coupons/:code` - Delete coupon (Admin)
-
-> **Admin endpoints** now live under `/api/admin/*` (e.g. `/api/admin/products`, `/api/admin/orders`, `/api/admin/users`), mirroring the controller/model/view folders for the admin scope.
-
-### Database Setup
-
-**⚠️ QUAN TRỌNG:** Folder `database/` chứa scripts để tạo database và user **TRƯỚC** khi chạy Prisma migrations.
-
-**Tại sao cần?**
-- Prisma **KHÔNG tự động tạo database**, chỉ tạo tables trong database đã có
-- Cần tạo database và user trước khi Prisma có thể kết nối
-
-**Các file trong `database/`:**
-- `README.md` - Hướng dẫn chi tiết
-- `create_database.sql` - Script SQL tạo database và user
-- `setup_database.bat` / `.sh` - Scripts tự động (Windows/Linux)
-
-**Cách sử dụng:**
-1. Chạy script setup: `database\setup_database.bat` (Windows) hoặc `bash database/setup_database.sh` (Linux/Mac)
-2. Cấu hình `DATABASE_URL` trong `apps/api/.env`
-3. Chạy Prisma migrations: `npx prisma migrate dev`
-
-Xem `database/README.md` để biết chi tiết.
-
-### Wishlist
-- `GET /api/wishlist` - Get wishlist
-- `POST /api/wishlist` - Add to wishlist
-- `DELETE /api/wishlist/:productId` - Remove from wishlist
-
-### Addresses
-- `GET /api/addresses` - List addresses
-- `POST /api/addresses` - Create address
-- `PUT /api/addresses/:id` - Update address
-- `DELETE /api/addresses/:id` - Delete address
-
-### Users
-- `PUT /api/users/profile` - Update current user profile
-- `GET /api/admin/users` - List users (Admin)
-- `GET /api/admin/users/:id` - Get user detail (Admin)
-- `PUT /api/admin/users/:id` - Update role/status (Admin)
-
-## Development
-
-### Running in Development Mode
-
-From the root directory:
+## Setup
+1) Install dependencies
 ```bash
-npm run dev
+npm install
+npm --prefix apps/api install
+npm --prefix apps/web install
 ```
 
-This will start both the API and web servers concurrently.
+2) Configure environment
+- Create `apps/api/.env` (see `.env.example` for variables such as DB connection, JWT, email, Redis).
+- Create `apps/web/.env` if you need to override `VITE_API_URL` (default `/api`).
 
-### Database Connection với Prisma
-
-### ⚠️ Quan Trọng: Không cần kết nối MySQL thủ công!
-
-**Prisma tự động quản lý kết nối MySQL** thông qua connection string trong file `.env`:
-
-```env
-DATABASE_URL="mysql://user:password@localhost:3306/database_name"
+3) Initialize database  
+See `database/README.md` for SQL scripts. Fast path:
+```bash
+cd database
+# Windows
+./setup_database.bat
+# Linux/Mac
+chmod +x setup_database.sh && ./setup_database.sh
 ```
 
-Prisma sẽ:
-- ✅ Tự động tạo connection pool
-- ✅ Quản lý kết nối hiệu quả
-- ✅ Tự động reconnect khi mất kết nối
-- ✅ Đóng connection đúng cách khi app shutdown
-
-**Chỉ cần:**
-1. Cấu hình `DATABASE_URL` trong `.env`
-2. Chạy `npx prisma generate` để tạo Prisma Client
-3. Sử dụng `prisma` trong code - không cần kết nối thủ công!
-
-### Database Migrations
-
+4) Seed default admin
 ```bash
 cd apps/api
-npx prisma migrate dev --name migration_name
+npm run seed:admin
+# default: admin@ecommerce.com / Admin@123 (change immediately)
 ```
 
-### Generate Prisma Client
+## Run
+- Dev (API + Web from root): `npm run dev`
+- Dev only API: `npm run dev:api`
+- Dev only Web: `npm run dev:web`
+- API production: `cd apps/api && npm run build && npm run start:prod`
+- Web production build: `cd apps/web && npm run build` (serve `dist/` with any static server)
 
-```bash
-cd apps/api
-npx prisma generate
-```
+## Useful API endpoints
+- Swagger UI: `http://localhost:4000/api-docs`
+- API base: `http://localhost:4000/api`
 
-### Prisma Studio (GUI để xem database)
-
-```bash
-cd apps/api
-npx prisma studio
-```
-
-## Security Features
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Rate limiting on sensitive routes
-- Input validation with Zod
-- SQL injection protection via Prisma
-- Role-based access control
-
-## License
-
-MIT
+## Notes
+- Redis is optional; when absent, caching is skipped gracefully.
+- Test suites were removed; add your own before production.
+- This repo uses a mix of TypeScript and JavaScript on the API side; migrate gradually as needed.

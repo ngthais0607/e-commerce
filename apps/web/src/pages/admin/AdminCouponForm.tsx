@@ -4,6 +4,7 @@ import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface CouponFormData {
   code: string;
@@ -23,6 +24,7 @@ export default function AdminCouponForm() {
   const { code } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState<CouponFormData>({
     code: '',
     name: '',
@@ -60,8 +62,13 @@ export default function AdminCouponForm() {
         validUntil: new Date(coupon.validUntil).toISOString().slice(0, 16),
         isActive: coupon.isActive,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching coupon:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to fetch coupon. Please try again.',
+      });
     }
   };
 
@@ -86,14 +93,26 @@ export default function AdminCouponForm() {
 
       if (code) {
         await api.put(`/coupons/${code}`, data);
+        toast({
+          title: 'Success',
+          description: 'Coupon updated successfully',
+        });
       } else {
         await api.post('/coupons', data);
+        toast({
+          title: 'Success',
+          description: 'Coupon created successfully',
+        });
       }
 
       navigate('/admin/coupons');
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to save coupon');
       console.error('Error saving coupon:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.error || error.response?.data?.message || 'Failed to save coupon. Please try again.',
+      });
     } finally {
       setLoading(false);
     }

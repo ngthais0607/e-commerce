@@ -10,8 +10,16 @@ export const authLimiter = rateLimit({
 
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per window
+  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Higher limit in development
+  message: 'Too many requests, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // Skip rate limiting for admin routes in development
+    if (process.env.NODE_ENV === 'development' && req.path?.startsWith('/api/admin')) {
+      return true;
+    }
+    return false;
+  },
 });
 

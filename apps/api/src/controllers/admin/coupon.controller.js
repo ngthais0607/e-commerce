@@ -20,8 +20,23 @@ const createCouponSchema = z.object({
 
 export const getCoupons = async (req, res, next) => {
   try {
-    const coupons = await adminCouponModel.list();
-    res.json(adminCouponView.list(coupons));
+    const filters = {
+      page: req.query.page ? parseInt(req.query.page, 10) : undefined,
+      pageSize: req.query.pageSize ? Math.min(parseInt(req.query.pageSize, 10), 100) : undefined,
+      search: req.query.search?.trim(),
+      isActive: req.query.isActive !== undefined ? req.query.isActive === 'true' : undefined,
+      type: req.query.type,
+    };
+
+    const result = await adminCouponModel.list(filters);
+    
+    // If pagination was used, result has pagination metadata
+    if (result.items) {
+      res.json(adminCouponView.list(result));
+    } else {
+      // Backward compatibility: result is array
+      res.json(adminCouponView.list(result));
+    }
   } catch (error) {
     next(error);
   }

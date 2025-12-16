@@ -13,7 +13,6 @@ export const config = {
   },
   features: {
     enableReviews: true,
-    enableWishlist: true,
     enableCoupons: true,
   },
 } as const;

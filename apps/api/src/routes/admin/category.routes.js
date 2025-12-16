@@ -4,7 +4,7 @@ import { authenticate, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(authenticate, authorize('ADMIN', 'STAFF'));
+router.use(authenticate, authorize('ADMIN'));
 router.get('/', categoryController.getCategories);
 router.get('/:id', categoryController.getCategory);
 router.post('/', categoryController.createCategory);

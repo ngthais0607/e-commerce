@@ -86,21 +86,70 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      // Validate required fields
+      if (!formData.shippingAddress.name || !formData.shippingAddress.phone || 
+          !formData.shippingAddress.address || !formData.shippingAddress.city ||
+          !formData.shippingAddress.district || !formData.shippingAddress.ward) {
+        setError('Please fill in all required shipping address fields');
+        setLoading(false);
+        return;
+      }
+
       const orderData = {
-        ...formData,
+        shippingAddress: formData.shippingAddress,
+        phone: formData.shippingAddress.phone, // API requires phone separately
+        email: formData.email || undefined,
+        notes: formData.notes || undefined,
+        paymentMethod: formData.paymentMethod,
         couponCode: discount > 0 ? formData.couponCode : undefined,
+        shippingFee: formData.shippingFee,
         items: items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
-          attributes: item.attributes,
+          attributes: item.attributes || {},
         })),
       };
 
       const res = await api.post('/orders', orderData);
+      console.log('Order created:', res.data);
+      const orderId = res.data.id;
+
+      // Handle payment for online payment methods
+      if (formData.paymentMethod === 'MOMO' || formData.paymentMethod === 'ZALOPAY' || formData.paymentMethod === 'BANK') {
+        try {
+          const paymentRes = await api.post('/payments', {
+            orderId: orderId,
+            returnUrl: `${window.location.origin}/orders/${orderId}`,
+          });
+
+          console.log('Payment created:', paymentRes.data);
+
+          if (paymentRes.data.paymentUrl) {
+            // Redirect to payment gateway
+            window.location.href = paymentRes.data.paymentUrl;
+            return;
+          } else if (formData.paymentMethod === 'BANK') {
+            // Bank transfer - redirect to bank transfer page
+            clearCart();
+            navigate(`/payment/bank?orderId=${orderId}&amount=${res.data.total}`);
+            return;
+          }
+        } catch (paymentError: any) {
+          console.error('Payment creation error:', paymentError);
+          // Continue to order page even if payment creation fails
+        }
+      }
+
+      // For COD, order is already created with PENDING status
+      // Payment will be collected on delivery
       clearCart();
-      navigate(`/orders/${res.data.id}`);
+      navigate(`/orders/${orderId}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to place order');
+      console.error('Order error:', err);
+      const errorMessage = err.response?.data?.error || 
+                          err.response?.data?.details?.[0]?.message ||
+                          'Failed to place order';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -280,14 +329,28 @@ export default function CheckoutPage() {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="WALLET"
-                    checked={formData.paymentMethod === 'WALLET'}
+                    value="MOMO"
+                    checked={formData.paymentMethod === 'MOMO'}
                     onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                     className="w-4 h-4"
                   />
                   <div>
-                    <div className="font-medium">E-Wallet</div>
-                    <div className="text-sm text-muted-foreground">MoMo, ZaloPay, etc.</div>
+                    <div className="font-medium">MoMo Wallet</div>
+                    <div className="text-sm text-muted-foreground">Pay with MoMo e-wallet</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-accent">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="ZALOPAY"
+                    checked={formData.paymentMethod === 'ZALOPAY'}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium">ZaloPay</div>
+                    <div className="text-sm text-muted-foreground">Pay with ZaloPay e-wallet</div>
                   </div>
                 </label>
               </CardContent>

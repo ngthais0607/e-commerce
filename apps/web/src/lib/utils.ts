@@ -38,3 +38,21 @@ export function formatDate(date: string | Date): string {
     day: 'numeric',
   }).format(new Date(date));
 }
+
+export function formatNumber(num: number | string | null | undefined): string {
+  // Handle null, undefined, or empty values
+  if (num === null || num === undefined || num === '') {
+    return '0';
+  }
+  
+  // Convert to number
+  const numValue = typeof num === 'string' ? parseFloat(num) : Number(num);
+  
+  // Handle NaN
+  if (isNaN(numValue)) {
+    return '0';
+  }
+  
+  // Format with dot as thousand separator
+  return numValue.toLocaleString('de-DE'); // German locale uses dot as thousand separator
+}

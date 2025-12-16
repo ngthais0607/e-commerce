@@ -5,6 +5,7 @@ import type { Category } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductFormData {
   name: string;
@@ -25,6 +26,7 @@ export default function AdminProductForm() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     shortDesc: '',
@@ -50,8 +52,13 @@ export default function AdminProductForm() {
     try {
       const res = await api.get('/categories');
       setCategories(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching categories:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch categories. Please try again.',
+      });
     }
   };
 
@@ -72,8 +79,13 @@ export default function AdminProductForm() {
         brand: product.brand || '',
         isActive: product.isActive !== undefined ? product.isActive : true,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching product:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to fetch product. Please try again.',
+      });
     }
   };
 
@@ -98,14 +110,26 @@ export default function AdminProductForm() {
 
       if (id) {
         await api.put(`/products/${id}`, data);
+        toast({
+          title: 'Success',
+          description: 'Product updated successfully',
+        });
       } else {
         await api.post('/products', data);
+        toast({
+          title: 'Success',
+          description: 'Product created successfully',
+        });
       }
 
       navigate('/admin/products');
     } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to save product');
       console.error('Error saving product:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.error || error.response?.data?.message || 'Failed to save product. Please try again.',
+      });
     } finally {
       setLoading(false);
     }

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run Prettier to format code
+npm run format
+
+# Run ESLint to check code quality
+npm run lint
+
+# Run TypeScript type check
+npm run type-check
+

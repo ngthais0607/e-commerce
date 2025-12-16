@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { config } from '@/config';
 import { STORAGE_KEYS } from '@/constants';
+import { handleApiError, formatErrorMessage } from '@/utils/errorHandler';
 
 const api = axios.create({
   baseURL: config.api.baseURL,
@@ -35,11 +36,14 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor - Handle token expiration
+// Response interceptor - Handle errors and token expiration
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (error: AxiosError) => {
+    const apiError = handleApiError(error);
+
+    // Handle 401 Unauthorized - Token expired or invalid
+    if (apiError.status === 401) {
       // Clear all auth data
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
       localStorage.removeItem(STORAGE_KEYS.AUTH_STORAGE);
@@ -52,9 +56,27 @@ api.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
+
+    // Log error in development
+    if (config.app.environment === 'development') {
+      console.error('API Error:', {
+        message: apiError.message,
+        status: apiError.status,
+        code: apiError.code,
+        details: apiError.details,
+      });
+    }
+
+    // In production, you could send to error tracking service
+    // Example: Sentry.captureException(error, { extra: apiError });
+
+    // Reject with standardized error
+    return Promise.reject(apiError);
   }
 );
+
+// Export helper function for components to use
+export { formatErrorMessage, handleApiError };
 
 export default api;
 

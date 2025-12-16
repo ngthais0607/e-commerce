@@ -7,6 +7,26 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+
+// Helper function to get product image or generate placeholder
+const getProductImage = (product: Product): string => {
+  if (product.images && product.images.length > 0 && product.images[0]) {
+    return product.images[0];
+  }
+  // Generate placeholder image based on product ID for consistency
+  return `https://picsum.photos/seed/${product.id}/400/300`;
+};
 
 export default function AdminProducts() {
   const navigate = useNavigate();
@@ -19,6 +39,10 @@ export default function AdminProducts() {
   });
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set());
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchProducts();
@@ -26,12 +50,30 @@ export default function AdminProducts() {
 
   const fetchProducts = async () => {
     try {
+      setLoading(true);
       const params: any = { pageSize: 20 };
       if (search) params.search = search;
-      const res = await api.get('/products', { params });
+      const res = await api.get('/admin/products', { params });
       setProducts(res.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching products:', error);
+      if (error.response) {
+        console.error('Response status:', error.response.status);
+        console.error('Response data:', error.response.data);
+        if (error.response.status === 401 || error.response.status === 403) {
+          toast({
+            variant: 'destructive',
+            title: 'Access Denied',
+            description: 'You need to login with an Admin account to view products',
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Error',
+            description: 'Failed to fetch products. Please try again.',
+          });
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -42,15 +84,35 @@ export default function AdminProducts() {
     fetchProducts();
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteClick = (id: number) => {
+    setProductToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/admin/products/${productToDelete}`);
+      toast({
+        title: 'Success',
+        description: 'Product deleted successfully',
+      });
+      setDeleteDialogOpen(false);
+      setProductToDelete(null);
       fetchProducts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting product:', error);
-      alert('Failed to delete product');
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to delete product. Please try again.',
+      });
     }
+  };
+
+  const handleImageError = (productId: number) => {
+    setImageErrors((prev) => new Set(prev).add(productId));
   };
 
   if (loading && products.items.length === 0) {
@@ -64,8 +126,8 @@ export default function AdminProducts() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Products</h1>
-        <Button onClick={() => navigate('/admin/products/new')}>
+        <h1 className="text-3xl font-bold text-foreground dark:text-white">Products</h1>
+        <Button onClick={() => navigate('/admin/products/new')} className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
           <Plus className="h-4 w-4 mr-2" />
           Add Product
         </Button>
@@ -98,38 +160,46 @@ export default function AdminProducts() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products.items.map((product) => (
-            <Card key={product.id} className="overflow-hidden">
-              <img
-                src={product.images?.[0] || '/placeholder.jpg'}
-                alt={product.name}
-                className="w-full h-48 object-cover"
-              />
+          {products.items.map((product) => {
+            const imageUrl = imageErrors.has(product.id)
+              ? `https://picsum.photos/seed/${product.id}/400/300`
+              : getProductImage(product);
+            
+            return (
+              <Card key={product.id} className="overflow-hidden bg-card dark:bg-slate-900/50 border-border dark:border-white/10">
+                <div className="relative w-full h-48 bg-gray-100 dark:bg-slate-800 overflow-hidden">
+                  <img
+                    src={imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    onError={() => handleImageError(product.id)}
+                  />
+                </div>
               <CardContent className="p-4">
-                <h3 className="font-semibold mb-2 line-clamp-2">{product.name}</h3>
+                <h3 className="font-semibold mb-2 line-clamp-2 text-foreground dark:text-white">{product.name}</h3>
                 <div className="flex items-center gap-2 mb-2">
                   {product.salePrice ? (
                     <>
-                      <span className="text-lg font-bold text-primary">
+                      <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
                         {formatPrice(product.salePrice)}
                       </span>
-                      <span className="text-sm text-muted-foreground line-through">
+                      <span className="text-sm text-muted-foreground dark:text-muted-foreground/70 line-through">
                         {formatPrice(product.price)}
                       </span>
                     </>
                   ) : (
-                    <span className="text-lg font-bold">{formatPrice(product.price)}</span>
+                    <span className="text-lg font-bold text-foreground dark:text-white">{formatPrice(product.price)}</span>
                   )}
                 </div>
                 <div className="flex items-center justify-between mb-4">
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm text-muted-foreground dark:text-muted-foreground/80">
                     Stock: {product.stock}
                   </span>
                   <span
                     className={`px-2 py-1 rounded text-xs ${
                       product.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-400'
                     }`}
                   >
                     {product.isActive ? 'Active' : 'Inactive'}
@@ -148,14 +218,15 @@ export default function AdminProducts() {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => handleDeleteClick(product.id)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -184,6 +255,26 @@ export default function AdminProducts() {
           </Button>
         </div>
       )}
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Product</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this product? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
