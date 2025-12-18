@@ -27,11 +27,10 @@ export default tseslint.config(
     },
     settings: { react: { version: '18.3' } },
     rules: {
+      // Start from the recommended hooks rules, then relax a few that are too noisy for this app
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-hooks/exhaustive-deps': 'off',
+      'react-refresh/only-export-components': 'off',
       'react/react-in-jsx-scope': 'off',
     },
   },

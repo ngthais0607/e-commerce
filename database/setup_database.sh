@@ -1,40 +1,54 @@
 #!/bin/bash
 
-# Script tự động setup database cho E-Commerce Project
-# Chạy: bash database/setup_database.sh
+# Automated database setup script for E-Commerce Project
+# Run: bash database/setup_database.sh
 
-echo "🚀 Bắt đầu setup database..."
+echo "🚀 Starting database setup..."
 
-# Kiểm tra MySQL đã cài đặt chưa
+# Check if MySQL is installed
 if ! command -v mysql &> /dev/null; then
-    echo "❌ MySQL chưa được cài đặt!"
-    echo "Vui lòng cài đặt MySQL 8.0+ trước"
+    echo "❌ MySQL is not installed!"
+    echo "Please install MySQL 8.0+ first"
     exit 1
 fi
 
-echo "✅ MySQL đã được cài đặt"
+echo "✅ MySQL is installed"
 
-# Nhập password root
-read -sp "Nhập MySQL root password: " ROOT_PASSWORD
+# Get root password
+read -sp "Enter MySQL root password: " ROOT_PASSWORD
 echo ""
 
-# Tạo database và user
+# Create database and user
+echo "Creating database and user..."
 mysql -u root -p"$ROOT_PASSWORD" < database/create_database.sql
 
 if [ $? -eq 0 ]; then
-    echo "✅ Database đã được tạo thành công!"
-    echo ""
-    echo "📋 Thông tin kết nối:"
-    echo "   Database: ecommerce"
-    echo "   User: ecommerce_user"
-    echo "   Password: ecommerce_pass"
-    echo "   Host: localhost"
-    echo "   Port: 3306"
-    echo ""
-    echo "🔗 Connection String:"
-    echo "   mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce"
+    echo "Creating tables..."
+    mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/ecommerce_tables_v2.sql
+    echo "Applying support conversations schema..."
+    mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/add-support-conversations.sql
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo "✅ Database setup completed successfully!"
+        echo ""
+        echo "📋 Connection Information:"
+        echo "   Database: ecommerce"
+        echo "   User: ecommerce_user"
+        echo "   Password: ecommerce_pass"
+        echo "   Host: localhost"
+        echo "   Port: 3306"
+        echo ""
+        echo "🔗 Connection String for .env:"
+        echo "   DATABASE_URL=mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce"
+    else
+        echo "❌ Failed to create tables"
+        echo "Database created but tables failed"
+        exit 1
+    fi
 else
-    echo "❌ Có lỗi xảy ra khi tạo database"
+    echo "❌ Failed to create database"
+    echo "Please check root password or permissions"
     exit 1
 fi
 

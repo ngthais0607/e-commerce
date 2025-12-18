@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
-import api from '@/lib/api';
+import api from '@/services/api';
+import type { User } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AccountPage() {
-  const [user, setUser] = useState<any>(null);
-  const [formData, setFormData] = useState({ name: '', phone: '', password: '' });
+  const [user, setUser] = useState<User | null>(null);
+  const [formData, setFormData] = useState<{ name: string; phone: string; password: string }>({
+    name: '',
+    phone: '',
+    password: '',
+  });
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchUser();
@@ -15,9 +22,10 @@ export default function AccountPage() {
 
   const fetchUser = async () => {
     try {
-      const res = await api.get('/auth/me');
-      setUser(res.data);
-      setFormData({ name: res.data.name, phone: res.data.phone || '', password: '' });
+      const res = await api.get<User>('/auth/me');
+      const userData = res.data;
+      setUser(userData);
+      setFormData({ name: userData.name, phone: userData.phone || '', password: '' });
     } catch (error) {
       console.error('Error fetching user:', error);
     }
@@ -27,13 +35,25 @@ export default function AccountPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      const updateData: any = { name: formData.name, phone: formData.phone };
+      const updateData: { name: string; phone: string; password?: string } = {
+        name: formData.name,
+        phone: formData.phone,
+      };
       if (formData.password) updateData.password = formData.password;
-      await api.put('/users/profile', updateData);
+      // Backend mount: app.use('/api/clients', clientProfileRoutes)
+      await api.put('/clients/profile', updateData);
       await fetchUser();
-      alert('Profile updated successfully');
+      toast({
+        title: 'Profile updated',
+        description: 'Your account information was saved successfully.',
+      });
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Update failed',
+        description: 'Could not update your profile. Please try again.',
+      });
     } finally {
       setLoading(false);
     }

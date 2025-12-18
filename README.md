@@ -1,236 +1,72 @@
-﻿# E-Commerce Platform
+# E-Commerce Platform
 
-A full-stack e-commerce application built with React + Vite, Express.js, and MySQL.
+Full-stack e-commerce application with an Express + MySQL2 API and a React + Vite frontend.
+
+## Overview
+- Customer features: authentication (JWT), product browse/search, cart, checkout with Stripe/VNPay, addresses, coupons, reviews, wishlist, order history.
+- Admin features: dashboard, product/category/banner CRUD, order/user/coupon management, uploads.
+- Infrastructure: MySQL 8+, optional Redis caching, Swagger docs, image processing with Sharp, email via Nodemailer.
 
 ## Tech Stack
+- Backend: Node.js 18+, Express 5, TypeScript, MySQL2, Redis (optional), Zod + express-validator, Winston, Multer/Sharp, Swagger.
+- Frontend: React 18, Vite, TypeScript, Tailwind CSS, Radix UI, Zustand, React Router, React Hook Form + Zod, PWA (Workbox).
 
-### Frontend
-- React 18
-- Vite
-- TypeScript
-- Tailwind CSS
-- React Router
-- Zustand (State Management)
-- Axios
-
-### Backend
-- Node.js
-- Express.js
-- Prisma ORM
-- MySQL
-- JWT Authentication
-- bcryptjs
-
-## Features
-
-### Customer Features
-- Browse products with filters and search
-- Product detail pages with reviews
-- Shopping cart
-- Checkout process
-- User authentication (register/login)
-- Order history
-- Wishlist
-- Address management
-
-### Admin Features
-- Product management (CRUD)
-- Order management with status updates
-- User management
-- Coupon/promotion management
-- Dashboard with statistics
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- MySQL 8.0+ (hoặc dùng Docker)
-- Docker (optional, recommended for database)
-
-### Installation
-
-1. Clone the repository
-```bash
-git clone <repository-url>
-cd E-Commerce
-```
-
-2. Start the database (using Docker - recommended)
-```bash
-docker-compose up -d
-```
-
-Hoặc cài đặt MySQL thủ công và tạo database:
-```sql
-CREATE DATABASE ecommerce;
-CREATE USER 'ecommerce_user'@'localhost' IDENTIFIED BY 'ecommerce_pass';
-GRANT ALL PRIVILEGES ON ecommerce.* TO 'ecommerce_user'@'localhost';
-FLUSH PRIVILEGES;
-```
-
-3. Set up the backend
-```bash
-cd apps/api
-npm install
-cp env.example .env
-# Chỉnh sửa .env với thông tin database của bạn
-# DATABASE_URL="mysql://user:password@localhost:3306/ecommerce"
-npx prisma generate
-npx prisma migrate dev
-npm run db:seed
-npm run dev
-```
-
-4. Set up the frontend
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-5. Access the application
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:4000
-- Health Check: http://localhost:4000/health
-
-### Default Credentials
-
-After running the seed script:
-- Admin: `admin@example.com` / `admin123`
-- Customer: `customer@example.com` / `customer123`
+## Requirements
+- Node.js >= 18, npm >= 9
+- MySQL >= 8.0
+- Redis >= 6 (optional; app still runs without it)
 
 ## Project Structure
-
 ```
 E-Commerce/
 ├── apps/
-│   ├── api/                 # Backend API
-│   │   ├── src/
-│   │   │   ├── controllers/  # Route controllers
-│   │   │   ├── middleware/   # Auth, error handling, etc.
-│   │   │   ├── routes/       # API routes
-│   │   │   └── utils/        # Utilities
-│   │   ├── prisma/          # Database schema and migrations
-│   │   └── index.js         # Entry point
-│   └── web/                 # Frontend
-│       ├── src/
-│       │   ├── components/  # React components
-│       │   ├── pages/       # Page components
-│       │   ├── store/      # Zustand stores
-│       │   └── lib/         # Utilities and types
-│       └── vite.config.ts
-└── docker-compose.yml      # Database setup
+│   ├── api/   # Express API (TypeScript + JS)
+│   └── web/   # React frontend (TypeScript)
+├── database/  # SQL schemas and setup scripts
+└── package.json
 ```
 
-## API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login
-- `GET /api/auth/me` - Get current user
-
-### Products
-- `GET /api/products` - List products (with filters)
-- `GET /api/products/:id` - Get product by ID
-- `GET /api/products/slug/:slug` - Get product by slug
-- `POST /api/products` - Create product (Admin)
-- `PUT /api/products/:id` - Update product (Admin)
-- `DELETE /api/products/:id` - Delete product (Admin)
-
-### Orders
-- `GET /api/orders` - List orders
-- `GET /api/orders/:id` - Get order details
-- `POST /api/orders` - Create order
-- `PUT /api/orders/:id/status` - Update order status (Admin)
-
-### Categories
-- `GET /api/categories` - List categories
-- `POST /api/categories` - Create category (Admin)
-
-### Reviews
-- `GET /api/reviews` - List reviews
-- `POST /api/reviews` - Create review
-- `PUT /api/reviews/:id` - Update review
-- `DELETE /api/reviews/:id` - Delete review
-
-### Coupons
-- `GET /api/coupons` - List coupons
-- `GET /api/coupons/validate` - Validate coupon
-- `POST /api/coupons` - Create coupon (Admin)
-
-### Wishlist
-- `GET /api/wishlist` - Get wishlist
-- `POST /api/wishlist` - Add to wishlist
-- `DELETE /api/wishlist/:productId` - Remove from wishlist
-
-### Addresses
-- `GET /api/addresses` - List addresses
-- `POST /api/addresses` - Create address
-- `PUT /api/addresses/:id` - Update address
-- `DELETE /api/addresses/:id` - Delete address
-
-## Development
-
-### Running in Development Mode
-
-From the root directory:
+## Setup
+1) Install dependencies
 ```bash
-npm run dev
+npm install
+npm --prefix apps/api install
+npm --prefix apps/web install
 ```
 
-This will start both the API and web servers concurrently.
+2) Configure environment
+- Create `apps/api/.env` (see `.env.example` for variables such as DB connection, JWT, email, Redis).
+- Create `apps/web/.env` if you need to override `VITE_API_URL` (default `/api`).
 
-### Database Connection với Prisma
-
-### ⚠️ Quan Trọng: Không cần kết nối MySQL thủ công!
-
-**Prisma tự động quản lý kết nối MySQL** thông qua connection string trong file `.env`:
-
-```env
-DATABASE_URL="mysql://user:password@localhost:3306/database_name"
+3) Initialize database  
+See `database/README.md` for SQL scripts. Fast path:
+```bash
+cd database
+# Windows
+./setup_database.bat
+# Linux/Mac
+chmod +x setup_database.sh && ./setup_database.sh
 ```
 
-Prisma sẽ:
-- ✅ Tự động tạo connection pool
-- ✅ Quản lý kết nối hiệu quả
-- ✅ Tự động reconnect khi mất kết nối
-- ✅ Đóng connection đúng cách khi app shutdown
-
-**Chỉ cần:**
-1. Cấu hình `DATABASE_URL` trong `.env`
-2. Chạy `npx prisma generate` để tạo Prisma Client
-3. Sử dụng `prisma` trong code - không cần kết nối thủ công!
-
-### Database Migrations
-
+4) Seed default admin
 ```bash
 cd apps/api
-npx prisma migrate dev --name migration_name
+npm run seed:admin
+# default: admin@ecommerce.com / Admin@123 (change immediately)
 ```
 
-### Generate Prisma Client
+## Run
+- Dev (API + Web from root): `npm run dev`
+- Dev only API: `npm run dev:api`
+- Dev only Web: `npm run dev:web`
+- API production: `cd apps/api && npm run build && npm run start:prod`
+- Web production build: `cd apps/web && npm run build` (serve `dist/` with any static server)
 
-```bash
-cd apps/api
-npx prisma generate
-```
+## Useful API endpoints
+- Swagger UI: `http://localhost:4000/api-docs`
+- API base: `http://localhost:4000/api`
 
-### Prisma Studio (GUI để xem database)
-
-```bash
-cd apps/api
-npx prisma studio
-```
-
-## Security Features
-
-- JWT-based authentication
-- Password hashing with bcrypt
-- Rate limiting on sensitive routes
-- Input validation with Zod
-- SQL injection protection via Prisma
-- Role-based access control
-
-## License
-
-MIT
+## Notes
+- Redis is optional; when absent, caching is skipped gracefully.
+- Test suites were removed; add your own before production.
+- This repo uses a mix of TypeScript and JavaScript on the API side; migrate gradually as needed.

@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import api from '@/lib/api';
-import type { Category } from '@/lib/types';
+import api from '@/services/api';
+import type { Category } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductFormData {
   name: string;
@@ -25,6 +26,7 @@ export default function AdminProductForm() {
   const navigate = useNavigate();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
     shortDesc: '',
@@ -39,25 +41,23 @@ export default function AdminProductForm() {
     isActive: true,
   });
 
-  useEffect(() => {
-    fetchCategories();
-    if (id) {
-      fetchProduct();
-    }
-  }, [id]);
-
   const fetchCategories = async () => {
     try {
       const res = await api.get('/categories');
       setCategories(res.data);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching categories:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to fetch categories. Please try again.',
+      });
     }
   };
 
   const fetchProduct = async () => {
     try {
-      const res = await api.get(`/products/${id}`);
+      const res = await api.get(`/admin/products/${id}`);
       const product = res.data;
       setFormData({
         name: product.name || '',
@@ -70,12 +70,27 @@ export default function AdminProductForm() {
         images: product.images && product.images.length > 0 ? product.images : [''],
         categoryId: String(product.categoryId || ''),
         brand: product.brand || '',
-        isActive: product.isActive !== undefined ? product.isActive : true,
+        // DB có thể trả isActive = 0/1, convert sang boolean để hợp lệ với schema
+        isActive:
+          product.isActive !== undefined ? Boolean(product.isActive) : true,
       });
-    } catch (error) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error fetching product:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: err.response?.data?.message || 'Failed to fetch product. Please try again.',
+      });
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+    if (id) {
+      fetchProduct();
+    }
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,15 +112,39 @@ export default function AdminProductForm() {
       };
 
       if (id) {
-        await api.put(`/products/${id}`, data);
+        await api.put(`/admin/products/${id}`, data);
+        toast({
+          title: 'Success',
+          description: 'Product updated successfully',
+        });
       } else {
-        await api.post('/products', data);
+        await api.post('/admin/products', data);
+        toast({
+          title: 'Success',
+          description: 'Product created successfully',
+        });
       }
 
       navigate('/admin/products');
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Failed to save product');
-      console.error('Error saving product:', error);
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { error?: string; message?: string; details?: unknown } };
+      };
+      console.error('Error saving product:', err.response?.data || error);
+
+      const detailText =
+        (err.response?.data as { details?: { message?: string }[] })?.details?.[0]?.message ||
+        (err.response?.data?.details ? JSON.stringify(err.response.data.details) : undefined);
+
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          detailText ||
+          'Failed to save product. Please try again.',
+      });
     } finally {
       setLoading(false);
     }

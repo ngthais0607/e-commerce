@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
-import api from '@/lib/api';
+import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
+import type { Address } from '@/types';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
   const { user } = useAuthStore();
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [, setAddresses] = useState<Address[]>([]);
   const [formData, setFormData] = useState({
     shippingAddress: {
       name: '',
@@ -25,7 +26,7 @@ export default function CheckoutPage() {
     },
     email: user?.email || '',
     notes: '',
-    paymentMethod: 'COD',
+    paymentMethod: 'COD' as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY',
     couponCode: '',
     shippingFee: 0,
   });
@@ -40,10 +41,11 @@ export default function CheckoutPage() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await api.get('/addresses');
-      setAddresses(res.data);
-      if (res.data.length > 0) {
-        const defaultAddr = res.data.find((a: any) => a.isDefault) || res.data[0];
+      const res = await api.get<Address[]>('/addresses');
+      const addresses = res.data || [];
+      setAddresses(addresses);
+      if (addresses.length > 0) {
+        const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
         setFormData((prev) => ({
           ...prev,
           shippingAddress: {
@@ -72,8 +74,10 @@ export default function CheckoutPage() {
         amount: getTotal(),
       });
       setDiscount(res.data.discount || 0);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid coupon code');
+    } catch (err: unknown) {
+      const apiError =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error;
+      setError(apiError || 'Invalid coupon code');
       setDiscount(0);
     } finally {
       setApplyingCoupon(false);
@@ -86,21 +90,72 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      // Validate required fields
+      if (!formData.shippingAddress.name || !formData.shippingAddress.phone || 
+          !formData.shippingAddress.address || !formData.shippingAddress.city ||
+          !formData.shippingAddress.district || !formData.shippingAddress.ward) {
+        setError('Please fill in all required shipping address fields');
+        setLoading(false);
+        return;
+      }
+
       const orderData = {
-        ...formData,
+        shippingAddress: formData.shippingAddress,
+        phone: formData.shippingAddress.phone, // API requires phone separately
+        email: formData.email || undefined,
+        notes: formData.notes || undefined,
+        paymentMethod: formData.paymentMethod,
         couponCode: discount > 0 ? formData.couponCode : undefined,
+        shippingFee: formData.shippingFee,
         items: items.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
-          attributes: item.attributes,
+          attributes: item.attributes || {},
         })),
       };
 
       const res = await api.post('/orders', orderData);
+      console.log('Order created:', res.data);
+      const orderId = res.data.id;
+
+      // Handle payment for online payment methods
+      if (formData.paymentMethod === 'MOMO' || formData.paymentMethod === 'ZALOPAY' || formData.paymentMethod === 'BANK') {
+        try {
+          const paymentRes = await api.post('/payments', {
+            orderId: orderId,
+            returnUrl: `${window.location.origin}/orders/${orderId}`,
+          });
+
+          console.log('Payment created:', paymentRes.data);
+
+          if (paymentRes.data.paymentUrl) {
+            // Redirect to payment gateway
+            window.location.href = paymentRes.data.paymentUrl;
+            return;
+          } else if (formData.paymentMethod === 'BANK') {
+            // Bank transfer - redirect to bank transfer page
+            clearCart();
+            navigate(`/payment/bank?orderId=${orderId}&amount=${res.data.total}`);
+            return;
+          }
+        } catch (paymentError: unknown) {
+          console.error('Payment creation error:', paymentError);
+          // Continue to order page even if payment creation fails
+        }
+      }
+
+      // For COD, order is already created with PENDING status
+      // Payment will be collected on delivery
       clearCart();
-      navigate(`/orders/${res.data.id}`);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to place order');
+      navigate(`/orders/${orderId}`);
+    } catch (err: unknown) {
+      console.error('Order error:', err);
+      const errorResponse = (err as { response?: { data?: { error?: string; details?: { message?: string }[] } } }).response?.data;
+      const errorMessage =
+        errorResponse?.error ||
+        errorResponse?.details?.[0]?.message ||
+        'Failed to place order';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -280,14 +335,28 @@ export default function CheckoutPage() {
                   <input
                     type="radio"
                     name="paymentMethod"
-                    value="WALLET"
-                    checked={formData.paymentMethod === 'WALLET'}
+                    value="MOMO"
+                    checked={formData.paymentMethod === 'MOMO'}
                     onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
                     className="w-4 h-4"
                   />
                   <div>
-                    <div className="font-medium">E-Wallet</div>
-                    <div className="text-sm text-muted-foreground">MoMo, ZaloPay, etc.</div>
+                    <div className="font-medium">MoMo Wallet</div>
+                    <div className="text-sm text-muted-foreground">Pay with MoMo e-wallet</div>
+                  </div>
+                </label>
+                <label className="flex items-center gap-3 p-3 border rounded-md cursor-pointer hover:bg-accent">
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value="ZALOPAY"
+                    checked={formData.paymentMethod === 'ZALOPAY'}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    className="w-4 h-4"
+                  />
+                  <div>
+                    <div className="font-medium">ZaloPay</div>
+                    <div className="text-sm text-muted-foreground">Pay with ZaloPay e-wallet</div>
                   </div>
                 </label>
               </CardContent>
@@ -316,13 +385,13 @@ export default function CheckoutPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   {items.map((item) => {
-                    const price = item.product.salePrice || item.product.price;
+                    const price = Number(item.product.salePrice || item.product.price);
                     return (
                       <div key={item.productId} className="flex justify-between text-sm">
                         <span>
                           {item.product.name} x {item.quantity}
                         </span>
-                        <span>{formatPrice(price * item.quantity)}</span>
+                        <span>{formatPrice(Number(price) * item.quantity)}</span>
                       </div>
                     );
                   })}

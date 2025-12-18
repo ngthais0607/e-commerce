@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { User } from '@/lib/types';
-import api from '@/lib/api';
+import type { User } from '@/types';
+import api from '@/services/api';
 
 interface AuthState {
   user: User | null;
@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.get('/auth/me');
           set({ user: response.data, isAuthenticated: true });
-        } catch (error) {
+        } catch {
           set({ user: null, token: null, isAuthenticated: false });
         }
       },
