@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
-        name: 'E-Commerce App',
-        short_name: 'E-Commerce',
+        name: 'Stay App',
+        short_name: 'Stay',
         description: 'Full-stack e-commerce application',
         theme_color: '#000000',
         icons: [

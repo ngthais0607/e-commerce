@@ -1,6 +1,6 @@
 {
-  "name": "E-Commerce App",
-  "short_name": "E-Commerce",
+  "name": "Stay App",
+  "short_name": "Stay",
   "description": "Full-stack e-commerce application",
   "start_url": "/",
   "display": "standalone",

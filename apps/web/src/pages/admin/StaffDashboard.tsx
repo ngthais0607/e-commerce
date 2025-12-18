@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, ShoppingBag, CreditCard, Clock, XCircle, CheckCircle2 } from 'lucide-react';
+import { RefreshCw, ShoppingBag, Clock, XCircle, CheckCircle2 } from 'lucide-react';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -41,11 +41,12 @@ export default function StaffDashboard() {
       setRefreshing(true);
       const res = await api.get('/admin/staff/dashboard');
       setData(res.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
       toast({
         variant: 'destructive',
         title: 'Không tải được dữ liệu',
-        description: error?.response?.data?.error || 'Vui lòng thử lại.',
+        description: err?.response?.data?.error || 'Vui lòng thử lại.',
       });
     } finally {
       setLoading(false);
@@ -63,7 +64,7 @@ export default function StaffDashboard() {
     value,
     accent,
   }: {
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     label: string;
     value: number | string;
     accent?: string;

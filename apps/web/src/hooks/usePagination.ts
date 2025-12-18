@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import {
   PaginationParams,
-  PaginationMeta,
   createPaginationMeta,
   validatePaginationParams,
   calculateOffset,

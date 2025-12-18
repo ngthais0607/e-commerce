@@ -71,7 +71,7 @@ export const sendOrderConfirmation = async (order, user) => {
           <p>If you have any questions, please contact our support team.</p>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} E-Commerce. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Stay. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -100,7 +100,7 @@ Total: $${Number(order.total).toFixed(2)}
 We'll send you another email when your order ships.
 If you have any questions, please contact our support team.
 
-© ${new Date().getFullYear()} E-Commerce. All rights reserved.
+© ${new Date().getFullYear()} Stay. All rights reserved.
   `;
 
   return sendEmail({
@@ -146,7 +146,7 @@ export const sendPasswordReset = async (user, resetToken) => {
           <p class="warning">This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} E-Commerce. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Stay. All rights reserved.</p>
         </div>
       </div>
     </body>
@@ -164,7 +164,7 @@ ${resetUrl}
 
 This link will expire in 1 hour. If you didn't request this, please ignore this email.
 
-© ${new Date().getFullYear()} E-Commerce. All rights reserved.
+© ${new Date().getFullYear()} Stay. All rights reserved.
   `;
 
   return sendEmail({
@@ -207,7 +207,7 @@ export const sendOrderStatusUpdate = async (order, user, oldStatus, newStatus) =
           <p>You can check your order status anytime in your account.</p>
         </div>
         <div class="footer">
-          <p>© ${new Date().getFullYear()} E-Commerce. All rights reserved.</p>
+          <p>© ${new Date().getFullYear()} Stay. All rights reserved.</p>
         </div>
       </div>
     </body>

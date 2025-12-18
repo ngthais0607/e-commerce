@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,7 +68,7 @@ export default function BankTransferPage() {
       } else {
         throw new Error(res.data?.message || 'Payment failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Bank transfer error:', error);
       console.error('Error details:', {
         message: error.message,
@@ -77,9 +77,9 @@ export default function BankTransferPage() {
       });
       
       const errorMessage =
-        error.response?.data?.error ||
-        error.response?.data?.message ||
-        error.message ||
+        (error as { response?: { data?: { error?: string; message?: string } } }).response?.data?.error ||
+        (error as { response?: { data?: { error?: string; message?: string } } }).response?.data?.message ||
+        (error as Error).message ||
         'Bank transfer failed. Please try again.';
       
       navigate(

@@ -40,7 +40,7 @@ export interface Product {
   stock: number;
   sku?: string;
   images: string[];
-  attributes?: Record<string, any>;
+  attributes?: Record<string, string | number | boolean | null>;
   categoryId: number;
   category?: Category;
   brand?: string;
@@ -58,7 +58,7 @@ export interface OrderItem {
   name: string;
   price: number;
   quantity: number;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, string | number | boolean | null>;
   product?: Product;
 }
 
@@ -146,13 +146,15 @@ export interface Banner {
   position: string;
   isActive: boolean;
   sortOrder: number;
+  // Mô tả chỉ xuất hiện ở một số banner (như banner mặc định ở HomePage)
+  description?: string;
 }
 
 export interface CartItem {
   productId: number;
   product: Product;
   quantity: number;
-  attributes?: Record<string, any>;
+  attributes?: Record<string, string | number | boolean | null>;
 }
 
 export interface PaginatedResponse<T> {

@@ -4,9 +4,8 @@ import api from '@/services/api';
 import type { Order, PaginatedResponse } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { Eye, Search } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminOrders() {
@@ -29,7 +28,7 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const params: any = { pageSize: 20 };
+      const params: Record<string, string | number> = { pageSize: 20 };
       if (statusFilter) params.status = statusFilter;
       const res = await api.get('/admin/orders', { params });
       console.log('Admin orders response:', res.data);
@@ -61,13 +60,17 @@ export default function AdminOrders() {
           totalPages: 0,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string; error?: string } } };
       console.error('Error fetching orders:', error);
-      console.error('Error response:', error.response?.data);
+      console.error('Error response:', err.response?.data);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || error.response?.data?.error || 'Failed to fetch orders. Please try again.',
+        description:
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          'Failed to fetch orders. Please try again.',
       });
       setOrders({
         items: [],
@@ -89,12 +92,16 @@ export default function AdminOrders() {
         description: `Order status updated to ${status}`,
       });
       fetchOrders();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string; error?: string } } };
       console.error('Error updating order:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || error.response?.data?.error || 'Failed to update order status. Please try again.',
+        description:
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          'Failed to update order status. Please try again.',
       });
     }
   };

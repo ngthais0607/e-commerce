@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Button, ButtonProps } from './button';
 import { aria, keyboardHandlers } from '@/utils/accessibility';
-import { cn } from '@/lib/utils';
 
 interface AccessibleButtonProps extends ButtonProps {
   /**

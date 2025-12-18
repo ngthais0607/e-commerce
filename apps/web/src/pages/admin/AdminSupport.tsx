@@ -25,7 +25,7 @@ type SupportMessage = {
 };
 
 export default function AdminSupport() {
-  const { token, user } = useAuthStore() as any;
+  const { token, user } = useAuthStore();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<SupportMessage[]>([]);
@@ -62,11 +62,12 @@ export default function AdminSupport() {
     try {
       const res = await api.get('/admin/support/conversations?status=OPEN,ASSIGNED,CLOSED');
       setConversations(res.data.conversations || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       toast({
         variant: 'destructive',
         title: 'Failed to load conversations',
-        description: error?.message || 'Please try again.',
+        description: err?.message || 'Please try again.',
       });
     } finally {
       setLoading(false);
@@ -82,11 +83,12 @@ export default function AdminSupport() {
       const res = await api.get(`/admin/support/conversations/${c.id}/messages`);
       setMessages(res.data.messages || []);
       socket?.emit('join-support-conv', c.id);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { message?: string };
       toast({
         variant: 'destructive',
         title: 'Failed to open conversation',
-        description: error?.message || 'Please try again.',
+        description: err?.message || 'Please try again.',
       });
     } finally {
       setLoadingMsgs(false);
@@ -98,13 +100,16 @@ export default function AdminSupport() {
     const text = newMsg.trim();
     setNewMsg('');
     try {
-      const res = await api.post(`/admin/support/conversations/${selected.id}/messages`, { message: text });
+      const res = await api.post(`/admin/support/conversations/${selected.id}/messages`, {
+        message: text,
+      });
       setMessages((prev) => [...prev, res.data]);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const error = err as { message?: string };
       toast({
         variant: 'destructive',
         title: 'Failed to send message',
-        description: err?.message || 'Please try again.',
+        description: error?.message || 'Please try again.',
       });
     }
   };

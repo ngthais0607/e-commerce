@@ -23,7 +23,7 @@ interface ThemeToggleProps {
  * <ThemeToggle variant="icon" />
  */
 export function ThemeToggle({ className, variant = 'icon' }: ThemeToggleProps) {
-  const { theme, setTheme, resolvedTheme, toggleTheme } = useTheme();
+  const { theme, setTheme, toggleTheme } = useTheme();
 
   if (variant === 'button') {
     return (

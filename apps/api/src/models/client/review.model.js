@@ -107,7 +107,8 @@ export const reviewModel = {
     const { productId, rating, title, comment } = data;
 
     // Check if user has purchased this product
-    const [purchasedRows] = await query(
+    // NOTE: query() trả về mảng các dòng, không destructure phần tử đầu tiên
+    const purchasedRows = await query(
       `SELECT oi.id 
        FROM order_items oi
        INNER JOIN orders o ON oi.orderId = o.id
@@ -116,6 +117,15 @@ export const reviewModel = {
       [productId, clientId]
     );
     const hasPurchased = purchasedRows.length > 0;
+
+    if (!hasPurchased) {
+      const error = new Error('You can only review products you have purchased');
+      // Use generic error branch in errorHandler with 400 status
+      error.name = 'CustomValidationError';
+      // @ts-ignore - JS file, allow dynamic property
+      error.status = 400;
+      throw error;
+    }
 
     // Create review
     const reviewId = await insert(

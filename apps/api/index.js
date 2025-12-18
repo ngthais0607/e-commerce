@@ -76,7 +76,7 @@ app.get('/health', (req, res) => {
 // API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'E-Commerce API Documentation',
+  customSiteTitle: 'Stay API Documentation',
 }));
 
 // Client API Routes

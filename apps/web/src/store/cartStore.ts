@@ -4,7 +4,7 @@ import type { CartItem, Product } from '@/types';
 
 interface CartState {
   items: CartItem[];
-  addItem: (product: Product, quantity?: number, attributes?: Record<string, any>) => void;
+  addItem: (product: Product, quantity?: number, attributes?: CartItem['attributes']) => void;
   removeItem: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
   clearCart: () => void;
@@ -17,7 +17,7 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
 
-      addItem: (product: Product, quantity = 1, attributes?: Record<string, any>) => {
+      addItem: (product: Product, quantity = 1, attributes?: CartItem['attributes']) => {
         set((state) => {
           const existingItem = state.items.find(
             (item) => item.productId === product.id

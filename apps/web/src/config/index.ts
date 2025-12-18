@@ -7,7 +7,7 @@ export const config = {
     timeout: 30000,
   },
   app: {
-    name: 'E-Commerce',
+    name: 'Stay',
     version: '1.0.0',
     environment: import.meta.env.MODE || 'development',
   },

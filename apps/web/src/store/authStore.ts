@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const response = await api.get('/auth/me');
           set({ user: response.data, isAuthenticated: true });
-        } catch (error) {
+        } catch {
           set({ user: null, token: null, isAuthenticated: false });
         }
       },

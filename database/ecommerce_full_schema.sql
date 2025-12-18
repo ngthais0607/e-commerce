@@ -1,12 +1,12 @@
 -- ============================================
--- Script tạo Database và Tables cho E-Commerce Project (Version 2)
--- Sử dụng clients thay vì users, có bảng payments
--- ============================================
--- Chạy script này với quyền root hoặc admin
--- MySQL 8.0+ required
+-- Full schema for E-Commerce project
+--   - Creates database `ecommerce`
+--   - Core tables (clients, products, orders, payments, coupons, etc.)
+--   - Support tables (order_messages, support_conversations, support_messages)
+-- Source: merged from ecommerce_tables_v2.sql, add-order-messages.sql, add-support-conversations.sql
 -- ============================================
 
--- 1. Tạo Database
+-- 1. Create database
 CREATE DATABASE IF NOT EXISTS ecommerce 
     CHARACTER SET utf8mb4 
     COLLATE utf8mb4_unicode_ci;
@@ -14,10 +14,10 @@ CREATE DATABASE IF NOT EXISTS ecommerce
 USE ecommerce;
 
 -- ============================================
--- 2. TẠO CÁC BẢNG (TABLES)
+-- 2. CORE TABLES
 -- ============================================
 
--- Bảng Clients (đổi từ users)
+-- Clients
 CREATE TABLE IF NOT EXISTS clients (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS clients (
     INDEX idx_email (email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Password Reset Tokens
+-- Password reset tokens
 CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     clientId INT NOT NULL,
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS password_reset_tokens (
     FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Addresses
+-- Addresses
 CREATE TABLE IF NOT EXISTS addresses (
     id INT AUTO_INCREMENT PRIMARY KEY,
     clientId INT NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS addresses (
     FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Categories
+-- Categories
 CREATE TABLE IF NOT EXISTS categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS categories (
     FOREIGN KEY (parentId) REFERENCES categories(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Products
+-- Products
 CREATE TABLE IF NOT EXISTS products (
     id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS products (
     FOREIGN KEY (categoryId) REFERENCES categories(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Coupons
+-- Coupons
 CREATE TABLE IF NOT EXISTS coupons (
     code VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS coupons (
     INDEX idx_isActive_validFrom_validUntil (isActive, validFrom, validUntil)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Orders
+-- Orders
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     orderNumber VARCHAR(100) NOT NULL UNIQUE,
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (couponCode) REFERENCES coupons(code) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Payments (MỚI)
+-- Payments
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
@@ -178,7 +178,7 @@ CREATE TABLE IF NOT EXISTS payments (
     FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Order Items
+-- Order items
 CREATE TABLE IF NOT EXISTS order_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
     orderId INT NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE IF NOT EXISTS order_items (
     FOREIGN KEY (productId) REFERENCES products(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Reviews
+-- Reviews
 CREATE TABLE IF NOT EXISTS reviews (
     id INT AUTO_INCREMENT PRIMARY KEY,
     clientId INT NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE IF NOT EXISTS reviews (
     FOREIGN KEY (productId) REFERENCES products(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Bảng Banners
+-- Banners
 CREATE TABLE IF NOT EXISTS banners (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
@@ -230,24 +230,62 @@ CREATE TABLE IF NOT EXISTS banners (
     INDEX idx_position_isActive_sortOrder (position, isActive, sortOrder)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Wishlist feature has been removed from this version (no wishlist_items table)
+-- ============================================
+-- 3. SUPPORT / MESSAGING TABLES
+-- ============================================
+
+-- Order messages (internal chat per order)
+CREATE TABLE IF NOT EXISTS order_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  orderId INT NOT NULL,
+  clientId INT NULL,
+  staffId INT NULL,
+  senderRole ENUM('CUSTOMER', 'STAFF', 'ADMIN') NOT NULL,
+  message TEXT NOT NULL,
+  createdAt DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  INDEX idx_orderId_createdAt (orderId, createdAt),
+  INDEX idx_clientId (clientId),
+  INDEX idx_staffId (staffId),
+  CONSTRAINT fk_order_messages_order
+    FOREIGN KEY (orderId) REFERENCES orders(id) ON DELETE CASCADE,
+  CONSTRAINT fk_order_messages_client
+    FOREIGN KEY (clientId) REFERENCES clients(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Support conversations
+CREATE TABLE IF NOT EXISTS support_conversations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  userId INT NOT NULL,
+  status ENUM('OPEN', 'ASSIGNED', 'CLOSED') NOT NULL DEFAULT 'OPEN',
+  assignedStaffId INT NULL,
+  lastMessageAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_user (userId),
+  INDEX idx_status (status),
+  INDEX idx_assigned (assignedStaffId),
+  CONSTRAINT fk_support_user FOREIGN KEY (userId) REFERENCES clients(id),
+  CONSTRAINT fk_support_staff FOREIGN KEY (assignedStaffId) REFERENCES clients(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Support messages
+CREATE TABLE IF NOT EXISTS support_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  conversationId INT NOT NULL,
+  senderRole ENUM('CUSTOMER', 'STAFF', 'ADMIN') NOT NULL,
+  userId INT NULL,
+  staffId INT NULL,
+  message TEXT NOT NULL,
+  createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_conversation (conversationId),
+  INDEX idx_senderRole (senderRole),
+  CONSTRAINT fk_support_conv FOREIGN KEY (conversationId) REFERENCES support_conversations(id),
+  CONSTRAINT fk_support_msg_user FOREIGN KEY (userId) REFERENCES clients(id),
+  CONSTRAINT fk_support_msg_staff FOREIGN KEY (staffId) REFERENCES clients(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
--- HOÀN TẤT
+-- END
 -- ============================================
--- Tất cả các bảng đã được tạo thành công!
--- 
--- Các bảng đã tạo:
--- 1. clients - Khách hàng (đổi từ users)
--- 2. password_reset_tokens - Tokens để reset password
--- 3. addresses - Địa chỉ
--- 4. categories - Danh mục sản phẩm
--- 5. products - Sản phẩm
--- 6. orders - Đơn hàng
--- 7. payments - Thanh toán (MỚI)
--- 8. order_items - Chi tiết đơn hàng
--- 9. reviews - Đánh giá sản phẩm
--- 10. coupons - Mã giảm giá
--- 11. banners - Banner quảng cáo
--- ============================================
+
 

@@ -25,20 +25,18 @@ export default function AdminCoupons() {
   const [couponToDelete, setCouponToDelete] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchCoupons();
-  }, []);
-
   const fetchCoupons = async () => {
     try {
-      const res = await api.get('/coupons');
+      const res = await api.get('/admin/coupons');
       setCoupons(res.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error fetching coupons:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to fetch coupons. Please try again.',
+        description:
+          err.response?.data?.message || 'Failed to fetch coupons. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -54,7 +52,7 @@ export default function AdminCoupons() {
     if (!couponToDelete) return;
     
     try {
-      await api.delete(`/coupons/${couponToDelete}`);
+      await api.delete(`/admin/coupons/${couponToDelete}`);
       toast({
         title: 'Success',
         description: 'Coupon deleted successfully',
@@ -62,15 +60,21 @@ export default function AdminCoupons() {
       setDeleteDialogOpen(false);
       setCouponToDelete(null);
       fetchCoupons();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error deleting coupon:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete coupon. Please try again.',
+        description:
+          err.response?.data?.message || 'Failed to delete coupon. Please try again.',
       });
     }
   };
+
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
 
   if (loading) {
     return (

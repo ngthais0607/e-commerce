@@ -23,14 +23,16 @@ export default function HomePage() {
     const fetchData = async () => {
       try {
         // Fetch categories first to get clothing category ID
-        const categoriesRes = await api.get('/categories');
+        const categoriesRes = await api.get<Array<{ id: number; slug: string; name?: string }>>('/categories');
         const categories = categoriesRes.data || [];
-        const clothingCategory = categories.find((cat: any) => 
-          cat.slug === 'clothing' || cat.name?.toLowerCase().includes('clothing') || cat.name?.toLowerCase().includes('fashion')
+        const clothingCategory = categories.find((cat) =>
+          cat.slug === 'clothing' ||
+          cat.name?.toLowerCase().includes('clothing') ||
+          cat.name?.toLowerCase().includes('fashion')
         );
         
         // Fetch fashion/clothing products only
-        const productParams: any = { 
+        const productParams: Record<string, unknown> = { 
           pageSize: 8, 
           sortBy: 'createdAt', 
           sortOrder: 'desc',
@@ -78,6 +80,7 @@ export default function HomePage() {
             link: '/shop',
             position: 'homepage',
             isActive: true,
+            sortOrder: 0,
           }]);
         }
       } catch (error) {
@@ -91,6 +94,7 @@ export default function HomePage() {
           link: '/shop',
           position: 'homepage',
           isActive: true,
+          sortOrder: 0,
         }]);
       } finally {
         setLoading(false);

@@ -71,47 +71,42 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [period, setPeriod] = useState<'7d' | '30d' | '12m'>('7d');
 
-  useEffect(() => {
-    fetchStats();
-    
-    // Auto-refresh every 30 seconds to get latest data
-    const interval = setInterval(() => {
-      fetchStats();
-    }, 30000);
-    
-    return () => clearInterval(interval);
-  }, [period]);
-
   const fetchStats = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await api.get(`/admin/statistics?period=${period}`);
       setStats(response.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching stats:', error);
       
       // Extract error message
       let errorMessage = 'Unable to load statistics data';
-      if (error?.response) {
+      const err = error as {
+        response?: { status: number; data?: { error?: string; message?: string } };
+        request?: unknown;
+        message?: string;
+      };
+
+      if (err?.response) {
         // Server responded with error
-        if (error.response.status === 401) {
+        if (err.response.status === 401) {
           errorMessage = 'Authentication required. Please log in.';
-        } else if (error.response.status === 403) {
+        } else if (err.response.status === 403) {
           errorMessage = 'Insufficient permissions. Admin access required.';
-        } else if (error.response.status === 404) {
+        } else if (err.response.status === 404) {
           errorMessage = 'Statistics endpoint not found. Please check API configuration.';
-        } else if (error.response.data?.error || error.response.data?.message) {
-          errorMessage = error.response.data.error || error.response.data.message;
+        } else if (err.response.data?.error || err.response.data?.message) {
+          errorMessage = err.response.data.error || err.response.data.message;
         } else {
-          errorMessage = `Server error: ${error.response.status}`;
+          errorMessage = `Server error: ${err.response.status}`;
         }
-      } else if (error?.request) {
+      } else if (err?.request) {
         // Request was made but no response received
         errorMessage = 'Cannot connect to server. Please ensure the API server is running on port 4000.';
       } else {
         // Error setting up request
-        errorMessage = error?.message || 'An unexpected error occurred';
+        errorMessage = err?.message || 'An unexpected error occurred';
       }
       
       setError(errorMessage);
@@ -120,6 +115,17 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchStats();
+
+    // Auto-refresh every 30 seconds to get latest data
+    const interval = setInterval(() => {
+      fetchStats();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [period]);
 
   if (loading) {
     return (
@@ -193,6 +199,11 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     );
+  }
+
+  // Đảm bảo stats không null trước khi destructuring (TS an toàn hơn)
+  if (!stats) {
+    return null;
   }
 
   const { overview, salesByPeriod, topProducts, ordersByStatus } = stats;
@@ -441,15 +452,16 @@ export default function AdminDashboard() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ status, percent }) =>
-                    `${status}: ${(percent * 100).toFixed(0)}%`
+                  // Recharts label payload is not fully typed in the lib, so we type a safe subset here
+                  label={({ status, percent }: { status: string; percent?: number }) =>
+                    `${status}: ${(((percent ?? 0) as number) * 100).toFixed(0)}%`
                   }
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
                   nameKey="status"
                 >
-                  {ordersByStatus.statuses.map((entry, index) => (
+                  {ordersByStatus.statuses.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

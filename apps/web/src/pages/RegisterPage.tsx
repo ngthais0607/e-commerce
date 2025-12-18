@@ -69,8 +69,9 @@ export default function RegisterPage() {
       localStorage.removeItem('auth-storage')
       await registerUser(values.email, values.password, values.name, values.phone)
       navigate('/')
-    } catch (err: any) {
-      const message = err?.response?.data?.error || err?.message || 'Registration failed'
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } }; message?: string }
+      const message = error?.response?.data?.error || error?.message || 'Registration failed'
       setServerError(message)
       console.error('Registration error:', err)
     }

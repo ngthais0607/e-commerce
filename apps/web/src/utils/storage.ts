@@ -108,11 +108,14 @@ export function getStorageSize(type: StorageType = 'localStorage'): number {
   try {
     const storage = getStorage(type);
     let total = 0;
-    for (const key in storage) {
-      if (storage.hasOwnProperty(key)) {
-        total += storage[key].length + key.length;
-      }
+
+    for (let i = 0; i < storage.length; i++) {
+      const key = storage.key(i);
+      if (!key) continue;
+      const value = storage.getItem(key) ?? "";
+      total += value.length + key.length;
     }
+
     return total;
   } catch {
     return 0;

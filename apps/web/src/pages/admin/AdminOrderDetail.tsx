@@ -32,7 +32,7 @@ const PAYMENT_STATUS_TRANSITIONS: Record<string, string[]> = {
 export default function AdminOrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token, user } = useAuthStore() as any;
+  const { token, user } = useAuthStore();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -91,12 +91,13 @@ export default function AdminOrderDetail() {
     try {
       const res = await api.get(`/admin/orders/${id}`);
       setOrder(res.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error fetching order:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to fetch order. Please try again.',
+        description: err.response?.data?.message || 'Failed to fetch order. Please try again.',
       });
     } finally {
       setLoading(false);
@@ -109,7 +110,7 @@ export default function AdminOrderDetail() {
       setLoadingMessages(true);
       const res = await api.get(`/admin/orders/${id}/messages`);
       setMessages(res.data.messages || []);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching order messages:', error);
     } finally {
       setLoadingMessages(false);
@@ -129,12 +130,13 @@ export default function AdminOrderDetail() {
         description: `Order ${field} updated to ${value}`,
       });
       await fetchOrder();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error updating order:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to update order. Please try again.',
+        description: err.response?.data?.message || 'Failed to update order. Please try again.',
       });
     } finally {
       setUpdating(false);
@@ -150,12 +152,14 @@ export default function AdminOrderDetail() {
         description: 'Tracking code updated successfully',
       });
       await fetchOrder();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error updating tracking:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to update tracking code. Please try again.',
+        description:
+          err.response?.data?.message || 'Failed to update tracking code. Please try again.',
       });
     } finally {
       setUpdating(false);
@@ -168,12 +172,13 @@ export default function AdminOrderDetail() {
       const res = await api.post(`/admin/orders/${id}/messages`, { message: newMessage.trim() });
       setMessages((prev) => [...prev, res.data]);
       setNewMessage('');
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error sending message:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to send message. Please try again.',
+        description: err.response?.data?.message || 'Failed to send message. Please try again.',
       });
     }
   };

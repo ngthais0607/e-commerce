@@ -75,9 +75,10 @@ export default function OrderHistoryPage() {
           totalPages: 0,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching orders:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to load orders';
+      const err = error as { response?: { data?: { error?: string }; status?: number }; message?: string };
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to load orders';
       console.error('Error details:', {
         message: errorMessage,
         status: error.response?.status,

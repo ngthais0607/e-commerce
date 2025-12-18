@@ -29,7 +29,7 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const params: any = { pageSize: 20 };
+      const params: Record<string, string | number> = { pageSize: 20 };
       if (search) params.search = search;
       if (roleFilter) params.role = roleFilter;
       
@@ -50,12 +50,16 @@ export default function AdminUsers() {
           totalPages: 0,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { status: number; data?: { error?: string } };
+        message?: string;
+      };
       console.error('❌ Error fetching users:', error);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-        if (error.response.status === 401 || error.response.status === 403) {
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+        if (err.response.status === 401 || err.response.status === 403) {
           toast({
             variant: 'destructive',
             title: 'Access Denied',
@@ -65,14 +69,15 @@ export default function AdminUsers() {
           toast({
             variant: 'destructive',
             title: 'Error',
-            description: error.response.data?.error || error.message || 'Failed to fetch users. Please try again.',
+            description:
+              err.response.data?.error || err.message || 'Failed to fetch users. Please try again.',
           });
         }
       } else {
         toast({
           variant: 'destructive',
           title: 'Connection Error',
-          description: error.message || 'Failed to connect to server. Please try again.',
+          description: err.message || 'Failed to connect to server. Please try again.',
         });
       }
       // Set empty state on error
@@ -101,12 +106,13 @@ export default function AdminUsers() {
         description: 'User updated successfully',
       });
       fetchUsers();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error updating user:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to update user. Please try again.',
+        description: err.response?.data?.message || 'Failed to update user. Please try again.',
       });
     }
   };

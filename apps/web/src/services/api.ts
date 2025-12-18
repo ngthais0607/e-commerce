@@ -1,4 +1,4 @@
-import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { config } from '@/config';
 import { STORAGE_KEYS } from '@/constants';
 import { handleApiError, formatErrorMessage } from '@/utils/errorHandler';

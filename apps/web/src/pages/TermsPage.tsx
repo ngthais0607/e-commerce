@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 
 const clauses = [
   {
@@ -29,7 +29,7 @@ export default function TermsPage() {
       <div className="space-y-3">
         <p className="text-sm uppercase tracking-widest text-primary">Legal</p>
         <h1 className="text-4xl font-semibold tracking-tight">Terms of Service</h1>
-        <p className="text-muted-foreground">Please read these terms carefully before using the E-Commerce platform.</p>
+        <p className="text-muted-foreground">Please read these terms carefully before using the Stay platform.</p>
       </div>
 
       <Card>

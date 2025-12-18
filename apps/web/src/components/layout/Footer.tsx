@@ -11,7 +11,7 @@ export default function Footer() {
             <Link to="/" className="flex items-center space-x-2 group">
               <Store className="h-6 w-6 text-indigo-500 dark:text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:text-violet-500 dark:group-hover:text-violet-400" />
               <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent group-hover:from-indigo-600 group-hover:via-violet-600 group-hover:to-fuchsia-600 transition-all duration-300">
-                E-Commerce
+                Stay
               </span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -154,7 +154,7 @@ export default function Footer() {
         <div className="mt-12 pt-8 border-t border-white/10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground text-center md:text-left">
-              © {new Date().getFullYear()} E-Commerce. All rights reserved.
+              © {new Date().getFullYear()} Stay. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <span className="hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors cursor-pointer">Privacy</span>

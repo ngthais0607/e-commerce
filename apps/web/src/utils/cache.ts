@@ -217,6 +217,8 @@ export function useCachedApi<T>(
       .finally(() => {
         setLoading(false);
       });
+    // We intentionally only depend on URL + params stringified.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, JSON.stringify(options.params)]);
 
   return { data, loading, error };

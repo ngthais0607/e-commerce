@@ -1,5 +1,5 @@
 // App Constants
-export const APP_NAME = 'E-Commerce';
+export const APP_NAME = 'Stay';
 export const APP_VERSION = '1.0.0';
 
 // API Constants

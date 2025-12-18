@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, Menu, Search, Store, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, User, Menu, Search, Store } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,6 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { SearchDialog } from '@/components/SearchDialog';
 
 export default function Header() {
-  const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { getItemCount } = useCartStore();
   const cartCount = getItemCount();
@@ -45,7 +44,7 @@ export default function Header() {
               <Store className="relative h-6 w-6 md:h-7 md:w-7 text-indigo-500 dark:text-indigo-400 transition-all duration-300 group-hover:scale-110 group-hover:text-violet-500 dark:group-hover:text-violet-400" />
             </div>
             <span className="text-xl md:text-2xl font-display font-bold bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent group-hover:from-indigo-600 group-hover:via-violet-600 group-hover:to-fuchsia-600 transition-all duration-300 tracking-tight">
-              E-Commerce
+              Stay
             </span>
           </Link>
 
@@ -172,7 +171,7 @@ export default function Header() {
                   <SheetTitle className="flex items-center space-x-2">
                     <Store className="h-6 w-6 text-indigo-500" />
                     <span className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-                      E-Commerce
+                      Stay
                     </span>
                   </SheetTitle>
                 </SheetHeader>

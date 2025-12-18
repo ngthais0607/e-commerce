@@ -16,6 +16,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
+interface ShopFilters {
+  search: string;
+  categoryId: string;
+  minPrice: string;
+  maxPrice: string;
+  sortBy: 'createdAt' | 'price' | 'rating';
+  sortOrder: 'asc' | 'desc';
+  page: number;
+  pageSize: number;
+}
+
 export default function ShopPage() {
   const [products, setProducts] = useState<PaginatedResponse<Product>>({
     items: [],
@@ -26,7 +37,7 @@ export default function ShopPage() {
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<ShopFilters>({
     search: '',
     categoryId: '',
     minPrice: '',
@@ -58,7 +69,7 @@ export default function ShopPage() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const params: any = {
+      const params: Record<string, string | number> = {
         page: filters.page,
         pageSize: filters.pageSize,
         sortBy: filters.sortBy,
@@ -78,9 +89,17 @@ export default function ShopPage() {
     }
   };
 
-  const handleFilterChange = (key: string, value: any, resetPage: boolean = true) => {
-    setFilters((prev) => ({ ...prev, [key]: value, ...(resetPage ? { page: 1 } : {}) }));
-  };
+  function handleFilterChange<K extends keyof ShopFilters>(
+    key: K,
+    value: ShopFilters[K],
+    resetPage: boolean = true,
+  ) {
+    setFilters((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(resetPage ? { page: 1 } : {}),
+    }));
+  }
 
   return (
     <div className="bg-gradient-to-b from-background via-muted/20 to-background min-h-screen">

@@ -7,12 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
+import type { Address } from '@/types';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { items, getTotal, clearCart } = useCartStore();
   const { user } = useAuthStore();
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [, setAddresses] = useState<Address[]>([]);
   const [formData, setFormData] = useState({
     shippingAddress: {
       name: '',
@@ -25,7 +26,7 @@ export default function CheckoutPage() {
     },
     email: user?.email || '',
     notes: '',
-    paymentMethod: 'COD',
+    paymentMethod: 'COD' as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY',
     couponCode: '',
     shippingFee: 0,
   });
@@ -40,10 +41,11 @@ export default function CheckoutPage() {
 
   const fetchAddresses = async () => {
     try {
-      const res = await api.get('/addresses');
-      setAddresses(res.data);
-      if (res.data.length > 0) {
-        const defaultAddr = res.data.find((a: any) => a.isDefault) || res.data[0];
+      const res = await api.get<Address[]>('/addresses');
+      const addresses = res.data || [];
+      setAddresses(addresses);
+      if (addresses.length > 0) {
+        const defaultAddr = addresses.find((a) => a.isDefault) || addresses[0];
         setFormData((prev) => ({
           ...prev,
           shippingAddress: {
@@ -72,8 +74,10 @@ export default function CheckoutPage() {
         amount: getTotal(),
       });
       setDiscount(res.data.discount || 0);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid coupon code');
+    } catch (err: unknown) {
+      const apiError =
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error;
+      setError(apiError || 'Invalid coupon code');
       setDiscount(0);
     } finally {
       setApplyingCoupon(false);
@@ -134,7 +138,7 @@ export default function CheckoutPage() {
             navigate(`/payment/bank?orderId=${orderId}&amount=${res.data.total}`);
             return;
           }
-        } catch (paymentError: any) {
+        } catch (paymentError: unknown) {
           console.error('Payment creation error:', paymentError);
           // Continue to order page even if payment creation fails
         }
@@ -144,11 +148,13 @@ export default function CheckoutPage() {
       // Payment will be collected on delivery
       clearCart();
       navigate(`/orders/${orderId}`);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Order error:', err);
-      const errorMessage = err.response?.data?.error || 
-                          err.response?.data?.details?.[0]?.message ||
-                          'Failed to place order';
+      const errorResponse = (err as { response?: { data?: { error?: string; details?: { message?: string }[] } } }).response?.data;
+      const errorMessage =
+        errorResponse?.error ||
+        errorResponse?.details?.[0]?.message ||
+        'Failed to place order';
       setError(errorMessage);
     } finally {
       setLoading(false);

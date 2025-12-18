@@ -63,15 +63,16 @@ export default function OrderDetailPage() {
 
   const fetchOrder = async () => {
     try {
-      const res = await api.get(`/orders/${id}`);
+      const res = await api.get<Order>(`/orders/${id}`);
       if (res.data) {
         setOrder(res.data);
       } else {
         console.error('Order data is null or undefined');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching order:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to load order';
+      const err = error as { response?: { data?: { error?: string }; status?: number } };
+      const errorMessage = err.response?.data?.error || 'Failed to load order';
       console.error('Error message:', errorMessage);
     } finally {
       setLoading(false);
@@ -82,9 +83,9 @@ export default function OrderDetailPage() {
     if (!id) return;
     try {
       setLoadingMessages(true);
-      const res = await api.get(`/orders/${id}/messages`);
+      const res = await api.get<{ messages?: OrderMessage[] }>(`/orders/${id}/messages`);
       setMessages(res.data.messages || []);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching order messages:', error);
     } finally {
       setLoadingMessages(false);
@@ -122,9 +123,10 @@ export default function OrderDetailPage() {
         // If no payment URL, show error
         throw new Error(paymentRes.data.message || 'Payment URL not generated');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Payment error:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to process payment';
+      const err = error as { response?: { data?: { error?: string } } };
+      const errorMessage = err.response?.data?.error || 'Failed to process payment';
       alert(errorMessage);
     } finally {
       setProcessingPayment(false);
@@ -135,12 +137,15 @@ export default function OrderDetailPage() {
     if (!id || !newMessage.trim()) return;
 
     try {
-      const res = await api.post(`/orders/${id}/messages`, { message: newMessage.trim() });
+      const res = await api.post<OrderMessage>(`/orders/${id}/messages`, {
+        message: newMessage.trim(),
+      });
       setMessages((prev) => [...prev, res.data]);
       setNewMessage('');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error sending message:', error);
-      const errorMessage = error.response?.data?.error || 'Failed to send message';
+      const err = error as { response?: { data?: { error?: string } } };
+      const errorMessage = err.response?.data?.error || 'Failed to send message';
       alert(errorMessage);
     }
   };
@@ -174,6 +179,16 @@ export default function OrderDetailPage() {
                       <p className="font-semibold mt-2">
                         {formatPrice(Number(item.price) * item.quantity)}
                       </p>
+                      {item.product?.slug && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-3"
+                          onClick={() => navigate(`/product/${item.product!.slug}`)}
+                        >
+                          Write a review
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}

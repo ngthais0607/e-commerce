@@ -44,23 +44,22 @@ export default function AdminProducts() {
   const [productToDelete, setProductToDelete] = useState<number | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
-
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const params: any = { pageSize: 20 };
+      const params: Record<string, string | number> = { pageSize: 20 };
       if (search) params.search = search;
       const res = await api.get('/admin/products', { params });
       setProducts(res.data);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { status: number; data?: unknown };
+      };
       console.error('Error fetching products:', error);
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-        if (error.response.status === 401 || error.response.status === 403) {
+      if (err.response) {
+        console.error('Response status:', err.response.status);
+        console.error('Response data:', err.response.data);
+        if (err.response.status === 401 || err.response.status === 403) {
           toast({
             variant: 'destructive',
             title: 'Access Denied',
@@ -78,6 +77,10 @@ export default function AdminProducts() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleSearch = () => {
     setLoading(true);
@@ -101,12 +104,14 @@ export default function AdminProducts() {
       setDeleteDialogOpen(false);
       setProductToDelete(null);
       fetchProducts();
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error deleting product:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to delete product. Please try again.',
+        description:
+          err.response?.data?.message || 'Failed to delete product. Please try again.',
       });
     }
   };

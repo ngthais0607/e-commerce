@@ -56,7 +56,7 @@ export default function SupportBot() {
   const [liveLoading, setLiveLoading] = useState(false);
   const [liveInput, setLiveInput] = useState('');
   const [connecting, setConnecting] = useState(false);
-  const [socketReady, setSocketReady] = useState(false);
+  const [, setSocketReady] = useState(false);
 
   const faqQuickReplies = useMemo(
     () => [
@@ -93,8 +93,10 @@ export default function SupportBot() {
       } else {
         pushMessage({ from: 'bot', text: 'I have received your request.' });
       }
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.error || 'Sorry, I cannot answer that right now.';
+    } catch (err: unknown) {
+      const errMsg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Sorry, I cannot answer that right now.';
       pushMessage({ from: 'bot', text: errMsg });
     } finally {
       setLoading(false);
@@ -161,8 +163,10 @@ export default function SupportBot() {
       setLiveConversation(res.data);
       await loadConversationMessages(res.data.id);
       setTab('live');
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.error || 'Unable to start live chat right now.';
+    } catch (err: unknown) {
+      const errMsg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Unable to start live chat right now.';
       pushMessage({ from: 'bot', text: errMsg });
       setTab('quick');
     } finally {
@@ -177,8 +181,10 @@ export default function SupportBot() {
     try {
       const res = await api.post(`/support/conversations/${liveConversation.id}/messages`, { message: text });
       setLiveMessages((prev) => [...prev, res.data]);
-    } catch (err: any) {
-      const errMsg = err?.response?.data?.error || 'Failed to send message.';
+    } catch (err: unknown) {
+      const errMsg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Failed to send message.';
       setLiveMessages((prev) => [
         ...prev,
         { id: Date.now(), conversationId: liveConversation.id, senderRole: 'CUSTOMER', message: `Failed: ${errMsg}`, createdAt: new Date().toISOString() },

@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { Toaster } from './components/ui/toaster';
 import './index.css';
 
 // Kiểm tra root element
@@ -19,6 +20,7 @@ ReactDOM.createRoot(rootElement).render(
       <ThemeProvider defaultTheme="system" storageKey="app-theme">
         <BrowserRouter>
           <App />
+          <Toaster />
         </BrowserRouter>
       </ThemeProvider>
     </ErrorBoundary>

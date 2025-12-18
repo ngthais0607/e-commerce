@@ -41,7 +41,8 @@ export function useBatchRequests<T, R = T>(
 ) {
   const { maxBatchSize = 10, batchDelay = 100 } = options;
   const batchRef = useRef<BatchRequest<T>[]>([]);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Sử dụng kiểu timeout tương thích trình duyệt thay vì NodeJS.Timeout
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const processBatch = useCallback(async () => {
     if (batchRef.current.length === 0) return;
@@ -54,10 +55,10 @@ export function useBatchRequests<T, R = T>(
 
     try {
       const results = await batchFn(requests);
-      
-      // Resolve each promise with corresponding result
+
+      // Resolve each promise với kiểu linh hoạt hơn (R có thể khác T)
       currentBatch.forEach((item, index) => {
-        item.resolve(results[index] as T);
+        item.resolve(results[index] as unknown as T);
       });
     } catch (error) {
       // Reject all promises in batch

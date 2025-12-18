@@ -39,15 +39,9 @@ export default function AdminCouponForm() {
     isActive: true,
   });
 
-  useEffect(() => {
-    if (code) {
-      fetchCoupon();
-    }
-  }, [code]);
-
   const fetchCoupon = async () => {
     try {
-      const res = await api.get(`/coupons/${code}`);
+      const res = await api.get(`/admin/coupons/${code}`);
       const coupon = res.data;
       setFormData({
         code: coupon.code,
@@ -60,17 +54,25 @@ export default function AdminCouponForm() {
         usageLimit: coupon.usageLimit ? String(coupon.usageLimit) : '',
         validFrom: new Date(coupon.validFrom).toISOString().slice(0, 16),
         validUntil: new Date(coupon.validUntil).toISOString().slice(0, 16),
-        isActive: coupon.isActive,
+        // API có thể trả 0/1 từ DB, cần convert sang boolean cho đúng schema Zod
+        isActive: Boolean(coupon.isActive),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
       console.error('Error fetching coupon:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.message || 'Failed to fetch coupon. Please try again.',
+        description: err.response?.data?.message || 'Failed to fetch coupon. Please try again.',
       });
     }
   };
+
+  useEffect(() => {
+    if (code) {
+      fetchCoupon();
+    }
+  }, [code]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,14 +93,16 @@ export default function AdminCouponForm() {
         isActive: formData.isActive,
       };
 
+      console.log('Saving coupon payload:', data);
+
       if (code) {
-        await api.put(`/coupons/${code}`, data);
+        await api.put(`/admin/coupons/${code}`, data);
         toast({
           title: 'Success',
           description: 'Coupon updated successfully',
         });
       } else {
-        await api.post('/coupons', data);
+        await api.post('/admin/coupons', data);
         toast({
           title: 'Success',
           description: 'Coupon created successfully',
@@ -106,12 +110,24 @@ export default function AdminCouponForm() {
       }
 
       navigate('/admin/coupons');
-    } catch (error: any) {
-      console.error('Error saving coupon:', error);
+    } catch (error: unknown) {
+      const err = error as {
+        response?: { data?: { error?: string; message?: string; details?: unknown } };
+      };
+      console.error('Error saving coupon:', err.response?.data || error);
+
+      const detailText =
+        (err.response?.data as { details?: { message?: string }[] })?.details?.[0]?.message ||
+        (err.response?.data?.details ? JSON.stringify(err.response.data.details) : undefined);
+
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: error.response?.data?.error || error.response?.data?.message || 'Failed to save coupon. Please try again.',
+        description:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          detailText ||
+          'Failed to save coupon. Please try again.',
       });
     } finally {
       setLoading(false);

@@ -6,7 +6,7 @@ import { formatPrice } from '@/lib/utils';
 import { Trash2, Plus, Minus } from 'lucide-react';
 
 export default function CartPage() {
-  const { items, updateQuantity, removeItem, getTotal, clearCart } = useCartStore();
+  const { items, updateQuantity, removeItem, getTotal } = useCartStore();
   const total = getTotal();
 
   if (items.length === 0) {

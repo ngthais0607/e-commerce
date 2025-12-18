@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,9 +33,10 @@ export default function MockPaymentPage() {
       } else {
         throw new Error(res.data.message || 'Payment failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Payment processing error:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Payment processing failed';
+      const err = error as { response?: { data?: { error?: string } }; message?: string }
+      const errorMessage = err.response?.data?.error || err.message || 'Payment processing failed';
       navigate(`/payment/failed?orderId=${orderId}&message=${encodeURIComponent(errorMessage)}`);
     }
   };

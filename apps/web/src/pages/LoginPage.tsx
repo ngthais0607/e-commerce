@@ -34,8 +34,9 @@ export default function LoginPage() {
       localStorage.removeItem('auth-storage')
       await login(values.email, values.password)
       navigate('/')
-    } catch (error: any) {
-      const message = error?.response?.data?.error || error?.message || 'Login failed'
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } }; message?: string }
+      const message = err?.response?.data?.error || err?.message || 'Login failed'
       form.setError('root', { message })
       console.error('Login error:', error)
     }
