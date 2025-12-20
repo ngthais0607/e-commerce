@@ -273,7 +273,7 @@ import React from 'react';
  * React hook for translations
  */
 export function useTranslation() {
-  const [locale, setLocaleState] = React.useState(i18n.getLocale());
+  const [, setLocaleState] = React.useState(i18n.getLocale());
 
   const t = React.useCallback((key: TranslationKey, params?: TranslationParams) => {
     return i18n.t(key, params);

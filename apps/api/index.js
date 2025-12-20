@@ -34,6 +34,7 @@ import adminOrderRoutes from './src/routes/admin/order.routes.js';
 import adminCouponRoutes from './src/routes/admin/coupon.routes.js';
 import adminBannerRoutes from './src/routes/admin/banner.routes.js';
 import adminUserRoutes from './src/routes/admin/user.routes.js';
+import adminAddressRoutes from './src/routes/admin/address.routes.js';
 import adminSupportRoutes from './src/routes/admin/support.routes.js';
 import adminStaffDashboardRoutes from './src/routes/admin/staffDashboard.routes.js';
 
@@ -104,6 +105,7 @@ app.use('/api/admin/orders', adminOrderRoutes);
 app.use('/api/admin/coupons', adminCouponRoutes);
 app.use('/api/admin/banners', adminBannerRoutes);
 app.use('/api/admin/users', adminUserRoutes);
+app.use('/api/admin/addresses', adminAddressRoutes);
 app.use('/api/admin/upload', adminUploadRoutes);
 app.use('/api/admin/statistics', adminStatisticsRoutes);
 app.use('/api/admin', adminOrderMessageRoutes);

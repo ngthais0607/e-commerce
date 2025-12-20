@@ -6,11 +6,9 @@ import { cacheWrapper, generateCacheKey, deleteCachePattern, CACHE_KEYS } from '
  */
 export const adminProductModel = {
   async list(filters = {}) {
-    // Temporarily disable cache for debugging
-    // const cacheKey = generateCacheKey(CACHE_KEYS.PRODUCTS, filters);
+    const cacheKey = generateCacheKey(CACHE_KEYS.PRODUCTS, filters);
     
-    // return cacheWrapper(cacheKey, async () => {
-    return (async () => {
+    return cacheWrapper(cacheKey, async () => {
       const {
         page = 1,
         pageSize = 12,
@@ -127,8 +125,7 @@ export const adminProductModel = {
         pageSize,
         totalPages: Math.ceil(total / pageSize),
       };
-    })(); // Temporarily disabled cache
-    // }, 300); // 5 minutes cache
+    }, 300); // 5 minutes cache
   },
 
   async getById(id) {

@@ -81,8 +81,8 @@ export default function OrderHistoryPage() {
       const errorMessage = err.response?.data?.error || err.message || 'Failed to load orders';
       console.error('Error details:', {
         message: errorMessage,
-        status: error.response?.status,
-        data: error.response?.data,
+        status: err.response?.status,
+        data: err.response?.data,
       });
       setOrders({
         items: [],
@@ -150,15 +150,26 @@ export default function OrderHistoryPage() {
                   <div className="text-right">
                     <p className="font-semibold">{formatPrice(order.total)}</p>
                     <span
-                      className={`inline-block px-2 py-1 rounded text-xs ${
+                      className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
                         order.status === 'COMPLETED'
-                          ? 'bg-green-100 text-green-800'
+                          ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
                           : order.status === 'CANCELLED'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                          : order.status === 'SHIPPED'
+                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                          : order.status === 'PROCESSING'
+                          ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400'
+                          : order.status === 'PAID'
+                          ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400'
+                          : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
                       }`}
                     >
-                      {order.status}
+                      {order.status === 'PENDING' && '⏳ Pending'}
+                      {order.status === 'PAID' && '💳 Paid'}
+                      {order.status === 'PROCESSING' && '⚙️ Processing'}
+                      {order.status === 'SHIPPED' && '📦 Shipped'}
+                      {order.status === 'COMPLETED' && '✅ Completed'}
+                      {order.status === 'CANCELLED' && '❌ Cancelled'}
                     </span>
                   </div>
                 </div>

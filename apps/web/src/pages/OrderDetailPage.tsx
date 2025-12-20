@@ -245,26 +245,75 @@ export default function OrderDetailPage() {
             <CardHeader>
               <CardTitle>Order Status</CardTitle>
             </CardHeader>
-            <CardContent>
-              <p className="mb-2">
-                <span className="font-semibold">Status:</span>{' '}
-                <span className="capitalize">{order.status.toLowerCase()}</span>
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Payment:</span>{' '}
-                <span className="capitalize">{order.paymentStatus.toLowerCase()}</span>
-              </p>
-              <p className="mb-2">
-                <span className="font-semibold">Payment Method:</span> {order.paymentMethod}
-              </p>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Order Status</label>
+                <div
+                  className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium ${
+                    order.status === 'COMPLETED'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                      : order.status === 'CANCELLED'
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                      : order.status === 'SHIPPED'
+                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400'
+                      : order.status === 'PROCESSING'
+                      ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-400'
+                      : order.status === 'PAID'
+                      ? 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-400'
+                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+                  }`}
+                >
+                  {order.status === 'PENDING' && '⏳ Pending'}
+                  {order.status === 'PAID' && '💳 Paid'}
+                  {order.status === 'PROCESSING' && '⚙️ Processing'}
+                  {order.status === 'SHIPPED' && '📦 Shipped'}
+                  {order.status === 'COMPLETED' && '✅ Completed'}
+                  {order.status === 'CANCELLED' && '❌ Cancelled'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Payment Status</label>
+                <div
+                  className={`inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium ${
+                    order.paymentStatus === 'PAID'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-400'
+                      : order.paymentStatus === 'FAILED'
+                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-400'
+                      : order.paymentStatus === 'REFUNDED'
+                      ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-400'
+                      : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-400'
+                  }`}
+                >
+                  {order.paymentStatus === 'PENDING' && '⏳ Pending'}
+                  {order.paymentStatus === 'PAID' && '✅ Paid'}
+                  {order.paymentStatus === 'FAILED' && '❌ Failed'}
+                  {order.paymentStatus === 'REFUNDED' && '↩️ Refunded'}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">Payment Method</label>
+                <p className="px-4 py-2 bg-muted rounded-lg">{order.paymentMethod}</p>
+              </div>
+
               {order.trackingCode && (
-                <p>
-                  <span className="font-semibold">Tracking:</span> {order.trackingCode}
-                </p>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Tracking Code</label>
+                  <p className="px-4 py-2 bg-muted rounded-lg font-mono">{order.trackingCode}</p>
+                </div>
               )}
-              <p className="text-sm text-muted-foreground mt-4">
-                Ordered on {formatDate(order.createdAt)}
-              </p>
+
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Ordered on {formatDate(order.createdAt)}
+                </p>
+                {order.updatedAt !== order.createdAt && (
+                  <p className="text-sm text-muted-foreground">
+                    Last updated: {formatDate(order.updatedAt)}
+                  </p>
+                )}
+              </div>
               
               {/* Payment Button for PENDING orders */}
               {order.status === 'PENDING' && order.paymentStatus === 'PENDING' && (

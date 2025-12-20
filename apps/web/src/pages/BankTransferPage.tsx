@@ -69,17 +69,18 @@ export default function BankTransferPage() {
         throw new Error(res.data?.message || 'Payment failed');
       }
     } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string; message?: string }; status?: number }; message?: string };
       console.error('Bank transfer error:', error);
       console.error('Error details:', {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
       });
       
       const errorMessage =
-        (error as { response?: { data?: { error?: string; message?: string } } }).response?.data?.error ||
-        (error as { response?: { data?: { error?: string; message?: string } } }).response?.data?.message ||
-        (error as Error).message ||
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
         'Bank transfer failed. Please try again.';
       
       navigate(

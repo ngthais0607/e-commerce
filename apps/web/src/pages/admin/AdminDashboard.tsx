@@ -97,7 +97,7 @@ export default function AdminDashboard() {
         } else if (err.response.status === 404) {
           errorMessage = 'Statistics endpoint not found. Please check API configuration.';
         } else if (err.response.data?.error || err.response.data?.message) {
-          errorMessage = err.response.data.error || err.response.data.message;
+          errorMessage = err.response.data.error || err.response.data.message || 'Unknown error';
         } else {
           errorMessage = `Server error: ${err.response.status}`;
         }
@@ -453,9 +453,11 @@ export default function AdminDashboard() {
                   cy="50%"
                   labelLine={false}
                   // Recharts label payload is not fully typed in the lib, so we type a safe subset here
-                  label={({ status, percent }: { status: string; percent?: number }) =>
-                    `${status}: ${(((percent ?? 0) as number) * 100).toFixed(0)}%`
-                  }
+                  label={(props: any) => {
+                    const percent = props.percent ?? 0;
+                    const status = props.status || '';
+                    return `${status}: ${(percent * 100).toFixed(0)}%`;
+                  }}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"

@@ -45,8 +45,8 @@ export default function StaffDashboard() {
       const err = error as { response?: { data?: { error?: string } } };
       toast({
         variant: 'destructive',
-        title: 'Không tải được dữ liệu',
-        description: err?.response?.data?.error || 'Vui lòng thử lại.',
+        title: 'Failed to load data',
+        description: err?.response?.data?.error || 'Please try again.',
       });
     } finally {
       setLoading(false);

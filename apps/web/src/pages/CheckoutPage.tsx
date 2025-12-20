@@ -309,7 +309,7 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="COD"
                     checked={formData.paymentMethod === 'COD'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY' })}
                     className="w-4 h-4"
                   />
                   <div>
@@ -323,7 +323,7 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="BANK"
                     checked={formData.paymentMethod === 'BANK'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY' })}
                     className="w-4 h-4"
                   />
                   <div>
@@ -337,7 +337,7 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="MOMO"
                     checked={formData.paymentMethod === 'MOMO'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY' })}
                     className="w-4 h-4"
                   />
                   <div>
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                     name="paymentMethod"
                     value="ZALOPAY"
                     checked={formData.paymentMethod === 'ZALOPAY'}
-                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value as 'COD' | 'BANK' | 'MOMO' | 'ZALOPAY' })}
                     className="w-4 h-4"
                   />
                   <div>

@@ -75,9 +75,35 @@ export default function AdminOrderDetail() {
 
   const isOrderStatusOptionDisabled = (value: string) => {
     if (!order) return false;
-    if (!isStaff) return false;
     if (value === order.status) return false;
-    return value !== 'CANCELLED';
+    
+    // For both ADMIN and STAFF: Disable CANCELLED if order is already SHIPPED or COMPLETED
+    if (value === 'CANCELLED') {
+      const blockedStatuses = ['SHIPPED', 'COMPLETED'];
+      if (blockedStatuses.includes(order.status)) {
+        return true;
+      }
+    }
+    
+    // For STAFF: Allow PROCESSING, SHIPPED, COMPLETED, or CANCELLED
+    if (isStaff) {
+      const staffAllowedStatuses = ['PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+      if (!staffAllowedStatuses.includes(value)) {
+        return true;
+      }
+      
+      // Staff cannot change status backwards (except for CANCELLED which is allowed from any status)
+      if (value !== 'CANCELLED') {
+        const statusOrder = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED'];
+        const currentIndex = statusOrder.indexOf(order.status);
+        const newIndex = statusOrder.indexOf(value);
+        if (newIndex < currentIndex) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
   };
 
   const isPaymentStatusOptionDisabled = (value: string) => {
@@ -303,12 +329,21 @@ export default function AdminOrderDetail() {
                   disabled={updating}
                   className="w-full px-4 py-2 border rounded-md"
                 >
-                  {ORDER_STATUS_OPTIONS.map((value) => (
-                    <option key={value} value={value} disabled={isOrderStatusOptionDisabled(value)}>
-                      {value.charAt(0) + value.slice(1).toLowerCase()}
-                    </option>
-                  ))}
+                  {ORDER_STATUS_OPTIONS.map((value) => {
+                    const isDisabled = isOrderStatusOptionDisabled(value);
+                    return (
+                      <option key={value} value={value} disabled={isDisabled}>
+                        {value.charAt(0) + value.slice(1).toLowerCase()}
+                        {isDisabled && value === 'CANCELLED' && ' (Cannot cancel shipped/completed orders)'}
+                      </option>
+                    );
+                  })}
                 </select>
+                {isOrderStatusOptionDisabled('CANCELLED') && order.status !== 'CANCELLED' && !isStaff && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cannot cancel orders that are already shipped or completed
+                  </p>
+                )}
               </div>
 
               <div>
@@ -316,7 +351,7 @@ export default function AdminOrderDetail() {
                 <select
                   value={order.paymentStatus}
                   onChange={(e) => updateStatus('paymentStatus', e.target.value)}
-                  disabled={updating}
+                  disabled={updating || isStaff}
                   className="w-full px-4 py-2 border rounded-md"
                 >
                   {getAllowedPaymentStatuses().map((value) => (
@@ -325,6 +360,11 @@ export default function AdminOrderDetail() {
                     </option>
                   ))}
                 </select>
+                {isStaff && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Staff cannot update payment status
+                  </p>
+                )}
               </div>
 
               <div>
@@ -340,7 +380,7 @@ export default function AdminOrderDetail() {
                     defaultValue={order.trackingCode || ''}
                     placeholder="Enter tracking code"
                     className="flex-1 px-4 py-2 border rounded-md"
-                    disabled={isStaff}
+                    disabled={updating}
                     onBlur={(e) => {
                       if (e.target.value !== order.trackingCode) {
                         updateTracking(e.target.value);
@@ -348,6 +388,11 @@ export default function AdminOrderDetail() {
                     }}
                   />
                 </div>
+                {isStaff && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Staff can update tracking code
+                  </p>
+                )}
               </div>
 
               <div>

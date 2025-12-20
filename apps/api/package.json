@@ -18,7 +18,8 @@
     "update:products-clothing": "tsx scripts/update-products-clothing.js",
     "cleanup:wishlist": "tsx scripts/cleanup-wishlist.js",
     "fix:category": "tsx scripts/fix-category-name.js",
-    "clear:cache": "tsx scripts/clear-cache.js"
+    "clear:cache": "tsx scripts/clear-cache.js",
+    "migrate:addresses": "tsx scripts/migrate-addresses-from-orders.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -27,18 +28,17 @@
     "express": "^5.1.0",
     "express-rate-limit": "^7.4.1",
     "express-validator": "^7.2.0",
-    "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "mysql2": "^3.15.3",
     "nodemailer": "^7.0.11",
     "redis": "^5.10.0",
     "sharp": "^0.34.5",
+    "socket.io": "^4.8.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.19.0",
-    "zod": "^3.24.1",
-    "socket.io": "^4.8.1"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
