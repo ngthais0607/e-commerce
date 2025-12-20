@@ -10,6 +10,13 @@ export const addressModel = {
     );
   },
 
+  async listAll() {
+    return query(
+      `SELECT * FROM addresses 
+       ORDER BY createdAt DESC`
+    );
+  },
+
   async findById(id) {
     return queryOne(
       `SELECT * FROM addresses WHERE id = ?`,

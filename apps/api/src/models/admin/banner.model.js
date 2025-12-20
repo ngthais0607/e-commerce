@@ -88,6 +88,13 @@ export const adminBannerModel = {
     );
   },
 
+  async getById(id) {
+    return queryOne(
+      `SELECT * FROM banners WHERE id = ?`,
+      [id]
+    );
+  },
+
   async remove(id) {
     const affectedRows = await execute(
       `DELETE FROM banners WHERE id = ?`,

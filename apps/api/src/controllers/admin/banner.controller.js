@@ -25,6 +25,24 @@ export const getBanners = async (req, res, next) => {
   }
 };
 
+export const getBanner = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      return res.status(400).json({ error: 'Invalid banner ID' });
+    }
+
+    const banner = await adminBannerModel.getById(id);
+    if (!banner) {
+      return res.status(404).json({ error: 'Banner not found' });
+    }
+
+    res.json(adminBannerView.detail(banner));
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const createBanner = async (req, res, next) => {
   try {
     const data = createBannerSchema.parse({ body: req.body }).body;

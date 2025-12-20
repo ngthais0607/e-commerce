@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, ArrowLeft, Store, Menu, X, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, Users, Ticket, ArrowLeft, Store, Menu, X, MessageSquare, Image, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState, useMemo } from 'react';
 import { useAuthStore } from '@/store/authStore';
@@ -16,7 +16,9 @@ export default function AdminLayout() {
       { path: '/admin/products', label: 'Products', icon: Package, hidden: isStaff },
       { path: '/admin/orders', label: 'Orders & Payments', icon: ShoppingBag },
       { path: '/admin/users', label: 'Users', icon: Users, hidden: isStaff },
+      { path: '/admin/addresses', label: 'Addresses', icon: MapPin },
       { path: '/admin/coupons', label: 'Coupons', icon: Ticket, hidden: isStaff },
+      { path: '/admin/banners', label: 'Banners', icon: Image },
       // Support chat chỉ dành cho STAFF
       { path: '/admin/support', label: 'Support Chat', icon: MessageSquare, hidden: !isStaff },
     ],

@@ -156,7 +156,7 @@ export default function ShopPage() {
                     {categories.map((cat) => (
                       <button
                         key={cat.id}
-                        onClick={() => handleFilterChange('categoryId', cat.id)}
+                        onClick={() => handleFilterChange('categoryId', String(cat.id))}
                         className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                           filters.categoryId === String(cat.id)
                             ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/30'

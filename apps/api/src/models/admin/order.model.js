@@ -323,6 +323,53 @@ export const adminOrderModel = {
       );
       const orderId = orderResult.insertId;
 
+      // Auto-save shipping address to addresses table if it doesn't exist
+      try {
+        if (shippingAddress && shippingAddress.name && shippingAddress.address) {
+          // Check if address already exists for this user
+          const [existingAddresses] = await connection.execute(
+            `SELECT * FROM addresses 
+             WHERE clientId = ? 
+             AND name = ? 
+             AND phone = ? 
+             AND address = ? 
+             AND city = ? 
+             AND district = ? 
+             AND ward = ?`,
+            [
+              userId,
+              shippingAddress.name,
+              shippingAddress.phone || phone,
+              shippingAddress.address,
+              shippingAddress.city,
+              shippingAddress.district,
+              shippingAddress.ward,
+            ]
+          );
+
+          // If address doesn't exist, create it
+          if (!existingAddresses || existingAddresses.length === 0) {
+            await connection.execute(
+              `INSERT INTO addresses (clientId, name, phone, address, city, district, ward, postalCode, isDefault, createdAt, updatedAt)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())`,
+              [
+                userId,
+                shippingAddress.name,
+                shippingAddress.phone || phone,
+                shippingAddress.address,
+                shippingAddress.city,
+                shippingAddress.district,
+                shippingAddress.ward,
+                shippingAddress.postalCode || null,
+              ]
+            );
+          }
+        }
+      } catch (addressError) {
+        // Log but don't fail the order creation if address save fails
+        console.error('Failed to save address to addresses table:', addressError);
+      }
+
       // Create order items and update product stock
       for (const item of items) {
         const product = products.find((p) => p.id === item.productId);

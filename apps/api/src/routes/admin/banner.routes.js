@@ -4,8 +4,9 @@ import { authenticate, authorize } from '../../middleware/auth.js';
 
 const router = express.Router();
 
-router.use(authenticate, authorize('ADMIN'));
+router.use(authenticate, authorize('ADMIN', 'STAFF'));
 router.get('/', bannerController.getBanners);
+router.get('/:id', bannerController.getBanner);
 router.post('/', bannerController.createBanner);
 router.put('/:id', bannerController.updateBanner);
 router.delete('/:id', bannerController.deleteBanner);

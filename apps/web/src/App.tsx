@@ -35,6 +35,9 @@ const AdminOrderDetail = lazy(() => import('./pages/admin/AdminOrderDetail'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
 const AdminCoupons = lazy(() => import('./pages/admin/AdminCoupons'));
 const AdminCouponForm = lazy(() => import('./pages/admin/AdminCouponForm'));
+const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
+const AdminBannerForm = lazy(() => import('./pages/admin/AdminBannerForm'));
+const AdminAddresses = lazy(() => import('./pages/admin/AdminAddresses'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 
@@ -189,6 +192,38 @@ function App() {
             element={
               <ProtectedRoute requiredRole="ADMIN">
                 <AdminCouponForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="banners"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminBanners />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="banners/new"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminBannerForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="banners/:id/edit"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminBannerForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="addresses"
+            element={
+              <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
+                <AdminAddresses />
               </ProtectedRoute>
             }
           />

@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuthStore } from '@/store/authStore';
 
 export default function AdminOrders() {
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const isStaff = user?.role === 'STAFF';
   const [orders, setOrders] = useState<PaginatedResponse<Order>>({
     items: [],
     total: 0,
@@ -20,6 +23,27 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('');
   const { toast } = useToast();
+
+  // Staff can update to PROCESSING, SHIPPED, COMPLETED, or CANCELLED
+  const getAllowedStatuses = (currentStatus: string) => {
+    if (!isStaff) {
+      return ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+    }
+    
+    const statusOrder = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED'];
+    const currentIndex = statusOrder.indexOf(currentStatus);
+    const allowedStatuses = ['PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
+    
+    // Filter to only show statuses that are forward in the flow (CANCELLED is always allowed)
+    return allowedStatuses.filter(status => {
+      if (status === 'CANCELLED') {
+        // Can cancel from any status except SHIPPED/COMPLETED
+        return !['SHIPPED', 'COMPLETED'].includes(currentStatus);
+      }
+      const statusIndex = statusOrder.indexOf(status);
+      return statusIndex >= currentIndex;
+    });
+  };
 
   useEffect(() => {
     fetchOrders();
@@ -193,12 +217,27 @@ export default function AdminOrders() {
                       onChange={(e) => updateStatus(order.id, e.target.value)}
                       className="px-3 py-1 border border-border dark:border-white/10 rounded-md text-sm bg-background dark:bg-slate-900/50 text-foreground dark:text-white"
                     >
-                      <option value="PENDING">Pending</option>
-                      <option value="PAID">Paid</option>
-                      <option value="PROCESSING">Processing</option>
-                      <option value="SHIPPED">Shipped</option>
-                      <option value="COMPLETED">Completed</option>
-                      <option value="CANCELLED">Cancelled</option>
+                      {!isStaff ? (
+                        <>
+                          <option value="PENDING">Pending</option>
+                          <option value="PAID">Paid</option>
+                          <option value="PROCESSING">Processing</option>
+                          <option value="SHIPPED">Shipped</option>
+                          <option value="COMPLETED">Completed</option>
+                          <option value="CANCELLED">Cancelled</option>
+                        </>
+                      ) : (
+                        <>
+                          <option value={order.status}>
+                            {order.status}
+                          </option>
+                          {getAllowedStatuses(order.status).map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </>
+                      )}
                     </select>
                   </div>
                 </div>

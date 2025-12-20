@@ -1,10 +1,22 @@
 export const addressView = {
   list(addresses) {
-    return addresses;
+    if (!Array.isArray(addresses)) {
+      return [];
+    }
+    return addresses.map(addr => ({
+      ...addr,
+      userId: addr.clientId || addr.userId, // Map clientId to userId for frontend
+    }));
   },
 
   detail(address) {
-    return address;
+    if (!address) {
+      return null;
+    }
+    return {
+      ...address,
+      userId: address.clientId || address.userId, // Map clientId to userId for frontend
+    };
   },
 };
 

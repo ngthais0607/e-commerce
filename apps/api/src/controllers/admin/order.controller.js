@@ -7,7 +7,8 @@ import { PaymentService } from '../../services/paymentService.js';
 import { orderMessageModel } from '../../models/admin/orderMessage.model.js';
 
 const ORDER_STATUS_OPTIONS = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
-const STAFF_ORDER_STATUS_OPTIONS = ['CANCELLED'];
+// Staff can update order status including cancel, but cannot change to PENDING/PAID
+const STAFF_ORDER_STATUS_OPTIONS = ['PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
 const PAYMENT_STATUS_OPTIONS = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'];
 const PAYMENT_STATUS_TRANSITIONS = {
   PENDING: ['PAID', 'FAILED'],
@@ -82,11 +83,24 @@ export const updateOrderStatus = async (req, res, next) => {
     const staffId = req.user?.id ?? null;
 
     if (isStaff) {
-      if (trackingCode !== undefined) {
-        return res.status(403).json({ error: 'Staff cannot update tracking codes' });
-      }
+      // Staff can update tracking codes
+      // Staff can update status to PROCESSING, SHIPPED, COMPLETED, or CANCELLED
       if (status && !STAFF_ORDER_STATUS_OPTIONS.includes(status)) {
-        return res.status(403).json({ error: 'Staff can only cancel orders' });
+        return res.status(403).json({ 
+          error: 'Staff can only update order status to PROCESSING, SHIPPED, COMPLETED, or CANCELLED' 
+        });
+      }
+      // Staff cannot change status backwards (e.g., from SHIPPED to PROCESSING)
+      // But can cancel from any status (except SHIPPED/COMPLETED which is checked below)
+      if (status && status !== 'CANCELLED' && oldOrder.status) {
+        const statusOrder = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED'];
+        const oldIndex = statusOrder.indexOf(oldOrder.status);
+        const newIndex = statusOrder.indexOf(status);
+        if (newIndex < oldIndex) {
+          return res.status(403).json({ 
+            error: 'Staff cannot change order status backwards' 
+          });
+        }
       }
     }
 
