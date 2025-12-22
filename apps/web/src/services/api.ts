@@ -11,10 +11,10 @@ const api = axios.create({
   },
 });
 
-// Request interceptor - Add token to requests
+
 api.interceptors.request.use(
   (config) => {
-    // Don't add token for auth endpoints (login, register)
+
     if (
       config.url?.includes('/auth/login') ||
       config.url?.includes('/auth/register')
