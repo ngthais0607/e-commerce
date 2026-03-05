@@ -6,6 +6,7 @@ import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
 import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 type Conversation = {
   id: number;
@@ -157,7 +158,7 @@ export default function AdminSupport() {
         <CardContent className="space-y-3">
           <div className="border rounded-lg divide-y max-h-[520px] overflow-y-auto bg-muted/40 dark:bg-slate-900/40">
             {loading ? (
-              <div className="p-3 text-sm text-muted-foreground">Loading...</div>
+              <div className="p-3 flex justify-center"><LoadingSpinner size="sm" /></div>
             ) : conversations.length === 0 ? (
               <div className="p-3 text-sm text-muted-foreground">No conversations</div>
             ) : (

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { CreditCard, Loader2 } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface OrderMessage {
   id: number;
@@ -109,8 +110,6 @@ export default function OrderDetailPage() {
         returnUrl: `${window.location.origin}/orders/${id}`,
       });
 
-      console.log('Payment response:', paymentRes.data);
-
       if (paymentRes.data.paymentUrl) {
         // Redirect to payment gateway (MoMo, ZaloPay, or Bank)
         window.location.href = paymentRes.data.paymentUrl;
@@ -150,7 +149,7 @@ export default function OrderDetailPage() {
     }
   };
 
-  if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (loading) return <div className="container mx-auto px-4 py-8"><LoadingSpinner /></div>;
   if (!order) return <div className="container mx-auto px-4 py-8">Order not found</div>;
 
   return (

@@ -16,7 +16,7 @@ const parseDatabaseUrl = (url: string) => {
       password: match[2],
       database: match[5],
     };
-  } catch (error) {
+  } catch (_error) {
     // Fallback: try to parse as standard format
     const urlObj = new URL(url.replace('mysql://', 'http://'));
     return {

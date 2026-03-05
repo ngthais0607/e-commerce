@@ -61,8 +61,6 @@ export default function BankTransferPage() {
         orderId: parseInt(orderId, 10),
       });
 
-      console.log('Payment response:', res.data);
-
       if (res.data && res.data.success) {
         navigate(`/payment/success?orderId=${orderId}`);
       } else {

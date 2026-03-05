@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { formatPrice } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   ShoppingCart,
   Heart,
@@ -44,6 +45,25 @@ export default function ProductDetailPage() {
       fetchProduct();
     }
   }, [slug]);
+
+  // SEO: cập nhật title & meta description theo sản phẩm
+  useEffect(() => {
+    const baseTitle = 'Product | Stay Store';
+    if (!product) {
+      document.title = baseTitle;
+      return;
+    }
+    const title = `${product.name} | Stay Store`;
+    const description =
+      product.shortDesc ||
+      `${product.name} - Buy this product at Stay Store with great price and fast delivery.`;
+
+    document.title = title;
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    }
+  }, [product]);
 
   const fetchProduct = async () => {
     try {
@@ -129,8 +149,55 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
+            <div className="space-y-4">
+              <Skeleton className="aspect-square w-full rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200" />
+              <div className="grid grid-cols-5 gap-3">
+                {[...Array(5)].map((_, idx) => (
+                  <Skeleton key={idx} className="aspect-square w-full rounded-lg" />
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="mb-6 space-y-3">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-8 w-3/4" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <Skeleton className="h-10 w-40" />
+              </div>
+
+              <div className="mb-8 space-y-2">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-5/6" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+
+              <div className="mb-8 flex flex-col sm:flex-row gap-4">
+                <Skeleton className="h-11 w-full sm:w-40 rounded-full" />
+                <Skeleton className="h-11 w-full sm:w-40 rounded-full" />
+              </div>
+
+              <div className="space-y-4">
+                <Skeleton className="h-5 w-32" />
+                <div className="grid grid-cols-3 gap-3">
+                  {[...Array(3)].map((_, idx) => (
+                    <Skeleton key={idx} className="h-16 w-full rounded-xl" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

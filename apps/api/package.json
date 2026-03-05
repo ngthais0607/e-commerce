@@ -2,15 +2,16 @@
   "name": "api",
   "version": "1.0.0",
   "type": "module",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "dev": "tsx watch index.js",
-    "start": "tsx index.js",
+    "dev": "tsx watch index.ts",
+    "start": "tsx index.ts",
     "build": "tsc",
     "start:prod": "node dist/index.js",
     "type-check": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 999",
     "db:test": "tsx scripts/test-db-connection.js",
-    "clear:rate-limit": "tsx scripts/clear-rate-limit.js",
+    "clear:rate-limit": "tsx scripts/clear-rate-limit.ts",
     "seed:admin": "tsx scripts/seed-admin.js",
     "seed:test-users": "tsx scripts/seed-test-users.js",
     "seed:products": "tsx scripts/seed-products.js",
@@ -18,7 +19,7 @@
     "update:products-clothing": "tsx scripts/update-products-clothing.js",
     "cleanup:wishlist": "tsx scripts/cleanup-wishlist.js",
     "fix:category": "tsx scripts/fix-category-name.js",
-    "clear:cache": "tsx scripts/clear-cache.js",
+    "clear:cache": "tsx scripts/clear-cache.ts",
     "migrate:addresses": "tsx scripts/migrate-addresses-from-orders.js"
   },
   "dependencies": {
@@ -41,15 +42,20 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
     "@types/node": "^25.0.1",
     "@types/nodemailer": "^7.0.4",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.15.0",
+    "eslint": "^9.15.0"
   }
 }

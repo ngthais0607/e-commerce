@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AccountPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -59,7 +60,7 @@ export default function AccountPage() {
     }
   };
 
-  if (!user) return <div>Loading...</div>;
+  if (!user) return <div className="flex justify-center p-8"><LoadingSpinner /></div>;
 
   return (
     <div className="container mx-auto px-4 py-8">

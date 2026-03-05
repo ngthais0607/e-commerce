@@ -38,7 +38,6 @@ export default function LoginPage() {
       const err = error as { response?: { data?: { error?: string } }; message?: string }
       const message = err?.response?.data?.error || err?.message || 'Login failed'
       form.setError('root', { message })
-      console.error('Login error:', error)
     }
   }
 
@@ -90,7 +89,7 @@ export default function LoginPage() {
           )}
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5" aria-label="Login form">
               <FormField
                 control={form.control}
                 name="email"

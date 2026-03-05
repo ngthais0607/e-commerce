@@ -2,6 +2,8 @@ import crypto from 'crypto';
 import { config } from '../config/index.js';
 import { query, queryOne, insert, execute, beginTransaction, commit, rollback } from '../config/database.js';
 import { log } from '../utils/logger.js';
+import { userOrderModel } from '../models/client/order.model.js';
+import { sendPaymentReceipt } from './emailService.js';
 
 export interface PaymentData {
   orderId: number;
@@ -212,10 +214,22 @@ export class PaymentService {
     status: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED',
     transactionId?: string
   ): Promise<void> {
+    let previousPaymentStatus: string | null = null;
+
     const connection = await beginTransaction();
     try {
       // Convert undefined to null for SQL
       const transactionIdValue = transactionId ?? null;
+      
+      // Read current payment status once to avoid sending duplicate receipts
+      const [orderStatusRows] = await connection.execute(
+        `SELECT paymentStatus FROM orders WHERE id = ?`,
+        [orderId]
+      );
+      if (Array.isArray(orderStatusRows) && orderStatusRows.length > 0) {
+        const row = orderStatusRows[0] as { paymentStatus: string | null };
+        previousPaymentStatus = row.paymentStatus;
+      }
       
       // Check if payment record exists
       const [existingPayments] = await connection.execute(
@@ -298,6 +312,21 @@ export class PaymentService {
     } catch (error) {
       await rollback(connection);
       throw error;
+    }
+
+    // After transaction commit, send payment receipt email once when status changes to PAID
+    if (status === 'PAID' && previousPaymentStatus !== 'PAID') {
+      try {
+        const order = await userOrderModel.getById(orderId);
+        if (order && (order.user?.email || order.email)) {
+          await sendPaymentReceipt(order, transactionId);
+        }
+      } catch (error) {
+        log.error('Failed to send payment receipt email', error as Error, {
+          orderId,
+          status,
+        });
+      }
     }
   }
 

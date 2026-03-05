@@ -4,11 +4,15 @@ import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import type { Order, PaginatedResponse } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function OrderHistoryPage() {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [orders, setOrders] = useState<PaginatedResponse<Order>>({
     items: [],
     total: 0,
@@ -33,12 +37,7 @@ export default function OrderHistoryPage() {
 
   const fetchOrders = async () => {
     try {
-      console.log('Fetching orders for user:', user?.id, user?.email);
       const res = await api.get('/orders');
-      console.log('Orders API response:', res);
-      console.log('Orders data:', res.data);
-      console.log('User info:', { id: user?.id, email: user?.email, isAuthenticated });
-      
       // Handle both direct data and paginated response
       if (res.data) {
         if (res.data.items && Array.isArray(res.data.items)) {
@@ -54,8 +53,6 @@ export default function OrderHistoryPage() {
             totalPages: 1,
           });
         } else if (res.data.items === undefined && res.data.total === undefined) {
-          // Empty or invalid response
-          console.warn('Invalid orders response format:', res.data);
           setOrders({
             items: [],
             total: 0,
@@ -76,27 +73,16 @@ export default function OrderHistoryPage() {
         });
       }
     } catch (error: unknown) {
-      console.error('Error fetching orders:', error);
       const err = error as { response?: { data?: { error?: string }; status?: number }; message?: string };
       const errorMessage = err.response?.data?.error || err.message || 'Failed to load orders';
-      console.error('Error details:', {
-        message: errorMessage,
-        status: err.response?.status,
-        data: err.response?.data,
-      });
-      setOrders({
-        items: [],
-        total: 0,
-        page: 1,
-        pageSize: 10,
-        totalPages: 0,
-      });
+      setOrders({ items: [], total: 0, page: 1, pageSize: 10, totalPages: 0 });
+      toast({ variant: 'destructive', title: 'Error', description: errorMessage });
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>;
+  if (loading) return <div className="container mx-auto px-4 py-8"><LoadingSpinner /></div>;
 
   if (!isAuthenticated) {
     return (
@@ -104,11 +90,9 @@ export default function OrderHistoryPage() {
         <h1 className="text-3xl font-bold mb-8">Order History</h1>
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">Please login to view your orders</p>
-          <Link to="/login">
-            <button className="px-4 py-2 bg-primary text-primary-foreground rounded-md">
-              Login
-            </button>
-          </Link>
+          <Button asChild>
+            <Link to="/login" aria-label="Go to login page">Login</Link>
+          </Button>
         </div>
       </div>
     );
