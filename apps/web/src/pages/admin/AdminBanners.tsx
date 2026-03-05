@@ -16,6 +16,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminBanners() {
   const navigate = useNavigate();
@@ -99,7 +100,7 @@ export default function AdminBanners() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <LoadingSpinner />
       </div>
     );
   }

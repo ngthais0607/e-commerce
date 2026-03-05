@@ -57,6 +57,17 @@ export default function ShopPage() {
     fetchProducts();
   }, [filters]);
 
+  // SEO: Shop page title + description
+  useEffect(() => {
+    document.title = 'Shop All Products | Stay Store';
+    const description =
+      'Browse all products at Stay Store. Filter by category, price and rating to find the perfect item for you.';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    }
+  }, []);
+
   const fetchCategories = async () => {
     try {
       const res = await api.get('/categories');

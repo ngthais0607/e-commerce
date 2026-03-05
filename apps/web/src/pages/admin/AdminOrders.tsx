@@ -8,6 +8,7 @@ import { formatPrice, formatDate } from '@/lib/utils';
 import { Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminOrders() {
   const navigate = useNavigate();
@@ -49,14 +50,12 @@ export default function AdminOrders() {
     fetchOrders();
   }, [statusFilter]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (page = 1) => {
     try {
       setLoading(true);
-      const params: Record<string, string | number> = { pageSize: 20 };
+      const params: Record<string, string | number> = { page, pageSize: 20 };
       if (statusFilter) params.status = statusFilter;
       const res = await api.get('/admin/orders', { params });
-      console.log('Admin orders response:', res.data);
-      
       // Handle both direct data and paginated response
       if (res.data) {
         if (res.data.items && Array.isArray(res.data.items)) {
@@ -86,8 +85,6 @@ export default function AdminOrders() {
       }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string; error?: string } } };
-      console.error('Error fetching orders:', error);
-      console.error('Error response:', err.response?.data);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -118,7 +115,6 @@ export default function AdminOrders() {
       fetchOrders();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string; error?: string } } };
-      console.error('Error updating order:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -145,7 +141,7 @@ export default function AdminOrders() {
   if (loading && orders.items.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -244,6 +240,28 @@ export default function AdminOrders() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {orders.totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            disabled={orders.page <= 1}
+            onClick={() => fetchOrders(orders.page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4">
+            Page {orders.page} of {orders.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={orders.page >= orders.totalPages}
+            onClick={() => fetchOrders(orders.page + 1)}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>

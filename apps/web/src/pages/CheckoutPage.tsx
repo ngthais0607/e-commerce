@@ -115,7 +115,6 @@ export default function CheckoutPage() {
       };
 
       const res = await api.post('/orders', orderData);
-      console.log('Order created:', res.data);
       const orderId = res.data.id;
 
       // Handle payment for online payment methods
@@ -125,8 +124,6 @@ export default function CheckoutPage() {
             orderId: orderId,
             returnUrl: `${window.location.origin}/orders/${orderId}`,
           });
-
-          console.log('Payment created:', paymentRes.data);
 
           if (paymentRes.data.paymentUrl) {
             // Redirect to payment gateway
@@ -176,7 +173,7 @@ export default function CheckoutPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} aria-label="Checkout form">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <Card>

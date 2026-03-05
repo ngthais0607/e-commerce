@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminAddresses() {
   const { user } = useAuthStore();
@@ -59,13 +60,8 @@ export default function AdminAddresses() {
       setLoading(true);
       const params: Record<string, string | number> = {};
       if (userIdFilter) params.userId = userIdFilter;
-      
-      console.log('Fetching addresses with params:', params);
       const res = await api.get('/admin/addresses', { params });
-      console.log('Addresses API response:', res.data);
-      
       const addressesData = Array.isArray(res.data) ? res.data : [];
-      console.log(`Loaded ${addressesData.length} addresses`);
       setAddresses(addressesData);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string; error?: string } } };
@@ -142,7 +138,7 @@ export default function AdminAddresses() {
   if (loading && addresses.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <LoadingSpinner />
       </div>
     );
   }

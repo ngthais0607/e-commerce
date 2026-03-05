@@ -93,8 +93,6 @@ export default function AdminCouponForm() {
         isActive: formData.isActive,
       };
 
-      console.log('Saving coupon payload:', data);
-
       if (code) {
         await api.put(`/admin/coupons/${code}`, data);
         toast({

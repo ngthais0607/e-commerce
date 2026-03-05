@@ -9,6 +9,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { getSocket } from '@/lib/socket';
 import { useAuthStore } from '@/store/authStore';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 interface OrderMessage {
   id: number;
@@ -212,7 +213,7 @@ export default function AdminOrderDetail() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <LoadingSpinner />
       </div>
     );
   }

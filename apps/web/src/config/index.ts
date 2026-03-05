@@ -1,8 +1,6 @@
-// App Configuration
+// App Configuration (VITE_* from .env – see .env.example)
 export const config = {
   api: {
-    // Sử dụng relative URL để dùng Vite proxy trong development
-    // Hoặc absolute URL nếu có VITE_API_URL trong .env
     baseURL: import.meta.env.VITE_API_URL || '/api',
     timeout: 30000,
   },
@@ -12,8 +10,8 @@ export const config = {
     environment: import.meta.env.MODE || 'development',
   },
   features: {
-    enableReviews: true,
-    enableCoupons: true,
+    enableReviews: import.meta.env.VITE_ENABLE_REVIEWS !== 'false',
+    enableCoupons: import.meta.env.VITE_ENABLE_COUPONS !== 'false',
   },
 } as const;
 

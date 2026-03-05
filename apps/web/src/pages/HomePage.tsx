@@ -67,7 +67,6 @@ export default function HomePage() {
         
         setFeaturedProducts(products.slice(0, 8));
         const bannersData = bannersRes.data || [];
-        console.log('Banners fetched:', bannersData);
         setBanners(bannersData);
         
         // If no banners, add a default one
@@ -101,6 +100,17 @@ export default function HomePage() {
       }
     };
     fetchData();
+  }, []);
+
+  // SEO: Home page title + description
+  useEffect(() => {
+    document.title = 'Home | Stay Store';
+    const description =
+      'Discover the latest fashion 2025 collection at Stay Store. Browse featured products, exclusive deals, and fast delivery.';
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', description);
+    }
   }, []);
 
   // Auto-play carousel
@@ -147,8 +157,51 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex flex-col min-h-screen">
+        <section className="relative bg-gradient-to-br from-gray-900 via-indigo-950 to-gray-900 text-white mb-4 md:mb-6 overflow-hidden">
+          <div className="container mx-auto px-4 py-12 md:py-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+              <div className="space-y-4 md:space-y-6">
+                <Skeleton className="h-8 w-40 rounded-full bg-white/10" />
+                <Skeleton className="h-10 md:h-14 w-3/4 bg-white/20" />
+                <Skeleton className="h-4 w-full bg-white/10" />
+                <Skeleton className="h-4 w-5/6 bg-white/10" />
+                <div className="flex gap-3 mt-4">
+                  <Skeleton className="h-11 w-32 rounded-full bg-white/20" />
+                  <Skeleton className="h-11 w-32 rounded-full bg-white/10" />
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <Skeleton className="h-72 w-full rounded-3xl bg-white/10" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <main className="flex-1 bg-gradient-to-b from-background via-muted/20 to-background">
+          <section className="container mx-auto px-4 py-10 md:py-14">
+            <div className="flex items-center justify-between mb-6">
+              <Skeleton className="h-7 w-40" />
+              <Skeleton className="h-5 w-24" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(8)].map((_, i) => (
+                <Card key={i} className="overflow-hidden border-0 shadow-sm bg-white">
+                  <Skeleton className="aspect-[4/3] w-full" />
+                  <CardContent className="p-5">
+                    <Skeleton className="h-5 w-3/4 mb-2" />
+                    <Skeleton className="h-4 w-full mb-2" />
+                    <Skeleton className="h-4 w-2/3 mb-4" />
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <Skeleton className="h-6 w-20" />
+                      <Skeleton className="h-9 w-9 rounded-full" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </main>
       </div>
     );
   }

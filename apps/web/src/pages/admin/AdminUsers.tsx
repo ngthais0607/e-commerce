@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/utils';
 import { Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 export default function AdminUsers() {
   const [users, setUsers] = useState<PaginatedResponse<User>>({
@@ -26,22 +27,16 @@ export default function AdminUsers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleFilter]);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
-      const params: Record<string, string | number> = { pageSize: 20 };
+      const params: Record<string, string | number> = { page, pageSize: 20 };
       if (search) params.search = search;
       if (roleFilter) params.role = roleFilter;
-      
-      console.log('Fetching users with params:', params);
       const res = await api.get('/admin/users', { params });
-      console.log('Users API response:', res.data);
-      
       if (res.data && res.data.items) {
         setUsers(res.data);
-        console.log(`✅ Loaded ${res.data.items.length} users (total: ${res.data.total})`);
       } else {
-        console.warn('⚠️ Unexpected response format:', res.data);
         setUsers({
           items: [],
           total: 0,
@@ -55,10 +50,7 @@ export default function AdminUsers() {
         response?: { status: number; data?: { error?: string } };
         message?: string;
       };
-      console.error('❌ Error fetching users:', error);
       if (err.response) {
-        console.error('Response status:', err.response.status);
-        console.error('Response data:', err.response.data);
         if (err.response.status === 401 || err.response.status === 403) {
           toast({
             variant: 'destructive',
@@ -108,7 +100,6 @@ export default function AdminUsers() {
       fetchUsers();
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
-      console.error('Error updating user:', error);
       toast({
         variant: 'destructive',
         title: 'Error',
@@ -120,7 +111,7 @@ export default function AdminUsers() {
   if (loading && users.items.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div>Loading...</div>
+        <LoadingSpinner />
       </div>
     );
   }
@@ -219,6 +210,28 @@ export default function AdminUsers() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {users.totalPages > 1 && (
+        <div className="flex justify-center gap-2 mt-8">
+          <Button
+            variant="outline"
+            disabled={users.page <= 1}
+            onClick={() => fetchUsers(users.page - 1)}
+          >
+            Previous
+          </Button>
+          <span className="flex items-center px-4">
+            Page {users.page} of {users.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            disabled={users.page >= users.totalPages}
+            onClick={() => fetchUsers(users.page + 1)}
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>
