@@ -1,5 +1,5 @@
 export const userOrderView = {
-  list(payload) {
+  list(payload: Record<string, unknown> | unknown[] | null) {
     // Ensure payload has the correct structure
     if (!payload) {
       return {
@@ -12,7 +12,8 @@ export const userOrderView = {
     }
     
     // If payload already has items, return as is
-    if (payload.items !== undefined) {
+    const p = payload as Record<string, unknown>;
+    if (p && p.items !== undefined) {
       return payload;
     }
     
@@ -37,7 +38,7 @@ export const userOrderView = {
     };
   },
 
-  detail(order) {
+  detail(order: Record<string, unknown>) {
     return order;
   },
 };

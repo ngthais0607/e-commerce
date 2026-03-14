@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/lib/utils';
-import { Search } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
@@ -24,7 +24,6 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roleFilter]);
 
   const fetchUsers = async (page = 1) => {
@@ -140,9 +139,22 @@ export default function AdminUsers() {
           <option value="ADMIN">Admin</option>
           <option value="STAFF">Staff</option>
         </select>
-        <Button onClick={handleSearch} className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
-          <Search className="h-4 w-4 mr-2" />
-          Search
+        <Button
+          onClick={handleSearch}
+          disabled={loading}
+          className="bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-500 text-white shadow-md"
+        >
+          {loading && users.items.length > 0 ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="h-4 w-4 mr-2" />
+              Search
+            </>
+          )}
         </Button>
       </div>
 

@@ -5,7 +5,7 @@ export const userCategoryModel = {
     return adminCategoryModel.list(false, filters);
   },
 
-  getById(id) {
+  getById(id: number) {
     return adminCategoryModel.getById(id);
   },
 };

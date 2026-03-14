@@ -1,5 +1,5 @@
 export const userBannerView = {
-  list(banners) {
+  list(banners: Record<string, unknown>[]) {
     return banners;
   },
 };

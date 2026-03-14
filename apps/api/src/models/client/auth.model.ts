@@ -1,4 +1,4 @@
-import { query, queryOne, insert, execute } from '../../config/database.js';
+import { queryOne, insert, execute } from '../../config/database.js';
 
 export interface ClientData {
   email: string;
@@ -14,6 +14,7 @@ export interface Client {
   name: string;
   phone: string | null;
   role: string;
+  customerCode: string;
   createdAt: Date;
 }
 
@@ -27,9 +28,10 @@ export const authClientModel = {
       phone: string | null;
       role: string;
       isActive: boolean;
+      customerCode: string;
       createdAt: Date;
     }>(
-      `SELECT id, email, password, name, phone, role, isActive, createdAt 
+      `SELECT id, email, password, name, phone, role, isActive, customerCode, createdAt 
        FROM clients 
        WHERE email = ? AND isActive = 1`,
       [email]
@@ -43,6 +45,7 @@ export const authClientModel = {
       name: client.name,
       phone: client.phone,
       role: client.role,
+      customerCode: client.customerCode,
       createdAt: client.createdAt,
     };
   },
@@ -56,8 +59,9 @@ export const authClientModel = {
       phone: string | null;
       role: string;
       isActive: boolean;
+      customerCode: string;
     }>(
-      `SELECT id, email, password, name, phone, role, isActive 
+      `SELECT id, email, password, name, phone, role, isActive, customerCode 
        FROM clients 
        WHERE email = ? AND isActive = 1`,
       [email]
@@ -82,8 +86,9 @@ export const authClientModel = {
       email: string;
       name: string;
       role: string;
+      customerCode: string;
     }>(
-      `SELECT id, email, name, role 
+      `SELECT id, email, name, role, customerCode 
        FROM clients 
        WHERE id = ?`,
       [clientId]
@@ -99,9 +104,10 @@ export const authClientModel = {
       name: string;
       phone: string | null;
       role: string;
+      customerCode: string;
       createdAt: Date;
     }>(
-      `SELECT id, email, name, phone, role, createdAt 
+      `SELECT id, email, name, phone, role, customerCode, createdAt 
        FROM clients 
        WHERE id = ? AND isActive = 1`,
       [id]
@@ -115,6 +121,7 @@ export const authClientModel = {
       name: client.name,
       phone: client.phone,
       role: client.role,
+      customerCode: client.customerCode,
       createdAt: client.createdAt,
     };
   },

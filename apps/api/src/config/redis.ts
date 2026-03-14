@@ -86,6 +86,19 @@ export const getRedisClient = (): RedisClientType | null => {
 };
 
 /**
+ * Ping Redis for health check (no log, fast)
+ */
+export const pingRedis = async (): Promise<boolean> => {
+  if (!redisClient) return false;
+  try {
+    await redisClient.ping();
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Close Redis connection
  */
 export const closeRedis = async (): Promise<void> => {

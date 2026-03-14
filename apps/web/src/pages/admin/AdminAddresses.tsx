@@ -182,7 +182,10 @@ export default function AdminAddresses() {
             ))}
           </select>
         )}
-        <Button onClick={handleSearch} className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+        <Button
+          onClick={handleSearch}
+          className="bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-500 text-white shadow-md"
+        >
           <Search className="h-4 w-4 mr-2" />
           Search
         </Button>

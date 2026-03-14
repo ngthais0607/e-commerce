@@ -4,25 +4,14 @@
 
 /**
  * Build SQL UPDATE query dynamically from data object
- * @param {Record<string, any>} data - Object containing fields to update
- * @param {Record<string, string>} fieldMap - Optional mapping of data keys to SQL column names
- * @param {Array<string>} excludeFields - Fields to exclude from update
- * @returns {{ fields: string[], values: any[] }} Object with SQL fields and values
- * @example
- * const { fields, values } = buildUpdateQuery(
- *   { name: 'John', email: 'john@example.com' },
- *   {},
- *   ['id']
- * );
- * // Returns: { fields: ['name = ?', 'email = ?'], values: ['John', 'john@example.com'] }
  */
 export const buildUpdateQuery = (
-  data: Record<string, any>,
+  data: Record<string, unknown>,
   fieldMap: Record<string, string> = {},
   excludeFields: string[] = ['id', 'createdAt']
-): { fields: string[]; values: any[] } => {
+): { fields: string[]; values: unknown[] } => {
   const fields: string[] = [];
-  const values: any[] = [];
+  const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(data)) {
     // Skip undefined values and excluded fields
@@ -41,24 +30,20 @@ export const buildUpdateQuery = (
 
 /**
  * Build WHERE clause dynamically from filters
- * @param {Record<string, any>} filters - Object containing filter conditions
- * @param {Record<string, string>} fieldMap - Optional mapping of filter keys to SQL column names
- * @returns {{ clause: string, params: any[] }} Object with WHERE clause and parameters
- * @example
- * const { clause, params } = buildWhereClause(
- *   { status: 'active', categoryId: 1 },
- *   { categoryId: 'category_id' }
- * );
- * // Returns: { clause: "WHERE status = ? AND category_id = ?", params: ['active', 1] }
+ * @param filters - Object containing filter conditions
+ * @param fieldMap - Optional mapping of filter keys to SQL column names
+ * @returns Object with WHERE clause and parameters
  */
+/** Accepts any object used as filter (specific interfaces like ProductListFilters are allowed) */
 export const buildWhereClause = (
-  filters: Record<string, any>,
+  filters: Record<string, unknown> | object,
   fieldMap: Record<string, string> = {}
-): { clause: string; params: any[] } => {
+): { clause: string; params: unknown[] } => {
   const conditions: string[] = [];
-  const params: any[] = [];
+  const params: unknown[] = [];
 
-  for (const [key, value] of Object.entries(filters)) {
+  const entries = Object.entries(filters as Record<string, unknown>);
+  for (const [key, value] of entries) {
     if (value === undefined || value === null) {
       continue;
     }
@@ -70,19 +55,19 @@ export const buildWhereClause = (
       if (value.length > 0) {
         const placeholders = value.map(() => '?').join(', ');
         conditions.push(`${fieldName} IN (${placeholders})`);
-        params.push(...value);
+        params.push(...(Array.isArray(value) ? value : [value]));
       }
-    } else if (typeof value === 'object' && value !== null) {
-      // Handle operators like { gte: 100 }, { contains: 'text' }
-      if ('gte' in value) {
+    } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const obj = value as Record<string, unknown>;
+      if ('gte' in obj) {
         conditions.push(`${fieldName} >= ?`);
-        params.push(value.gte);
-      } else if ('lte' in value) {
+        params.push(obj.gte);
+      } else if ('lte' in obj) {
         conditions.push(`${fieldName} <= ?`);
-        params.push(value.lte);
-      } else if ('contains' in value) {
+        params.push(obj.lte);
+      } else if ('contains' in obj) {
         conditions.push(`${fieldName} LIKE ?`);
-        params.push(`%${value.contains}%`);
+        params.push(`%${String(obj.contains)}%`);
       }
     } else {
       conditions.push(`${fieldName} = ?`);
@@ -108,20 +93,17 @@ export const buildPagination = (page: number = 1, pageSize: number = 10): { limi
 
 /**
  * Parse JSON fields from database result
- * @param {any} row - Database row object
- * @param {string[]} jsonFields - Array of field names that contain JSON
- * @returns {any} Row with parsed JSON fields
  */
-export const parseJsonFields = (row: any, jsonFields: string[]): any => {
+export const parseJsonFields = (row: Record<string, unknown> | null, jsonFields: string[]): Record<string, unknown> | null => {
   if (!row) return row;
-
   const parsed = { ...row };
   for (const field of jsonFields) {
-    if (parsed[field] && typeof parsed[field] === 'string') {
+    const val = parsed[field];
+    if (typeof val === 'string') {
       try {
-        parsed[field] = JSON.parse(parsed[field]);
-      } catch (e) {
-        // If parsing fails, keep original value
+        parsed[field] = JSON.parse(val) as unknown;
+      } catch {
+        // keep original
       }
     }
   }
@@ -130,11 +112,8 @@ export const parseJsonFields = (row: any, jsonFields: string[]): any => {
 
 /**
  * Parse JSON fields from array of database results
- * @param {any[]} rows - Array of database row objects
- * @param {string[]} jsonFields - Array of field names that contain JSON
- * @returns {any[]} Array of rows with parsed JSON fields
  */
-export const parseJsonFieldsArray = (rows: any[], jsonFields: string[]): any[] => {
-  return rows.map(row => parseJsonFields(row, jsonFields));
+export const parseJsonFieldsArray = (rows: Record<string, unknown>[], jsonFields: string[]): Record<string, unknown>[] => {
+  return rows.map((row) => parseJsonFields(row, jsonFields) as Record<string, unknown>);
 };
 

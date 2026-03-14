@@ -16,8 +16,9 @@ const createBannerSchema = z.object({
 
 export const getBanners = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const position = typeof req.query.position === 'string' ? req.query.position : undefined;
     const banners = await adminBannerModel.list({
-      position: req.query.position,
+      position,
       includeInactive: true,
     });
     res.json(adminBannerView.list(banners));
@@ -61,7 +62,7 @@ export const updateBanner = async (req: Request, res: Response, next: NextFuncti
   try {
     const id = parseInt(req.params.id, 10);
     const data = createBannerSchema.partial().parse({ body: req.body }).body;
-    const banner = await adminBannerModel.update(id, data);
+    const banner = await adminBannerModel.update(id, data as Record<string, unknown>);
     res.json(adminBannerView.detail(banner));
   } catch (error) {
     next(error);

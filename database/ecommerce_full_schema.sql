@@ -264,8 +264,8 @@ CREATE TABLE IF NOT EXISTS support_conversations (
   INDEX idx_user (userId),
   INDEX idx_status (status),
   INDEX idx_assigned (assignedStaffId),
-  CONSTRAINT fk_support_user FOREIGN KEY (userId) REFERENCES clients(id),
-  CONSTRAINT fk_support_staff FOREIGN KEY (assignedStaffId) REFERENCES clients(id)
+  CONSTRAINT fk_support_user FOREIGN KEY (userId) REFERENCES clients(id) ON DELETE RESTRICT,
+  CONSTRAINT fk_support_staff FOREIGN KEY (assignedStaffId) REFERENCES clients(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Support messages
@@ -279,9 +279,9 @@ CREATE TABLE IF NOT EXISTS support_messages (
   createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_conversation (conversationId),
   INDEX idx_senderRole (senderRole),
-  CONSTRAINT fk_support_conv FOREIGN KEY (conversationId) REFERENCES support_conversations(id),
-  CONSTRAINT fk_support_msg_user FOREIGN KEY (userId) REFERENCES clients(id),
-  CONSTRAINT fk_support_msg_staff FOREIGN KEY (staffId) REFERENCES clients(id)
+  CONSTRAINT fk_support_conv FOREIGN KEY (conversationId) REFERENCES support_conversations(id) ON DELETE CASCADE,
+  CONSTRAINT fk_support_msg_user FOREIGN KEY (userId) REFERENCES clients(id) ON DELETE SET NULL,
+  CONSTRAINT fk_support_msg_staff FOREIGN KEY (staffId) REFERENCES clients(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================

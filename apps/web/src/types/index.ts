@@ -10,6 +10,7 @@ export interface User {
   name: string;
   phone?: string;
   role: UserRole;
+   customerCode?: string;
   isActive: boolean;
   createdAt: string;
   _count?: {

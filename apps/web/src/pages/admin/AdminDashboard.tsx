@@ -231,8 +231,8 @@ export default function AdminDashboard() {
             onClick={() => setPeriod('7d')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               period === '7d'
-                ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg'
-                : 'bg-muted dark:bg-white/5 hover:bg-muted/80 dark:hover:bg-white/10 text-foreground'
+                ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 text-white shadow-md'
+                : 'bg-muted dark:bg-white/5 hover:bg-sky-50 dark:hover:bg-white/10 text-foreground'
             }`}
           >
             7 Days
@@ -241,8 +241,8 @@ export default function AdminDashboard() {
             onClick={() => setPeriod('30d')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               period === '30d'
-                ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg'
-                : 'bg-muted dark:bg-white/5 hover:bg-muted/80 dark:hover:bg-white/10 text-foreground'
+                ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 text-white shadow-md'
+                : 'bg-muted dark:bg-white/5 hover:bg-sky-50 dark:hover:bg-white/10 text-foreground'
             }`}
           >
             30 Days
@@ -251,8 +251,8 @@ export default function AdminDashboard() {
             onClick={() => setPeriod('12m')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               period === '12m'
-                ? 'bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-lg'
-                : 'bg-muted dark:bg-white/5 hover:bg-muted/80 dark:hover:bg-white/10 text-foreground'
+                ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 text-white shadow-md'
+                : 'bg-muted dark:bg-white/5 hover:bg-sky-50 dark:hover:bg-white/10 text-foreground'
             }`}
           >
             12 Months
@@ -452,8 +452,7 @@ export default function AdminDashboard() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  // Recharts label payload is not fully typed in the lib, so we type a safe subset here
-                  label={(props: any) => {
+                  label={(props: { percent?: number; status?: string }) => {
                     const percent = props.percent ?? 0;
                     const status = props.status || '';
                     return `${status}: ${(percent * 100).toFixed(0)}%`;

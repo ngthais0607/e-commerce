@@ -18,13 +18,19 @@ export const uploadImages = async (req: AuthenticatedRequest, res: Response, nex
     }
 
     // Process images (resize, optimize, create thumbnails)
-    const processedImages = await processImages(req.files, {
-      width: 1200,
-      height: 1200,
-      quality: 85,
-      createThumbnail: true,
-      thumbnailSize: 300,
-    });
+    const fileList = Array.isArray(req.files)
+      ? req.files
+      : (req.files ? (Object.values(req.files) as Express.Multer.File[][]).flat() : []);
+    const processedImages = await processImages(
+      fileList.map((f: Express.Multer.File) => ({ path: f.path ?? '' })),
+      {
+        width: 1200,
+        height: 1200,
+        quality: 85,
+        createThumbnail: true,
+        thumbnailSize: 300,
+      }
+    );
 
     // Get URLs for processed images
     const imageUrls = processedImages.map((img) => ({

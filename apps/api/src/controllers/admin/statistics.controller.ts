@@ -1,11 +1,14 @@
 import type { Request, Response, NextFunction } from 'express';
+import { statisticsQuerySchema, topProductsQuerySchema, periodQuerySchema } from '../../validators/statisticsValidator.js';
 import { adminStatisticsModel } from '../../models/admin/statistics.model.js';
 import { adminStatisticsView } from '../../views/admin/statistics.view.js';
 
 export const getStatistics = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const period = (req.query.period as string) || '7d';
-    const topProductsLimit = parseInt(String(req.query.topProductsLimit || '10'), 10);
+    const { period, topProductsLimit } = statisticsQuerySchema.parse({
+      period: req.query.period ?? '7d',
+      topProductsLimit: req.query.topProductsLimit ?? 10,
+    });
 
     const [overview, salesByPeriod, topProducts, ordersByStatus] = await Promise.all([
       adminStatisticsModel.getOverview(),
@@ -37,7 +40,7 @@ export const getOverview = async (req: Request, res: Response, next: NextFunctio
 
 export const getSalesByPeriod = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const period = (req.query.period as string) || '7d';
+    const { period } = periodQuerySchema.parse({ period: req.query.period ?? '7d' });
     const sales = await adminStatisticsModel.getSalesByPeriod(period);
     res.json(adminStatisticsView.salesByPeriod(sales, period));
   } catch (error) {
@@ -47,7 +50,7 @@ export const getSalesByPeriod = async (req: Request, res: Response, next: NextFu
 
 export const getTopProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const limit = parseInt(String(req.query.limit || '10'), 10);
+    const { limit } = topProductsQuerySchema.parse({ limit: req.query.limit ?? 10 });
     const products = await adminStatisticsModel.getTopProducts(limit);
     res.json(adminStatisticsView.topProducts(products));
   } catch (error) {

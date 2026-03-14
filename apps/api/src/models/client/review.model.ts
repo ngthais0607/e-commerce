@@ -1,6 +1,7 @@
+import type { ReviewListFilters, ReviewCreateData, ReviewUpdateData } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
 
-const recalcProductRating = async (productId) => {
+const recalcProductRating = async (productId: number): Promise<void> => {
   const reviews = await query(
     `SELECT rating FROM reviews WHERE productId = ?`,
     [productId]
@@ -23,8 +24,12 @@ const recalcProductRating = async (productId) => {
 };
 
 export const reviewModel = {
-  async list(filters = {}) {
+  async list(filters: ReviewListFilters = {}) {
     const { productId, page = 1, pageSize = 10 } = filters;
+    const MAX_PAGE_SIZE = 100;
+    const limitValue = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(String(pageSize), 10) || 10));
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const offsetValue = (pageNum - 1) * limitValue;
 
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -54,8 +59,8 @@ export const reviewModel = {
       LEFT JOIN products p ON r.productId = p.id
       ${whereClause}
       ORDER BY r.createdAt DESC
-      LIMIT ? OFFSET ?`,
-      [...params, pageSize, (page - 1) * pageSize]
+      LIMIT ${limitValue} OFFSET ${offsetValue}`,
+      params
     );
 
     return {
@@ -79,12 +84,13 @@ export const reviewModel = {
         } : null,
       })),
       total,
-      page,
-      pageSize,
+      page: pageNum,
+      pageSize: limitValue,
+      totalPages: Math.ceil(total / limitValue),
     };
   },
 
-  async findUnique(where) {
+  async findUnique(where: { id?: number; clientId?: number; productId?: number }) {
     let whereClause = 'WHERE 1=1';
     const params = [];
 
@@ -103,7 +109,7 @@ export const reviewModel = {
     );
   },
 
-  async create(clientId, data) {
+  async create(clientId: number, data: ReviewCreateData) {
     const { productId, rating, title, comment } = data;
 
     // Check if user has purchased this product
@@ -112,7 +118,7 @@ export const reviewModel = {
       `SELECT oi.id 
        FROM order_items oi
        INNER JOIN orders o ON oi.orderId = o.id
-       WHERE oi.productId = ? AND o.clientId = ? AND o.status IN ('COMPLETED', 'SHIPPED')
+       WHERE oi.productId = ? AND o.clientId = ? AND o.status IN ('PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED')
        LIMIT 1`,
       [productId, clientId]
     );
@@ -173,7 +179,7 @@ export const reviewModel = {
     };
   },
 
-  async update(id, data) {
+  async update(id: number, data: ReviewUpdateData) {
     const updateFields = [];
     const updateValues = [];
 
@@ -206,14 +212,14 @@ export const reviewModel = {
       [id]
     );
 
-    if (updated) {
-      await recalcProductRating(updated.productId);
+    if (updated && (updated as { productId?: number }).productId != null) {
+      await recalcProductRating((updated as { productId: number }).productId);
     }
 
     return this.findUnique({ id });
   },
 
-  async remove(id) {
+  async remove(id: number) {
     // Get review to get productId before deleting
     const review = await queryOne(
       `SELECT productId FROM reviews WHERE id = ?`,
@@ -225,8 +231,8 @@ export const reviewModel = {
       [id]
     );
 
-    if (review && affectedRows > 0) {
-      await recalcProductRating(review.productId);
+    if (review && affectedRows > 0 && (review as { productId?: number }).productId != null) {
+      await recalcProductRating((review as { productId: number }).productId);
     }
 
     return affectedRows > 0;

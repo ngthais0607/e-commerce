@@ -1,3 +1,4 @@
+import type { ProductListFilters } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
 import { cacheWrapper, generateCacheKey, deleteCachePattern, CACHE_KEYS } from '../../utils/cache.js';
 
@@ -5,7 +6,7 @@ import { cacheWrapper, generateCacheKey, deleteCachePattern, CACHE_KEYS } from '
  * Product data layer for admin scope
  */
 export const adminProductModel = {
-  async list(filters = {}) {
+  async list(filters: ProductListFilters = {}) {
     const cacheKey = generateCacheKey(CACHE_KEYS.PRODUCTS, filters);
     
     return cacheWrapper(cacheKey, async () => {
@@ -69,12 +70,11 @@ export const adminProductModel = {
       const sortDirection = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
 
       // Get products with category
-      // Clean params - remove any undefined/null values and ensure proper types
-      const cleanParams = params.filter(p => p !== undefined && p !== null);
-      const limitValue = parseInt(String(pageSize), 10);
-      const offsetValue = parseInt(String((page - 1) * pageSize), 10);
-      
-      // Use template for LIMIT/OFFSET to avoid parameter binding issues
+      // Không cần lọc lại params – mảng `params` luôn khớp với số lượng dấu `?` trong whereClause
+      const MAX_PAGE_SIZE = 100;
+      const limitValue = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(String(pageSize), 10) || 12));
+      const offsetValue = Math.max(0, (parseInt(String(page), 10) || 1) - 1) * limitValue;
+
       const sql = `SELECT 
           p.*,
           c.id as category_id,
@@ -85,8 +85,7 @@ export const adminProductModel = {
         ${whereClause}
         ORDER BY p.${sortColumn} ${sortDirection}
         LIMIT ${limitValue} OFFSET ${offsetValue}`;
-      
-      const items = await query(sql, cleanParams);
+      const items = await query(sql, params);
 
       // Transform results to match expected format
       const transformedItems = items.map(item => {
@@ -121,14 +120,14 @@ export const adminProductModel = {
       return {
         items: transformedItems,
         total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
+        page: Math.max(1, parseInt(String(page), 10) || 1),
+        pageSize: limitValue,
+        totalPages: Math.ceil(total / limitValue),
       };
     }, 300); // 5 minutes cache
   },
 
-  async getById(id) {
+  async getById(id: number) {
     const cacheKey = `${CACHE_KEYS.PRODUCT}:${id}`;
     
     return cacheWrapper(cacheKey, async () => {
@@ -207,7 +206,7 @@ export const adminProductModel = {
     }, 600); // 10 minutes cache
   },
 
-  async getBySlug(slug) {
+  async getBySlug(slug: string) {
     const cacheKey = `${CACHE_KEYS.PRODUCT}:slug:${slug}`;
     
     return cacheWrapper(cacheKey, async () => {
@@ -285,7 +284,7 @@ export const adminProductModel = {
     }, 600); // 10 minutes cache
   },
 
-  async create(data) {
+  async create(data: Record<string, unknown>) {
     const productId = await insert(
       `INSERT INTO products (
         name, slug, shortDesc, description, price, salePrice, stock, sku, 
@@ -314,7 +313,7 @@ export const adminProductModel = {
     return this.getById(productId);
   },
 
-  async update(id, data) {
+  async update(id: number, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -388,7 +387,7 @@ export const adminProductModel = {
     return this.getById(id);
   },
 
-  async remove(id) {
+  async remove(id: number) {
     const affectedRows = await execute(
       `DELETE FROM products WHERE id = ?`,
       [id]

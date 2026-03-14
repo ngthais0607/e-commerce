@@ -1,5 +1,5 @@
 export const userProfileView = {
-  profile(user) {
+  profile(user: Record<string, unknown>) {
     return user;
   },
 };

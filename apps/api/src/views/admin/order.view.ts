@@ -1,9 +1,9 @@
 export const adminOrderView = {
-  list(payload) {
+  list(payload: Record<string, unknown>) {
     return payload;
   },
 
-  detail(order) {
+  detail(order: Record<string, unknown>) {
     return order;
   },
 };

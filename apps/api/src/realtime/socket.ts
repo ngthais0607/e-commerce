@@ -29,7 +29,7 @@ export function initSocket(server: HttpServer): Server {
       socket.data.userId = decoded.userId;
       socket.data.role = (decoded as { userId: number; role?: string }).role;
       next();
-    } catch (_error) {
+    } catch {
       next(new Error('Authentication error'));
     }
   });
@@ -81,25 +81,25 @@ export function initSocket(server: HttpServer): Server {
   return io;
 }
 
-export function emitOrderMessage(io, orderId, message) {
+export function emitOrderMessage(io: Server, orderId: number, message: string): void {
   io.to(`order:${orderId}`).emit('order-message', { orderId, message });
 }
 
-export function emitSupportMessage(io, conversationId, message) {
+export function emitSupportMessage(io: Server, conversationId: number, message: string): void {
   io.to(`support:conv:${conversationId}`).emit('support-message', { conversationId, message });
   io.to('support:staff').emit('support-message', { conversationId, message });
 }
 
-export function emitSupportAssignment(io, conversationId, conversation) {
+export function emitSupportAssignment(io: Server, conversationId: number, conversation: Record<string, unknown>): void {
   io.to(`support:conv:${conversationId}`).emit('support-assigned', { conversation });
   io.to('support:staff').emit('support-assigned', { conversation });
 }
 
-export function emitSupportClosure(io, conversationId) {
+export function emitSupportClosure(io: Server, conversationId: number): void {
   io.to(`support:conv:${conversationId}`).emit('support-closed', { conversationId });
 }
 
-export function emitSupportNew(io, conversation) {
+export function emitSupportNew(io: Server, conversation: Record<string, unknown>): void {
   io.to('support:staff').emit('support-new', { conversation });
 }
 

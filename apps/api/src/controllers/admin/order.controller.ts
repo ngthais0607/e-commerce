@@ -1,5 +1,6 @@
 import type { Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.js';
+import { updateOrderStatusSchema, updateOrderPaymentStatusSchema } from '../../validators/orderValidator.js';
 import { adminOrderModel } from '../../models/admin/order.model.js';
 import { adminOrderView } from '../../views/admin/order.view.js';
 import { sendOrderStatusUpdate } from '../../services/emailService.js';
@@ -11,7 +12,6 @@ import { orderMessageModel } from '../../models/admin/orderMessage.model.js';
 const ORDER_STATUS_OPTIONS = ['PENDING', 'PAID', 'PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
 // Staff can update order status including cancel, but cannot change to PENDING/PAID
 const STAFF_ORDER_STATUS_OPTIONS = ['PROCESSING', 'SHIPPED', 'COMPLETED', 'CANCELLED'];
-const PAYMENT_STATUS_OPTIONS = ['PENDING', 'PAID', 'FAILED', 'REFUNDED'];
 const PAYMENT_STATUS_TRANSITIONS = {
   PENDING: ['PAID', 'FAILED'],
   FAILED: ['PENDING', 'PAID'],
@@ -66,9 +66,16 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
       return res.status(404).json({ error: 'Order not found' });
     }
 
-    const { status, paymentStatus, trackingCode, reason } = req.body;
+    const parsed = updateOrderStatusSchema.safeParse({ body: req.body });
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: parsed.error.errors.map((e) => e.message).join('; '),
+      });
+    }
+    const { status, trackingCode, reason } = parsed.data.body;
 
-    if (paymentStatus !== undefined) {
+    if ((req.body as { paymentStatus?: string }).paymentStatus !== undefined) {
       return res.status(400).json({ error: 'Use /payment-status endpoint to update payment status' });
     }
 
@@ -198,14 +205,17 @@ export const getOrderPayment = async (req: AuthenticatedRequest, res: Response, 
 export const updateOrderPaymentStatus = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const id = parseInt(req.params.id, 10);
-    const { status, transactionId, reason } = req.body;
+    const bodyParsed = updateOrderPaymentStatusSchema.safeParse({ body: req.body });
+    if (!bodyParsed.success) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: bodyParsed.error.errors.map((e) => e.message).join('; '),
+      });
+    }
+    const { status, transactionId, reason } = bodyParsed.data.body;
 
     if (Number.isNaN(id)) {
       return res.status(400).json({ error: 'Invalid order ID' });
-    }
-
-    if (!status || !PAYMENT_STATUS_OPTIONS.includes(status)) {
-      return res.status(400).json({ error: 'Invalid payment status' });
     }
 
     const order = await adminOrderModel.getById(id);
@@ -217,7 +227,7 @@ export const updateOrderPaymentStatus = async (req: AuthenticatedRequest, res: R
     const allowedNextStatuses = (PAYMENT_STATUS_TRANSITIONS as Record<string, string[]>)[currentPaymentStatus] || [];
     const actorRole = req.user?.role === 'ADMIN' ? 'ADMIN' : 'STAFF';
     const staffId = req.user?.id ?? null;
-    const normalizedReason = typeof reason === 'string' ? reason.trim() : '';
+    const normalizedReason = reason?.trim() ?? '';
 
     if (status === currentPaymentStatus) {
       const payment = await PaymentService.getPaymentByOrderId(id);

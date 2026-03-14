@@ -1,9 +1,9 @@
 export const reviewView = {
-  list(payload) {
+  list(payload: Record<string, unknown>) {
     return payload;
   },
 
-  detail(review) {
+  detail(review: Record<string, unknown>) {
     return review;
   },
 };

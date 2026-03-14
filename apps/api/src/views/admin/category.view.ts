@@ -1,14 +1,15 @@
 export const adminCategoryView = {
-  list(result) {
+  list(result: Record<string, unknown>) {
     // Handle paginated result
-    if (result.items) {
+    const r = result as { items?: unknown; total?: unknown; page?: unknown; pageSize?: unknown; totalPages?: unknown };
+    if (r.items) {
       return {
-        items: result.items,
+        items: r.items,
         pagination: {
-          total: result.total,
-          page: result.page,
-          pageSize: result.pageSize,
-          totalPages: result.totalPages,
+          total: r.total,
+          page: r.page,
+          pageSize: r.pageSize,
+          totalPages: r.totalPages,
         },
       };
     }
@@ -16,7 +17,7 @@ export const adminCategoryView = {
     return result;
   },
 
-  detail(category) {
+  detail(category: Record<string, unknown>) {
     return category;
   },
 };

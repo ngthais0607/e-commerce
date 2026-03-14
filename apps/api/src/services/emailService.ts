@@ -1,5 +1,28 @@
 import { sendEmail } from '../config/email.js';
-import { log } from '../utils/logger.js';
+
+/** Minimal types for email payloads */
+interface OrderLike {
+  orderNumber?: string;
+  createdAt?: string | Date;
+  status?: string;
+  items?: Array<{ name?: string; quantity?: number; price?: unknown }>;
+  subtotal?: unknown;
+  shippingFee?: number;
+  discount?: unknown;
+  total?: unknown;
+  trackingCode?: string;
+  paymentStatus?: string;
+  paymentMethod?: string;
+  user?: UserLike | null;
+  email?: string;
+  shippingAddress?: { name?: string };
+}
+
+interface UserLike {
+  id?: number;
+  name?: string;
+  email?: string;
+}
 
 /**
  * Email templates and service functions
@@ -8,16 +31,16 @@ import { log } from '../utils/logger.js';
 /**
  * Send order confirmation email
  */
-export const sendOrderConfirmation = async (order, user) => {
-  const orderItems = order.items
+export const sendOrderConfirmation = async (order: OrderLike, user: UserLike) => {
+  const orderItems = (order.items || [])
     .map(
-      (item) => `
+      (item: { name?: string; quantity?: number; price?: unknown }) => `
     <tr>
       <td style="padding: 10px; border-bottom: 1px solid #eee;">
         ${item.name} x ${item.quantity}
       </td>
       <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
-        $${(Number(item.price) * item.quantity).toFixed(2)}
+        $${(Number(item.price) * (item.quantity ?? 0)).toFixed(2)}
       </td>
     </tr>
   `
@@ -52,7 +75,7 @@ export const sendOrderConfirmation = async (order, user) => {
           <div class="order-details">
             <h2>Order Details</h2>
             <p><strong>Order Number:</strong> ${order.orderNumber}</p>
-            <p><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+            <p><strong>Order Date:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}</p>
             <p><strong>Status:</strong> ${order.status}</p>
             
             <h3>Items:</h3>
@@ -61,8 +84,8 @@ export const sendOrderConfirmation = async (order, user) => {
             </table>
             <div class="total">
               <p>Subtotal: $${Number(order.subtotal).toFixed(2)}</p>
-              ${order.shippingFee > 0 ? `<p>Shipping: $${Number(order.shippingFee).toFixed(2)}</p>` : ''}
-              ${order.discount > 0 ? `<p>Discount: -$${Number(order.discount).toFixed(2)}</p>` : ''}
+              ${(order.shippingFee ?? 0) > 0 ? `<p>Shipping: $${Number(order.shippingFee).toFixed(2)}</p>` : ''}
+              ${Number(order.discount ?? 0) > 0 ? `<p>Discount: -$${Number(order.discount).toFixed(2)}</p>` : ''}
               <p>Total: $${Number(order.total).toFixed(2)}</p>
             </div>
           </div>
@@ -86,15 +109,15 @@ Hello ${user.name},
 Thank you for your order! We've received your order and will process it shortly.
 
 Order Number: ${order.orderNumber}
-Order Date: ${new Date(order.createdAt).toLocaleDateString()}
+Order Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}
 Status: ${order.status}
 
 Items:
-${order.items.map((item) => `- ${item.name} x ${item.quantity}: $${(Number(item.price) * item.quantity).toFixed(2)}`).join('\n')}
+${(order.items || []).map((item: { name?: string; quantity?: number; price?: unknown }) => `- ${item.name} x ${item.quantity}: $${(Number(item.price) * (item.quantity ?? 0)).toFixed(2)}`).join('\n')}
 
 Subtotal: $${Number(order.subtotal).toFixed(2)}
-${order.shippingFee > 0 ? `Shipping: $${Number(order.shippingFee).toFixed(2)}\n` : ''}
-${order.discount > 0 ? `Discount: -$${Number(order.discount).toFixed(2)}\n` : ''}
+${(order.shippingFee ?? 0) > 0 ? `Shipping: $${Number(order.shippingFee).toFixed(2)}\n` : ''}
+${Number(order.discount ?? 0) > 0 ? `Discount: -$${Number(order.discount).toFixed(2)}\n` : ''}
 Total: $${Number(order.total).toFixed(2)}
 
 We'll send you another email when your order ships.
@@ -104,8 +127,8 @@ If you have any questions, please contact our support team.
   `;
 
   return sendEmail({
-    to: user.email,
-    subject: `Order Confirmation - ${order.orderNumber}`,
+    to: user.email ?? '',
+    subject: `Order Confirmation - ${order.orderNumber ?? ''}`,
     html,
     text,
   });
@@ -114,7 +137,7 @@ If you have any questions, please contact our support team.
 /**
  * Send password reset email
  */
-export const sendPasswordReset = async (user, resetToken) => {
+export const sendPasswordReset = async (user: UserLike, resetToken: string) => {
   const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
 
   const html = `
@@ -168,7 +191,7 @@ This link will expire in 1 hour. If you didn't request this, please ignore this 
   `;
 
   return sendEmail({
-    to: user.email,
+    to: user.email ?? '',
     subject: 'Password Reset Request',
     html,
     text,
@@ -178,7 +201,12 @@ This link will expire in 1 hour. If you didn't request this, please ignore this 
 /**
  * Send order status update email
  */
-export const sendOrderStatusUpdate = async (order, user, oldStatus, newStatus) => {
+export const sendOrderStatusUpdate = async (
+  order: OrderLike,
+  user: UserLike,
+  oldStatus: string,
+  newStatus: string
+) => {
   const html = `
     <!DOCTYPE html>
     <html>
@@ -215,7 +243,7 @@ export const sendOrderStatusUpdate = async (order, user, oldStatus, newStatus) =
   `;
 
   return sendEmail({
-    to: user.email,
+    to: user.email ?? '',
     subject: `Order ${order.orderNumber} - Status Updated to ${newStatus}`,
     html,
     text: `Your order ${order.orderNumber} status has been updated to ${newStatus}.`,
@@ -225,22 +253,25 @@ export const sendOrderStatusUpdate = async (order, user, oldStatus, newStatus) =
 /**
  * Send payment receipt / invoice email after successful payment
  */
-export const sendPaymentReceipt = async (order, transactionId?: string) => {
+export const sendPaymentReceipt = async (
+  order: OrderLike,
+  transactionId?: string
+) => {
   // Prefer linked user info; fall back to order email if needed
-  const user = order.user || {
+  const user = order.user ?? {
     name: order.shippingAddress?.name || 'Customer',
     email: order.email,
   };
 
   const orderItems = (order.items || [])
     .map(
-      (item) => `
+      (item: { name?: string; quantity?: number; price?: unknown }) => `
     <tr>
       <td style="padding: 10px; border-bottom: 1px solid #eee;">
         ${item.name} x ${item.quantity}
       </td>
       <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
-        $${(Number(item.price) * item.quantity).toFixed(2)}
+        $${(Number(item.price) * (item.quantity ?? 0)).toFixed(2)}
       </td>
     </tr>
   `,
@@ -275,7 +306,7 @@ export const sendPaymentReceipt = async (order, transactionId?: string) => {
           <div class="order-details">
             <h2>Order Details</h2>
             <p><strong>Order Number:</strong> ${order.orderNumber}</p>
-            <p><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+            <p><strong>Order Date:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}</p>
             <p><strong>Payment Status:</strong> ${order.paymentStatus || 'PAID'}</p>
             <p><strong>Payment Method:</strong> ${order.paymentMethod || 'Online'}</p>
             ${transactionId ? `<p><strong>Transaction ID:</strong> ${transactionId}</p>` : ''}
@@ -286,8 +317,8 @@ export const sendPaymentReceipt = async (order, transactionId?: string) => {
             </table>
             <div class="total">
               <p>Subtotal: $${Number(order.subtotal).toFixed(2)}</p>
-              ${order.shippingFee > 0 ? `<p>Shipping: $${Number(order.shippingFee).toFixed(2)}</p>` : ''}
-              ${order.discount > 0 ? `<p>Discount: -$${Number(order.discount).toFixed(2)}</p>` : ''}
+              ${(order.shippingFee ?? 0) > 0 ? `<p>Shipping: $${Number(order.shippingFee).toFixed(2)}</p>` : ''}
+              ${Number(order.discount ?? 0) > 0 ? `<p>Discount: -$${Number(order.discount).toFixed(2)}</p>` : ''}
               <p>Total: $${Number(order.total).toFixed(2)}</p>
             </div>
           </div>
@@ -311,7 +342,7 @@ Hello ${user.name},
 We have received your payment for your order.
 
 Order Number: ${order.orderNumber}
-Order Date: ${new Date(order.createdAt).toLocaleDateString()}
+Order Date: ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}
 Payment Status: ${order.paymentStatus || 'PAID'}
 Payment Method: ${order.paymentMethod || 'Online'}
 ${transactionId ? `Transaction ID: ${transactionId}\n` : ''}
@@ -319,14 +350,14 @@ ${transactionId ? `Transaction ID: ${transactionId}\n` : ''}
 Items:
 ${(order.items || [])
   .map(
-    (item) =>
-      `- ${item.name} x ${item.quantity}: $${(Number(item.price) * item.quantity).toFixed(2)}`,
+    (item: { name?: string; quantity?: number; price?: unknown }) =>
+      `- ${item.name} x ${item.quantity}: $${(Number(item.price) * (item.quantity ?? 0)).toFixed(2)}`,
   )
   .join('\n')}
 
 Subtotal: $${Number(order.subtotal).toFixed(2)}
-${order.shippingFee > 0 ? `Shipping: $${Number(order.shippingFee).toFixed(2)}\n` : ''}
-${order.discount > 0 ? `Discount: -$${Number(order.discount).toFixed(2)}\n` : ''}
+${(order.shippingFee ?? 0) > 0 ? `Shipping: $${Number(order.shippingFee).toFixed(2)}\n` : ''}
+${Number(order.discount ?? 0) > 0 ? `Discount: -$${Number(order.discount).toFixed(2)}\n` : ''}
 Total: $${Number(order.total).toFixed(2)}
 
 You can view this order anytime in your account.
@@ -335,8 +366,9 @@ If you need a VAT invoice or have any questions, please contact our support team
 © ${new Date().getFullYear()} Stay. All rights reserved.
   `;
 
+  const recipient = (user as { email?: string }).email ?? '';
   return sendEmail({
-    to: user.email,
+    to: recipient,
     subject: `Payment Receipt - ${order.orderNumber}`,
     html,
     text,

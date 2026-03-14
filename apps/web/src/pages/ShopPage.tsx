@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
-import { ShoppingCart, Search, Filter, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Search, Filter, ChevronDown, Loader2 } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -112,14 +112,26 @@ export default function ShopPage() {
     }));
   }
 
+  const handleCategorySelect = (categoryId: string) => {
+    setFilters((prev) => ({
+      ...prev,
+      categoryId,
+      // Khi chọn lại category thì reset search & price
+      search: '',
+      minPrice: '',
+      maxPrice: '',
+      page: 1,
+    }));
+  };
+
   return (
-    <div className="bg-gradient-to-b from-background via-muted/20 to-background min-h-screen">
+    <div className="bg-gradient-to-b from-sky-50 via-sky-100 to-sky-200 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900 min-h-screen">
       <div className="container mx-auto px-4 py-8 md:py-12">
         <div className="mb-8 md:mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-indigo-500/10 to-violet-500/10 rounded-full border border-indigo-500/20 mb-4">
-            <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Shop</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-sky-500/10 to-cyan-500/10 rounded-full border border-sky-400/30 mb-4">
+            <span className="text-sm font-semibold text-sky-600 dark:text-sky-300">Shop</span>
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight bg-gradient-to-r from-foreground via-indigo-600 to-violet-600 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight bg-gradient-to-r from-slate-900 via-sky-600 to-cyan-500 bg-clip-text text-transparent mb-3">
             Shop All Products
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl">
@@ -129,37 +141,43 @@ export default function ShopPage() {
 
         <div className="flex flex-col lg:flex-row gap-8">
           <aside className="w-full lg:w-72 space-y-6 flex-shrink-0">
-            <div className="bg-background p-6 rounded-2xl shadow-xl border-2 border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-300">
+            <div className="bg-background p-6 rounded-2xl shadow-xl border-2 border-sky-100 hover:border-sky-300 dark:border-slate-800 dark:hover:border-sky-600 transition-all duration-300">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-2.5 bg-gradient-to-br from-indigo-500 to-violet-500 rounded-xl shadow-lg">
+                <div className="p-2.5 bg-gradient-to-br from-sky-500 via-sky-400 to-cyan-400 rounded-xl shadow-lg">
                   <Filter className="h-5 w-5 text-white" />
                 </div>
-                <h2 className="font-bold text-xl bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">Filters</h2>
+                <h2 className="font-bold text-xl bg-gradient-to-r from-sky-600 to-cyan-500 bg-clip-text text-transparent">
+                  Filters
+                </h2>
               </div>
 
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-sm font-semibold mb-3 text-gray-700 uppercase tracking-wide">Search</h3>
+                  <h3 className="text-sm font-semibold mb-3 text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                    Search
+                  </h3>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <Input
                       placeholder="Search products..."
                       value={filters.search}
                       onChange={(e) => handleFilterChange('search', e.target.value)}
-                      className="pl-10 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg"
+                      className="pl-10 h-11 border-sky-100 dark:border-slate-700 focus:border-sky-500 focus:ring-sky-400 rounded-lg"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold mb-4 text-gray-700 uppercase tracking-wide">Categories</h3>
+                  <h3 className="text-sm font-semibold mb-4 text-slate-700 dark:text-slate-200 uppercase tracking-wide">
+                    Categories
+                  </h3>
                   <div className="space-y-1.5">
                     <button
-                      onClick={() => handleFilterChange('categoryId', '')}
+                      onClick={() => handleCategorySelect('')}
                       className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                         !filters.categoryId
-                          ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/30'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
+                          ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 text-white shadow-md shadow-sky-500/30'
+                          : 'text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-300'
                       }`}
                     >
                       All Categories
@@ -167,11 +185,11 @@ export default function ShopPage() {
                     {categories.map((cat) => (
                       <button
                         key={cat.id}
-                        onClick={() => handleFilterChange('categoryId', String(cat.id))}
+                        onClick={() => handleCategorySelect(String(cat.id))}
                         className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                           filters.categoryId === String(cat.id)
-                            ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/30'
-                            : 'text-gray-700 hover:bg-gray-50 hover:text-indigo-600'
+                            ? 'bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 text-white shadow-md shadow-sky-500/30'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-sky-50 dark:hover:bg-slate-800 hover:text-sky-600 dark:hover:text-sky-300'
                         }`}
                       >
                         {cat.name}
@@ -181,7 +199,9 @@ export default function ShopPage() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-semibold mb-4 text-gray-700 uppercase tracking-wide">Price Range</h3>
+                  <h3 className="text-sm font-semibold mb-4 text-gray-700 dark:text-slate-200 uppercase tracking-wide">
+                    Price Range
+                  </h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
@@ -190,7 +210,7 @@ export default function ShopPage() {
                         placeholder="Min"
                         value={filters.minPrice}
                         onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                        className="pl-7 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg text-sm"
+                        className="pl-7 h-11 border-gray-200 dark:border-slate-700 focus:border-sky-500 focus:ring-sky-400 rounded-lg text-sm"
                       />
                     </div>
                     <div className="relative">
@@ -200,7 +220,7 @@ export default function ShopPage() {
                         placeholder="Max"
                         value={filters.maxPrice}
                         onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                        className="pl-7 h-11 border-gray-200 focus:border-indigo-500 focus:ring-indigo-500 rounded-lg text-sm"
+                        className="pl-7 h-11 border-gray-200 dark:border-slate-700 focus:border-sky-500 focus:ring-sky-400 rounded-lg text-sm"
                       />
                     </div>
                   </div>
@@ -210,22 +230,28 @@ export default function ShopPage() {
           </aside>
 
           <div className="flex-1">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white rounded-xl shadow-sm border border-gray-100">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 p-4 bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800">
               <div>
-                <p className="text-sm font-medium text-gray-600">
-                  Showing <span className="font-bold text-indigo-600">{products.items.length}</span> of{' '}
-                  <span className="font-bold text-gray-900">{products.total}</span> products
+                <p className="text-sm font-medium text-gray-600 dark:text-slate-300">
+                  Showing <span className="font-bold text-sky-600 dark:text-sky-300">{products.items.length}</span> of{' '}
+                  <span className="font-bold text-gray-900 dark:text-slate-50">{products.total}</span> products
                 </p>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-sm font-medium text-gray-600">Sort by:</span>
+                {loading && (
+                  <span className="inline-flex items-center gap-2 text-xs text-sky-600 dark:text-sky-300">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </span>
+                )}
+                <span className="text-sm font-medium text-gray-600 dark:text-slate-300">Sort by:</span>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="min-w-[180px] justify-between border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 rounded-lg"
+                      className="min-w-[180px] justify-between border-sky-100 dark:border-slate-700 hover:border-sky-500 hover:bg-sky-50 dark:hover:bg-slate-800 rounded-lg"
                     >
                       <span className="font-medium">
                         {filters.sortBy === 'createdAt'
@@ -280,7 +306,7 @@ export default function ShopPage() {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="overflow-hidden border-0 shadow-sm bg-white">
+                  <Card key={i} className="overflow-hidden border-0 shadow-sm bg-white dark:bg-slate-900">
                     <Skeleton className="aspect-[4/3] w-full" />
                     <CardContent className="p-5">
                       <Skeleton className="h-5 w-3/4 mb-2" />
@@ -295,8 +321,8 @@ export default function ShopPage() {
                 ))}
               </div>
             ) : products.items.length === 0 ? (
-              <div className="text-center py-20 bg-white rounded-xl border">
-                <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-slate-50">No products found</h3>
                 <p className="text-muted-foreground mt-2">
                   Try adjusting your filters or search terms.
                 </p>
@@ -316,7 +342,7 @@ export default function ShopPage() {
                   {products.items.map((product) => (
                     <Card
                       key={product.id}
-                      className="group overflow-hidden border-2 border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 shadow-lg hover:shadow-2xl transition-all duration-500 bg-background rounded-2xl hover:-translate-y-2"
+                      className="group overflow-hidden border-2 border-sky-100 hover:border-sky-300 dark:border-slate-800 dark:hover:border-sky-600 shadow-lg hover:shadow-2xl transition-all duration-500 bg-background rounded-2xl hover:-translate-y-2"
                     >
                       <Link
                         to={`/product/${product.slug}`}
@@ -353,7 +379,16 @@ export default function ShopPage() {
                       <CardContent className="p-5">
                         <div className="mb-2">
                           <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
-                            {product.category?.name || 'Clothing'}
+                            {product.category?.name ||
+                              // Nếu đang filter theo category cụ thể, ưu tiên hiển thị tên category đó
+                              (filters.categoryId
+                                ? categories.find(
+                                    (cat) => String(cat.id) === String(filters.categoryId),
+                                  )?.name
+                                : undefined) ||
+                              // Fallback: thử map theo categoryId trong product
+                              categories.find((cat) => cat.id === product.categoryId)?.name ||
+                              'All Categories'}
                           </p>
                           <Link to={`/product/${product.slug}`}>
                             <h3 className="font-semibold text-lg leading-tight mb-2 group-hover:text-primary transition-colors line-clamp-2 min-h-[56px]">
@@ -361,11 +396,11 @@ export default function ShopPage() {
                             </h3>
                           </Link>
                         </div>
-                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-slate-800">
                           <div className="flex flex-col gap-1">
                             {product.salePrice ? (
                               <>
-                                <span className="text-lg font-bold text-red-600">
+                                <span className="text-lg font-bold text-red-600 dark:text-red-400">
                                   {formatPrice(product.salePrice)}
                                 </span>
                                 <span className="text-xs text-muted-foreground line-through">
@@ -373,7 +408,7 @@ export default function ShopPage() {
                                 </span>
                               </>
                             ) : (
-                              <span className="text-lg font-bold text-gray-900">
+                              <span className="text-lg font-bold text-slate-900 dark:text-slate-50">
                                 {formatPrice(product.price)}
                               </span>
                             )}
@@ -382,7 +417,7 @@ export default function ShopPage() {
                             size="sm"
                             onClick={() => addItem(product)}
                             disabled={product.stock === 0}
-                            className="rounded-full px-4 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                            className="rounded-full px-4 bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 disabled:bg-slate-300 disabled:cursor-not-allowed"
                           >
                             <ShoppingCart className="h-4 w-4 mr-2" /> Add
                           </Button>
@@ -409,7 +444,7 @@ export default function ShopPage() {
                           className={`w-8 h-8 rounded-md text-sm font-medium transition-colors ${
                             filters.page === p
                               ? 'bg-primary text-primary-foreground'
-                              : 'text-gray-600 hover:bg-gray-100'
+                              : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800'
                           }`}
                         >
                           {p}

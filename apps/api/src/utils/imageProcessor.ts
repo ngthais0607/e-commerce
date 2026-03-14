@@ -11,18 +11,34 @@ if (!fs.existsSync(thumbnailsDir)) {
   fs.mkdirSync(thumbnailsDir, { recursive: true });
 }
 
+export interface ProcessImageOptions {
+  width?: number;
+  height?: number;
+  quality?: number;
+  format?: string;
+  createThumbnail?: boolean;
+  thumbnailSize?: number;
+}
+
+export interface ImageConstraints {
+  minWidth?: number;
+  minHeight?: number;
+  maxWidth?: number;
+  maxHeight?: number;
+  aspectRatio?: number;
+}
+
 /**
  * Process and optimize image
- * @param {string} filePath - Path to uploaded file
- * @param {object} options - Processing options
- * @returns {Promise<object>} - Processed image info
  */
-export const processImage = async (filePath, options = {}) => {
+export const processImage = async (
+  filePath: string,
+  options: ProcessImageOptions = {}
+): Promise<{ original: string; processed: string; thumbnail: string | null; filename: string; thumbnailFilename: string | null }> => {
   const {
     width = 1200,
     height = 1200,
     quality = 85,
-    format = 'jpeg',
     createThumbnail = true,
     thumbnailSize = 300,
   } = options;
@@ -65,52 +81,49 @@ export const processImage = async (filePath, options = {}) => {
       thumbnailFilename: thumbnailPath ? `${name}-thumb${ext}` : null,
     };
   } catch (error) {
-    log.error('Image processing error', error, { filePath });
+    log.error('Image processing error', error instanceof Error ? error : new Error(String(error)), { filePath });
     throw new Error('Failed to process image');
   }
 };
 
 /**
  * Process multiple images
- * @param {Array} files - Array of file objects
- * @param {object} options - Processing options
- * @returns {Promise<Array>} - Array of processed image info
  */
-export const processImages = async (files, options = {}) => {
+export const processImages = async (
+  files: Array<{ path: string }>,
+  options: ProcessImageOptions = {}
+) => {
   const results = await Promise.all(
-    files.map((file) => processImage(file.path, options))
+    files.map((file: { path: string }) => processImage(file.path, options))
   );
   return results;
 };
 
 /**
  * Validate image dimensions
- * @param {string} filePath - Path to image file
- * @param {object} constraints - Dimension constraints
- * @returns {Promise<boolean>} - Whether image meets constraints
  */
 export const validateImageDimensions = async (
-  filePath,
-  constraints = {}
-) => {
+  filePath: string,
+  constraints: ImageConstraints = {}
+): Promise<boolean> => {
   const { minWidth, minHeight, maxWidth, maxHeight, aspectRatio } = constraints;
 
   try {
     const metadata = await sharp(filePath).metadata();
 
-    if (minWidth && metadata.width < minWidth) {
+    if (minWidth && metadata.width != null && metadata.width < minWidth) {
       return false;
     }
-    if (minHeight && metadata.height < minHeight) {
+    if (minHeight && metadata.height != null && metadata.height < minHeight) {
       return false;
     }
-    if (maxWidth && metadata.width > maxWidth) {
+    if (maxWidth && metadata.width != null && metadata.width > maxWidth) {
       return false;
     }
-    if (maxHeight && metadata.height > maxHeight) {
+    if (maxHeight && metadata.height != null && metadata.height > maxHeight) {
       return false;
     }
-    if (aspectRatio) {
+    if (aspectRatio && metadata.width != null && metadata.height != null) {
       const currentRatio = metadata.width / metadata.height;
       const tolerance = 0.1; // 10% tolerance
       if (
@@ -123,16 +136,15 @@ export const validateImageDimensions = async (
 
     return true;
   } catch (error) {
-    log.error('Image validation error', error, { filePath });
+    log.error('Image validation error', error instanceof Error ? error : new Error(String(error)), { filePath });
     return false;
   }
 };
 
 /**
  * Delete image files
- * @param {string} filename - Filename to delete
  */
-export const deleteImage = (filename) => {
+export const deleteImage = (filename: string): void => {
   try {
     const filePath = path.join(uploadsDir, filename);
     const thumbPath = path.join(thumbnailsDir, filename.replace(/-processed/, '-thumb'));
@@ -144,7 +156,7 @@ export const deleteImage = (filename) => {
       fs.unlinkSync(thumbPath);
     }
   } catch (error) {
-    log.error('Image deletion error', error, { filename });
+    log.error('Image deletion error', error instanceof Error ? error : new Error(String(error)), { filename });
   }
 };
 

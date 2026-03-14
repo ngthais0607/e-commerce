@@ -236,7 +236,152 @@ INSERT INTO products (name, slug, shortDesc, description, price, salePrice, stoc
 'Delight young readers with our beautifully illustrated children\'s storybook collection. Set of 5 classic stories with modern illustrations. Perfect for bedtime reading. Ages 3-8.',
 29.99, 24.99, 160, 'BOOK-006', 
 '["https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800","https://images.unsplash.com/photo-1512820790803-83ca750da946?w=800","https://images.unsplash.com/photo-1532012197267-da84d127e765?w=800"]', 
-5, 'KidsBooks', 4.7, 189, TRUE)
+5, 'KidsBooks', 4.7, 189, TRUE),
+
+-- Extra Electronics Products (to reach ~10)
+('USB-C Hub 7-in-1', 'usb-c-hub-7-in-1',
+'USB-C hub with HDMI, USB and SD card slots',
+'Expand your laptop connectivity with this compact 7-in-1 USB-C hub. Features HDMI, USB-A, USB-C and SD/microSD card slots. Aluminum body, plug-and-play.',
+39.99, 34.99, 120, 'ELEC-007',
+'["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800","https://images.unsplash.com/photo-1518770660439-4636190af475?w=800"]',
+1, 'TechBrand', 4.4, 52, TRUE),
+
+('Noise Cancelling Earbuds', 'noise-cancelling-earbuds',
+'True wireless earbuds with ANC and case',
+'Compact true wireless earbuds with active noise cancelling, 24-hour battery with charging case and touch controls. IPX4 sweat resistant.',
+129.99, 99.99, 90, 'ELEC-008',
+'["https://images.unsplash.com/photo-1588423771073-b8903fbb85b5?w=800","https://images.unsplash.com/photo-1589820296156-2454bb8b367e?w=800"]',
+1, 'AudioMax', 4.5, 77, TRUE),
+
+('Mechanical Gaming Keyboard', 'mechanical-gaming-keyboard',
+'RGB mechanical keyboard with blue switches',
+'Full-size mechanical gaming keyboard with RGB backlight, blue switches and detachable wrist rest. N-key rollover and programmable macros.',
+119.99, 89.99, 70, 'ELEC-009',
+'["https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800","https://images.unsplash.com/photo-1512427691650-1e0c2f9a81b3?w=800"]',
+1, 'GameTech', 4.6, 134, TRUE),
+
+('1080p Web Camera', '1080p-web-camera',
+'Full HD webcam with built-in microphone',
+'Full HD 1080p webcam for streaming and video calls. Auto focus, wide angle lens and noise-reducing microphone. Clip-on mount for monitors and laptops.',
+69.99, 54.99, 85, 'ELEC-010',
+'["https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=800","https://images.unsplash.com/photo-1594904351111-7bcd5900c3a0?w=800"]',
+1, 'OfficePro', 4.3, 41, TRUE),
+
+-- Extra Clothing Products
+('Performance Hoodie', 'performance-hoodie',
+'Lightweight hoodie for training and casual wear',
+'Moisture-wicking performance hoodie with slim fit, thumb holes and kangaroo pocket. Ideal for warm-up, gym or daily wear.',
+59.99, 49.99, 110, 'CLOTH-007',
+'["https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=800","https://images.unsplash.com/photo-1526481280695-3c687fd543c0?w=800"]',
+2, 'SportMax', 4.4, 63, TRUE),
+
+('Slim Fit Chinos', 'slim-fit-chinos',
+'Stretch cotton chinos for office and weekend',
+'Versatile slim fit chinos made from stretch cotton. Mid-rise, tapered leg and multiple color options. Works with shirts or t-shirts.',
+69.99, 54.99, 140, 'CLOTH-008',
+'["https://images.unsplash.com/photo-1495121553079-4c61bcce189c?w=800","https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=800"]',
+2, 'FashionCo', 4.3, 58, TRUE),
+
+('Everyday Sneakers', 'everyday-sneakers',
+'Minimal sneakers for daily use',
+'Clean and minimal sneakers with cushioned insole and rubber outsole. Works with jeans, chinos and shorts.',
+79.99, 64.99, 95, 'CLOTH-009',
+'["https://images.unsplash.com/photo-1519741497674-611481863552?w=800","https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?w=800"]',
+2, 'UrbanStep', 4.5, 101, TRUE),
+
+('Classic Polo Shirt', 'classic-polo-shirt',
+'Cotton pique polo shirt',
+'Classic polo shirt made from breathable cotton pique. Ribbed collar and cuffs, two-button placket. Smart casual essential.',
+39.99, 29.99, 180, 'CLOTH-010',
+'["https://images.unsplash.com/photo-1512436991641-6745cdb1723f?w=800","https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=800"]',
+2, 'FashionCo', 4.2, 74, TRUE),
+
+-- Extra Sports Products
+('Foam Roller Recovery', 'foam-roller-recovery',
+'High-density foam roller for muscle recovery',
+'High-density foam roller ideal for myofascial release, stretching and recovery after workouts.',
+29.99, 24.99, 130, 'SPORT-007',
+'["https://images.unsplash.com/photo-1554344058-8d1d1dbc5960?w=800","https://images.unsplash.com/photo-1599059819516-07b1b1a9a7e6?w=800"]',
+4, 'FitnessPro', 4.4, 65, TRUE),
+
+('Training Jump Rope', 'training-jump-rope',
+'Adjustable speed jump rope',
+'Adjustable speed jump rope with ball bearings and comfortable handles. Great for cardio and warm-up.',
+19.99, 14.99, 200, 'SPORT-008',
+'["https://images.unsplash.com/photo-1605296867304-46d5465a13f1?w=800","https://images.unsplash.com/photo-1517832207067-4db24a2ae47c?w=800"]',
+4, 'SportMax', 4.3, 48, TRUE),
+
+('Indoor Fitness Bike', 'indoor-fitness-bike',
+'Adjustable indoor cycling bike',
+'Sturdy indoor cycling bike with adjustable resistance, LCD display and comfortable seat. Perfect for home workouts.',
+499.99, 429.99, 20, 'SPORT-009',
+'["https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800","https://images.unsplash.com/photo-1593079831268-3381b0db4a77?w=800&q=80"]',
+4, 'FitnessPro', 4.6, 72, TRUE),
+
+('Multi-Sport Gym Bag', 'multi-sport-gym-bag',
+'Spacious gym bag with shoe compartment',
+'Durable gym bag with ventilated shoe compartment, wet pocket and multiple organizers. Suitable for gym and short trips.',
+69.99, 54.99, 85, 'SPORT-010',
+'["https://images.unsplash.com/photo-1605348532760-6753d2c43329?w=800","https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800"]',
+4, 'SportMax', 4.5, 59, TRUE),
+
+-- Extra Home & Garden Products
+('Aroma Diffuser Lamp', 'aroma-diffuser-lamp',
+'Essential oil diffuser with ambient light',
+'Ultrasonic essential oil diffuser with warm ambient light. 4 timing modes and auto shut-off. Adds fragrance and atmosphere to your home.',
+44.99, 34.99, 75, 'HOME-007',
+'["https://images.unsplash.com/photo-1489515217757-5fd1be406fef?w=800","https://images.unsplash.com/photo-1489515217757-5fd1be406fef?w=800&q=80"]',
+3, 'HomeEssentials', 4.4, 61, TRUE),
+
+('Minimalist Wall Shelf Set', 'minimalist-wall-shelf-set',
+'Set of 3 floating wall shelves',
+'Set of three floating wall shelves for displaying decor, books or plants. Includes mounting hardware.',
+59.99, 49.99, 90, 'HOME-008',
+'["https://images.unsplash.com/photo-1505691723518-36a5ac3be353?w=800","https://images.unsplash.com/photo-1484154218962-a197022b5858?w=800"]',
+3, 'HomeEssentials', 4.3, 47, TRUE),
+
+('Luxury Bath Towel Set', 'luxury-bath-towel-set',
+'6-piece cotton bath towel set',
+'Soft and absorbent 100% cotton bath towel set. Includes bath towels, hand towels and washcloths.',
+69.99, 54.99, 110, 'HOME-009',
+'["https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800","https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800"]',
+3, 'ComfortHome', 4.6, 88, TRUE),
+
+('Outdoor String Lights', 'outdoor-string-lights',
+'Weatherproof LED string lights',
+'Warm white LED string lights for balcony, garden or patio. Weatherproof and connectable up to 5 sets.',
+39.99, 29.99, 140, 'HOME-010',
+'["https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800","https://images.unsplash.com/photo-1438109491414-7198515b166b?w=800"]',
+3, 'GardenPro', 4.5, 94, TRUE),
+
+-- Extra Books Products
+('Mindfulness Daily Journal', 'mindfulness-daily-journal',
+'Guided journal for mindfulness and gratitude',
+'Daily journal with prompts for mindfulness, gratitude and reflection. 180 days of guided pages.',
+24.99, 19.99, 190, 'BOOK-007',
+'["https://images.unsplash.com/photo-1523475472560-d2df97ec485c?w=800","https://images.unsplash.com/photo-1513475382585-d06e58bcb0ea?w=800"]',
+5, 'WellnessBooks', 4.5, 121, TRUE),
+
+('Productivity Playbook', 'productivity-playbook',
+'Strategies to improve productivity and focus',
+'Actionable strategies to organize your time, reduce distractions and get more done. Includes worksheets and checklists.',
+32.99, 27.99, 160, 'BOOK-008',
+'["https://images.unsplash.com/photo-1456327102063-fb5054efe647?w=800","https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800"]',
+5, 'BusinessBooks', 4.4, 87, TRUE),
+
+('Travel Photography Stories', 'travel-photography-stories',
+'Coffee table book of travel photos and stories',
+'Coffee table book featuring stunning travel photography and behind-the-scenes stories from around the world.',
+59.99, 49.99, 80, 'BOOK-009',
+'["https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800","https://images.unsplash.com/photo-1500534314211-0a24cd038ebd?w=800"]',
+5, 'PhotoBooks', 4.7, 76, TRUE),
+
+('Fantasy Epic Saga', 'fantasy-epic-saga',
+'Epic fantasy novel with rich world-building',
+'High fantasy novel set in a richly detailed world with complex characters and magic system. First book of an upcoming series.',
+39.99, 34.99, 140, 'BOOK-010',
+'["https://images.unsplash.com/photo-1457369804613-52c61a468e7d?w=800","https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=800"]',
+5, 'FictionBooks', 4.8, 132, TRUE)
 
 ON DUPLICATE KEY UPDATE name=VALUES(name);
 

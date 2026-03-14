@@ -1,13 +1,14 @@
+import type { UserListFilters } from '../../types/models.js';
 import { query, queryOne, execute } from '../../config/database.js';
 import { hashPassword } from '../../utils/password.js';
 
 export const adminUserModel = {
-  async list(filters = {}) {
+  async list(filters: UserListFilters = {}) {
     const { page = 1, pageSize = 20, role, search } = filters;
 
     // Ensure page and pageSize are valid numbers
-    const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const pageSizeNum = Math.max(1, Math.min(50, parseInt(pageSize, 10) || 20));
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const pageSizeNum = Math.max(1, Math.min(50, parseInt(String(pageSize), 10) || 20));
     const offset = (pageNum - 1) * pageSizeNum;
 
     let whereClause = 'WHERE 1=1';
@@ -43,6 +44,7 @@ export const adminUserModel = {
         c.role,
         c.isActive,
         c.createdAt,
+        c.customerCode,
         COALESCE(COUNT(o.id), 0) as orderCount
       FROM clients c
       LEFT JOIN orders o ON c.id = o.clientId
@@ -69,6 +71,7 @@ export const adminUserModel = {
         role: user.role,
         isActive: Boolean(user.isActive),
         createdAt: user.createdAt,
+        customerCode: user.customerCode,
         _count: {
           orders: parseInt(user.orderCount, 10) || 0,
         },
@@ -80,15 +83,15 @@ export const adminUserModel = {
     };
   },
 
-  async getById(id) {
+  async getById(id: number) {
     return queryOne(
-      `SELECT id, email, name, phone, role, isActive, createdAt 
+      `SELECT id, email, name, phone, role, isActive, createdAt, customerCode 
        FROM clients WHERE id = ?`,
       [id]
     );
   },
 
-  async update(id, data) {
+  async update(id: number, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -114,7 +117,7 @@ export const adminUserModel = {
     }
     if (data.password) {
       updateFields.push('password = ?');
-      updateValues.push(await hashPassword(data.password));
+      updateValues.push(await hashPassword(String(data.password)));
     }
 
     if (updateFields.length > 0) {
@@ -130,7 +133,7 @@ export const adminUserModel = {
     return this.getById(id);
   },
 
-  async updateRole(id, role, isActive) {
+  async updateRole(id: number, role: string, isActive?: boolean) {
     const updateFields = [];
     const updateValues = [];
 

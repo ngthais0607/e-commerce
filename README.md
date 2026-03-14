@@ -3,7 +3,7 @@
 Full-stack e-commerce application with an Express + MySQL2 API and a React + Vite frontend.
 
 ## Overview
-- Customer features: authentication (JWT), product browse/search, cart, checkout with Stripe/VNPay, addresses, coupons, reviews, wishlist, order history.
+- Customer features: authentication (JWT), product browse/search, cart, checkout with VNPay (MoMo, ZaloPay, Bank, COD), addresses, coupons, reviews, wishlist, order history.
 - Admin features: dashboard, product/category/banner CRUD, order/user/coupon management, uploads.
 - Infrastructure: MySQL 8+, optional Redis caching, Swagger docs, image processing with Sharp, email via Nodemailer.
 
@@ -35,17 +35,18 @@ npm --prefix apps/web install
 ```
 
 2) Configure environment
-- Create `apps/api/.env` (see `.env.example` for variables such as DB connection, JWT, email, Redis).
-- Create `apps/web/.env` if you need to override `VITE_API_URL` (default `/api`).
+- **API:** Create `apps/api/.env` (see `apps/api/.env.example` for DB, JWT, email, Redis, VNPay).
+- **Web:** Create `apps/web/.env` if you need to override defaults (see `apps/web/.env.example`).
+  - **Development:** Use default `VITE_API_URL=/api` so Vite proxy forwards to the API; optional `VITE_API_PORT=4000` for Socket.IO.
+  - **Production:** Set `VITE_API_URL=https://api.yourdomain.com/api` (or your API base URL) before building.
 
 3) Initialize database  
-See `database/README.md` for SQL scripts. Fast path:
+See `database/README.md` for SQL scripts. From repo root:
 ```bash
-cd database
 # Windows
-./setup_database.bat
+database\setup_database.bat
 # Linux/Mac
-chmod +x setup_database.sh && ./setup_database.sh
+chmod +x database/setup_database.sh && bash database/setup_database.sh
 ```
 
 4) Seed default admin

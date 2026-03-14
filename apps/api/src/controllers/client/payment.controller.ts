@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
+import type { AuthenticatedRequest } from '../../middleware/auth.js';
 import { PaymentService } from '../../services/paymentService.js';
 import { queryOne } from '../../config/database.js';
 import { log } from '../../utils/logger.js';
@@ -11,17 +12,26 @@ const createPaymentSchema = z.object({
   }),
 });
 
+/** Mock payment success (dev/sandbox): body.orderId required */
+const mockPaymentSuccessSchema = z.object({
+  body: z.object({
+    orderId: z.union([z.number().int().positive(), z.string().min(1)]).transform((v) =>
+      typeof v === 'string' ? parseInt(v, 10) : v
+    ).pipe(z.number().int().positive()),
+  }),
+});
+
 /**
  * Create payment URL for an order
  */
 export const createPayment = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const data = createPaymentSchema.parse({ body: req.body }).body;
-    const clientId = (req as any).user?.id;
+    const clientId = req.user?.id;
 
     if (!clientId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -121,7 +131,7 @@ export const createPayment = async (
 export const paymentCallback = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ): Promise<void> => {
   try {
     const result = await PaymentService.verifyVNPayCallback(req.query as Record<string, string>);
@@ -143,13 +153,13 @@ export const paymentCallback = async (
  * Get payment status for an order
  */
 export const getPaymentStatus = async (
-  req: Request,
+  req: AuthenticatedRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
     const orderId = parseInt(req.params.orderId, 10);
-    const clientId = (req as any).user?.id;
+    const clientId = req.user?.id;
 
     if (!clientId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -198,8 +208,8 @@ export const mockPaymentSuccess = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    const orderId = parseInt(req.body.orderId, 10);
-    const clientId = (req as any).user?.id;
+    const { orderId } = mockPaymentSuccessSchema.parse({ body: req.body }).body;
+    const clientId = req.user?.id;
 
     if (!clientId) {
       res.status(401).json({ error: 'Unauthorized' });
@@ -242,9 +252,10 @@ export const mockPaymentSuccess = async (
     });
   } catch (error) {
     const errorDetails = error as Error;
+    const body = req.body as { orderId?: unknown } | null;
     log.error('Mock payment success error', errorDetails, {
-      orderId: req.body.orderId,
-      userId: (req as any).user?.id,
+      orderId: body?.orderId,
+      userId: req.user?.id,
       message: errorDetails.message,
       stack: errorDetails.stack,
     });

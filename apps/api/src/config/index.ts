@@ -2,25 +2,6 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Validate critical environment variables in production
-if (process.env.NODE_ENV === 'production') {
-  const requiredVars = ['JWT_SECRET', 'DATABASE_URL'];
-  const missingVars = requiredVars.filter(varName => !process.env[varName]);
-  
-  if (missingVars.length > 0) {
-    console.error('❌ Missing required environment variables in production:');
-    missingVars.forEach(varName => console.error(`   - ${varName}`));
-    console.error('\n⚠️  Please set these variables before starting the server in production mode.');
-    process.exit(1);
-  }
-  
-  // Warn if using default JWT secret
-  if (process.env.JWT_SECRET === 'your-secret-key-change-in-production') {
-    console.warn('⚠️  WARNING: Using default JWT_SECRET in production is insecure!');
-    console.warn('⚠️  Please set a strong, random JWT_SECRET in your .env file.');
-  }
-}
-
 export const config = {
   // Server
   port: Number(process.env.PORT) || 4000,
@@ -57,10 +38,6 @@ export const config = {
 
   // Payment
   payment: {
-    stripe: {
-      secretKey: process.env.STRIPE_SECRET_KEY || '',
-      webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-    },
     vnpay: {
       tmnCode: process.env.VNPAY_TMN_CODE || '',
       secretKey: process.env.VNPAY_SECRET_KEY || '',
