@@ -1,12 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '@/services/api';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { Send, RefreshCw, MessageSquare, User } from 'lucide-react';
+
+const formatMessageTime = (date: string) =>
+  new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 
 type Conversation = {
   id: number;
@@ -15,6 +18,8 @@ type Conversation = {
   assignedStaffId: number | null;
   lastMessageAt: string;
   createdAt: string;
+  userName?: string | null;
+  userEmail?: string | null;
 };
 
 type SupportMessage = {
@@ -64,11 +69,12 @@ export default function AdminSupport() {
       const res = await api.get('/admin/support/conversations?status=OPEN,ASSIGNED,CLOSED');
       setConversations(res.data.conversations || []);
     } catch (error: unknown) {
-      const err = error as { message?: string };
+      const err = error as { response?: { data?: { error?: string; message?: string } }; message?: string };
+      const description = err?.response?.data?.error ?? err?.response?.data?.message ?? err?.message ?? 'Please try again.';
       toast({
         variant: 'destructive',
         title: 'Failed to load conversations',
-        description: err?.message || 'Please try again.',
+        description,
       });
     } finally {
       setLoading(false);
@@ -141,155 +147,158 @@ export default function AdminSupport() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Conversations list */}
-      <Card className="lg:col-span-1">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle>Conversations</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Live chats between customers and staff
-            </p>
+    <div className="flex flex-col h-[calc(100vh-7rem)] min-h-[480px] rounded-xl border border-border bg-card overflow-hidden shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-12 flex-1 min-h-0">
+        {/* Left: Conversations list - cùng tông với chat user (compact) */}
+        <aside className="lg:col-span-4 flex flex-col border-r border-border bg-muted/20 min-h-0">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-border shrink-0">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Conversations</span>
+            </div>
+            <Button size="sm" variant="ghost" onClick={fetchConversations} disabled={loading} className="h-8 w-8 p-0 shrink-0">
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
+              <span className="sr-only">Refresh</span>
+            </Button>
           </div>
-          <Button size="sm" variant="outline" onClick={fetchConversations} disabled={loading}>
-            Refresh
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="border rounded-lg divide-y max-h-[520px] overflow-y-auto bg-muted/40 dark:bg-slate-900/40">
+          <div className="flex-1 overflow-y-auto min-h-0">
             {loading ? (
-              <div className="p-3 flex justify-center"><LoadingSpinner size="sm" /></div>
+              <div className="p-4 flex justify-center">
+                <LoadingSpinner size="sm" />
+              </div>
             ) : conversations.length === 0 ? (
-              <div className="p-3 text-sm text-muted-foreground">No conversations</div>
+              <div className="p-4 flex flex-col items-center justify-center text-center text-muted-foreground">
+                <User className="h-8 w-8 mb-2 opacity-40" />
+                <p className="text-sm">No conversations yet.</p>
+                <p className="text-[11px] mt-1">When customers use Live chat, they appear here.</p>
+              </div>
             ) : (
-              conversations.map((c) => (
-                <button
-                  key={c.id}
-                  className={`w-full text-left px-3 py-3 transition-colors hover:bg-background/70 dark:hover:bg-slate-900/70 ${
-                    selected?.id === c.id
-                      ? 'bg-background dark:bg-slate-900 border-l-4 border-l-indigo-500'
-                      : ''
-                  }`}
-                  onClick={() => selectConversation(c)}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <div className="text-sm font-semibold">
-                      #{c.id}{' '}
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ml-1 ${getStatusBadgeClass(
-                          c.status
-                        )}`}
-                      >
-                        {c.status}
-                      </span>
+              <div className="divide-y divide-border">
+                {conversations.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`w-full text-left px-3 py-2.5 transition-colors hover:bg-background/80 ${
+                      selected?.id === c.id ? 'bg-primary/10 dark:bg-primary/20 border-l-4 border-l-primary' : ''
+                    }`}
+                    onClick={() => selectConversation(c)}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <span className="text-[11px] font-medium text-muted-foreground">#{c.id}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="text-sm font-medium text-foreground truncate">
+                            {c.userName?.trim() || c.userEmail || `Customer #${c.userId}`}
+                          </span>
+                          <span className={`inline-flex px-1.5 py-0.5 rounded-full text-[10px] font-medium shrink-0 ${getStatusBadgeClass(c.status)}`}>
+                            {c.status}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          #{c.id}
+                          {c.assignedStaffId != null && (
+                            <span> · {c.assignedStaffId === user?.id ? 'You' : `Staff #${c.assignedStaffId}`}</span>
+                          )}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">{formatDate(c.lastMessageAt)}</p>
+                      </div>
                     </div>
-                    <span className="text-[11px] text-muted-foreground">
-                      {formatDate(c.lastMessageAt)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>Customer ID: {c.userId}</span>
-                    <span>
-                      {c.assignedStaffId
-                        ? c.assignedStaffId === user?.id
-                          ? 'You'
-                          : `Staff: ${c.assignedStaffId}`
-                        : 'Unassigned'}
-                    </span>
-                  </div>
-                </button>
-              ))
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </aside>
 
-      {/* Conversation detail */}
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>
-            {selected ? `Conversation #${selected.id}` : 'Select a conversation'}
-            {selected?.assignedStaffId && (
-              <span className="ml-2 text-sm text-muted-foreground">Assigned: {selected.assignedStaffId}</span>
+        {/* Right: Chat area - cùng style header/empty như chat user */}
+        <main className="lg:col-span-8 flex flex-col min-h-0 bg-background">
+          {/* Chat header - compact như Support Bot */}
+          <header className="flex items-center justify-between px-3 py-2.5 border-b border-border shrink-0">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-xs shrink-0">
+                {selected ? `#${selected.id}` : '—'}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {selected
+                    ? (selected.userName?.trim() || selected.userEmail || `Customer #${selected.userId}`)
+                    : 'Select a conversation'}
+                </p>
+                <p className="text-[11px] text-muted-foreground capitalize">
+                  {selected ? `#${selected.id} · ${selected.status.toLowerCase()}` : 'Pick one from the list'}
+                </p>
+              </div>
+            </div>
+          </header>
+
+          {/* Messages - bubble style giống Support Bot */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
+            {loadingMsgs ? (
+              <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
+                Loading messages...
+              </div>
+            ) : !selected ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[180px] text-center text-muted-foreground">
+                <MessageSquare className="h-10 w-10 mb-2 opacity-40" />
+                <p className="text-sm">Pick a conversation to view and reply.</p>
+                <p className="text-[11px] mt-1">Select one from the list on the left.</p>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full min-h-[140px] text-sm text-muted-foreground">
+                <p className="text-sm">No messages yet.</p>
+                <p className="text-[11px] mt-1">Type below to send the first reply.</p>
+              </div>
+            ) : (
+              messages.map((m) => {
+                const isCustomer = m.senderRole === 'CUSTOMER';
+                const isStaffRole = m.senderRole === 'STAFF';
+                const label = m.senderRole === 'CUSTOMER' ? 'Customer' : isStaffRole ? (user?.role === 'STAFF' ? 'You' : 'Staff') : 'Admin';
+                return (
+                  <div key={m.id} className={`flex ${isCustomer ? 'justify-start' : 'justify-end'}`}>
+                    <div className={`max-w-[85%] px-3.5 py-2 rounded-2xl whitespace-pre-wrap ${isCustomer ? 'rounded-bl-md' : 'rounded-br-md'} ${getBubbleStyles(m.senderRole)}`}>
+                      <p className="text-[11px] font-medium opacity-90 mb-0.5">{label}</p>
+                      <p className="text-sm leading-snug">{m.message}</p>
+                      <p className={`text-[11px] mt-1 ${isCustomer ? 'text-slate-600 dark:text-slate-400' : 'text-white/80'}`}>
+                        {formatMessageTime(m.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })
             )}
-          </CardTitle>
-        </CardHeader>
-          <CardContent className="space-y-4">
-          {loadingMsgs ? (
-            <div className="text-sm text-muted-foreground">Loading messages...</div>
-          ) : !selected ? (
-            <div className="text-sm text-muted-foreground">Pick a conversation to view messages.</div>
-          ) : (
-            <>
-              <div className="h-80 overflow-y-auto border rounded-2xl p-4 bg-gradient-to-b from-muted/60 via-background to-muted/40 dark:from-slate-900/80 dark:via-slate-950 dark:to-slate-900/70 space-y-3">
-                {messages.length === 0 ? (
-                  <div className="text-sm text-muted-foreground">No messages yet.</div>
-                ) : (
-                  messages.map((m) => {
-                    const isCustomer = m.senderRole === 'CUSTOMER';
-                    const isStaff = m.senderRole === 'STAFF';
-                    const label =
-                      m.senderRole === 'CUSTOMER'
-                        ? 'Customer'
-                        : isStaff
-                        ? user?.role === 'STAFF'
-                          ? 'You'
-                          : 'Staff'
-                        : 'Admin';
+          </div>
 
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex w-full ${isCustomer ? 'justify-start' : 'justify-end'}`}
-                      >
-                        {/* Bubble wrapper: limit width giống Messenger, không kéo full màn hình */}
-                        <div className="max-w-[55%] space-y-1">
-                          <div
-                            className={`inline-flex items-center gap-2 px-2 py-0.5 rounded-full text-[11px] font-medium ${
-                              isCustomer
-                                ? 'bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-100'
-                                : isStaff
-                                ? 'bg-sky-500/90 text-white'
-                                : 'bg-violet-500/90 text-white'
-                            } ${isCustomer ? '' : 'self-end'}`}
-                          >
-                            <span>{label}</span>
-                          </div>
-                          <div
-                            className={`px-3 py-2 text-sm whitespace-pre-wrap rounded-2xl ${
-                              isCustomer ? 'rounded-bl-sm' : 'rounded-br-sm'
-                            } ${getBubbleStyles(m.senderRole)}`}
-                          >
-                            {m.message}
-                          </div>
-                          <div
-                            className={`text-[11px] text-muted-foreground ${
-                              isCustomer ? '' : 'text-right'
-                            }`}
-                          >
-                            {formatDate(m.createdAt)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-              <div className="flex gap-2">
-                <textarea
-                  value={newMsg}
-                  onChange={(e) => setNewMsg(e.target.value)}
-                  className="flex-1 px-3 py-2 border rounded-lg text-sm resize-none h-20 bg-background dark:bg-slate-950/60"
-                  placeholder="Type a reply..."
-                />
-                <Button onClick={sendMessage} disabled={!newMsg.trim() || !selected}>
-                  Send
-                </Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+          {/* Input bar - cùng style với chat user */}
+          <div className="p-2.5 border-t border-border shrink-0">
+            <div className="flex items-center gap-2">
+              <input
+                value={newMsg}
+                onChange={(e) => setNewMsg(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                  }
+                }}
+                className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-input bg-background text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50"
+                placeholder={selected ? 'Type a message...' : 'Select a conversation first'}
+                disabled={!selected}
+              />
+              <Button
+                size="icon"
+                onClick={sendMessage}
+                disabled={!newMsg.trim() || !selected}
+                className="shrink-0 rounded-full h-9 w-9"
+                aria-label="Send"
+              >
+                <Send className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

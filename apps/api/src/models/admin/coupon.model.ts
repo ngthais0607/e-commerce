@@ -1,7 +1,8 @@
+import type { CouponListFilters } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
 
 export const adminCouponModel = {
-  async list(filters = {}) {
+  async list(filters: CouponListFilters = {}) {
     const { page, pageSize, search, isActive, type } = filters;
 
     let whereClause = 'WHERE 1=1';
@@ -25,6 +26,11 @@ export const adminCouponModel = {
 
     // If pagination is requested, return paginated results
     if (page !== undefined && pageSize !== undefined) {
+      const MAX_PAGE_SIZE = 100;
+      const limitValue = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(String(pageSize), 10) || 20));
+      const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+      const offsetValue = (pageNum - 1) * limitValue;
+
       const [totalResult] = await query(
         `SELECT COUNT(*) as total FROM coupons ${whereClause}`,
         params
@@ -32,16 +38,16 @@ export const adminCouponModel = {
       const total = totalResult.total;
 
       const items = await query(
-        `SELECT * FROM coupons ${whereClause} ORDER BY createdAt DESC LIMIT ? OFFSET ?`,
-        [...params, pageSize, (page - 1) * pageSize]
+        `SELECT * FROM coupons ${whereClause} ORDER BY createdAt DESC LIMIT ${limitValue} OFFSET ${offsetValue}`,
+        params
       );
 
       return {
         items,
         total,
-        page,
-        pageSize,
-        totalPages: Math.ceil(total / pageSize),
+        page: pageNum,
+        pageSize: limitValue,
+        totalPages: Math.ceil(total / limitValue),
       };
     }
 
@@ -52,14 +58,14 @@ export const adminCouponModel = {
     );
   },
 
-  async getByCode(code) {
+  async getByCode(code: string) {
     return queryOne(
       `SELECT * FROM coupons WHERE code = ?`,
       [code]
     );
   },
 
-  async create(data) {
+  async create(data: Record<string, unknown>) {
     await insert(
       `INSERT INTO coupons (code, name, description, type, value, minOrderAmount, maxDiscount, usageLimit, usedCount, validFrom, validUntil, isActive, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -79,10 +85,10 @@ export const adminCouponModel = {
       ]
     );
 
-    return this.getByCode(data.code);
+    return this.getByCode(String(data.code));
   },
 
-  async update(code, data) {
+  async update(code: string, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -146,7 +152,7 @@ export const adminCouponModel = {
     return this.getByCode(code);
   },
 
-  async remove(code) {
+  async remove(code: string) {
     const affectedRows = await execute(
       `DELETE FROM coupons WHERE code = ?`,
       [code]
@@ -154,7 +160,7 @@ export const adminCouponModel = {
     return affectedRows > 0;
   },
 
-  async apply(code, amount) {
+  async apply(code: string, amount: number) {
     const coupon = await this.getByCode(code.toUpperCase());
 
     if (!coupon) {

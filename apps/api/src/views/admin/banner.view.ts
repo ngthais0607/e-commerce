@@ -1,9 +1,9 @@
 export const adminBannerView = {
-  list(banners) {
+  list(banners: Record<string, unknown>[]) {
     return banners;
   },
 
-  detail(banner) {
+  detail(banner: Record<string, unknown>) {
     return banner;
   },
 };

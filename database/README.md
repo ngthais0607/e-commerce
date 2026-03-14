@@ -28,9 +28,8 @@
 - **Order → Messages**: 1-n  
   `order_messages.orderId` FK `orders.id` (CASCADE).
 - **Support**:
-  - `support_conversations.userId` FK `clients.id`.
-  - `support_conversations.assignedStaffId` FK `clients.id`.
-  - `support_messages.userId` / `staffId` FK `clients.id`.
+  - `support_conversations.userId` FK `clients.id` (RESTRICT); `assignedStaffId` FK `clients.id` (SET NULL).
+  - `support_messages.conversationId` FK `support_conversations.id` (CASCADE: xóa conversation thì xóa messages); `userId`/`staffId` FK `clients.id` (SET NULL).
 
 ### Index tối ưu truy vấn
 
@@ -86,24 +85,49 @@ This folder contains SQL scripts and helpers for the e-commerce database.
 ## Files hiện có
 - `ecommerce_full_schema.sql` – full schema (clients, products, orders, payments, support, v.v.).  
 - `ecommerce_schema_optimizations.sql` – FK/staff, cột bổ sung và index tối ưu.  
+- `add_indexes_pagination.sql` – index cho list/pagination (orders by client, products by slug+isActive).  
+- `add_support_fk_cascade.sql` – bổ sung ON DELETE CASCADE/SET NULL cho support_conversations, support_messages (xóa conversation → xóa messages; xóa staff → gỡ assign).  
 - `insert-products-with-images.sql` – sample products với ảnh.  
 - `create-admin.sql` – seed admin trực tiếp bằng SQL (thay thế/backup cho `npm run seed:admin`).  
 - `update-banners-fashion-2025.sql` – cập nhật banner trang chủ theo chủ đề Fashion 2025.  
 - `update-products-clothing-only.sql` – script bảo trì cho dữ liệu sản phẩm (clothing).  
 - `setup_database.bat` / `setup_database.sh` – script tự động chạy các file cần thiết.
 
+## Database checklist (bảng + script)
+
+Các bảng API đang dùng (phải có sau khi chạy schema):
+
+| Bảng | Mô tả |
+|------|--------|
+| `clients` | User (khách + admin/staff) |
+| `password_reset_tokens` | Token đặt lại mật khẩu |
+| `addresses` | Địa chỉ giao hàng |
+| `categories` | Danh mục (cây parentId) |
+| `products` | Sản phẩm |
+| `coupons` | Mã giảm giá |
+| `orders` | Đơn hàng |
+| `order_items` | Chi tiết đơn |
+| `payments` | Thanh toán (order_id, created_at snake_case) |
+| `reviews` | Đánh giá sản phẩm |
+| `banners` | Banner trang chủ |
+| `order_messages` | Tin nhắn nội bộ theo đơn |
+| `support_conversations` | Hội thoại support |
+| `support_messages` | Tin nhắn support |
+
+Thứ tự chạy script khuyến nghị:  
+`ecommerce_full_schema.sql` → `ecommerce_schema_optimizations.sql` → `add_indexes_pagination.sql` → `add_support_fk_cascade.sql`.  
+Sau đó: `npm run seed:admin` và `npm run seed:test-users` trong `apps/api`.
+
 ## Quick setup (recommended)
-Windows:
+Windows (từ thư mục gốc repo):
 ```bash
-cd database
-./setup_database.bat
+database\setup_database.bat
 ```
 
-Linux/Mac:
+Linux/Mac (từ thư mục gốc repo):
 ```bash
-cd database
-chmod +x setup_database.sh
-./setup_database.sh
+chmod +x database/setup_database.sh
+bash database/setup_database.sh
 ```
 
 ## Manual setup (tương đương script)
@@ -111,7 +135,10 @@ chmod +x setup_database.sh
 ```bash
 mysql -u root -p ecommerce < database/ecommerce_full_schema.sql
 mysql -u root -p ecommerce < database/ecommerce_schema_optimizations.sql
+mysql -u root -p ecommerce < database/add_indexes_pagination.sql
+mysql -u root -p ecommerce < database/add_support_fk_cascade.sql
 ```
+(Bỏ qua lỗi "Duplicate key name" / "already exists" nếu index hoặc FK đã có.)
 
 2) Optional: sample data / fixes
 ```bash
@@ -147,10 +174,11 @@ DATABASE_URL=mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce
 ```
 
 ## Reset database
+Không có file `reset_database.sql`. Để reset toàn bộ:
 ```bash
-mysql -u root -p < database/reset_database.sql
+mysql -u root -p -e "DROP DATABASE IF EXISTS ecommerce; CREATE DATABASE ecommerce CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 ```
-Then re-run the schema scripts above.
+Sau đó chạy lại các script schema theo thứ tự ở mục Manual setup.
 
 ## Notes
 - Scripts target MySQL 8.0+. All tables use `utf8mb4` for full Unicode support.

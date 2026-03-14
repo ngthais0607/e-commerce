@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { pool } from '../src/config/database.js';
 import { log } from '../src/utils/logger.js';
+import { deleteCachePattern, CACHE_KEYS } from '../src/utils/cache.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -24,13 +25,32 @@ async function seedProducts() {
     // Remove comments and split by semicolons
     const statements = sqlContent
       .split(';')
-      .map(stmt => stmt.trim())
-      .filter(stmt => 
-        stmt.length > 0 && 
-        !stmt.startsWith('--') && 
-        !stmt.startsWith('/*') &&
-        stmt !== 'USE ecommerce'
-      );
+      .map((raw) => {
+        // Remove single-line comments
+        let stmt = raw.replace(/^--.*$/gm, '');
+        // Remove block comments
+        stmt = stmt.replace(/\/\*[\s\S]*?\*\//gm, '');
+        return stmt.trim();
+      })
+      .filter((stmt) => {
+        if (!stmt || stmt.length === 0) {
+          return false;
+        }
+
+        // Skip USE statement (DB đã chọn sẵn trong pool)
+        if (stmt.toUpperCase() === 'USE ECOMMERCE') {
+          return false;
+        }
+
+        // Skip verification SELECT queries from the SQL file.
+        // Script này đã tự có bước verify riêng bên dưới.
+        const upper = stmt.toUpperCase();
+        if (upper.startsWith('SELECT')) {
+          return false;
+        }
+
+        return true;
+      });
     
     console.log(`Found ${statements.length} SQL statements to execute\n`);
     
@@ -73,8 +93,15 @@ async function seedProducts() {
     }
     
     console.log('\n=== Summary ===');
-    console.log(`✅ Successful: ${successCount}`);
+    console.log(`✅ Successful (executed statements): ${successCount}`);
     console.log(`❌ Errors: ${errorCount}`);
+
+    // Invalidate related caches so frontend sees fresh data
+    console.log('\n=== Clearing product & category cache ===');
+    await deleteCachePattern(`${CACHE_KEYS.PRODUCTS}:*`);
+    await deleteCachePattern(`${CACHE_KEYS.PRODUCT}:*`);
+    await deleteCachePattern(`${CACHE_KEYS.CATEGORIES}:*`);
+    await deleteCachePattern(`${CACHE_KEYS.CATEGORY}:*`);
     
     // Verify data
     console.log('\n=== Verifying Data ===');

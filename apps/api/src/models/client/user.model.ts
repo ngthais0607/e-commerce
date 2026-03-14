@@ -1,8 +1,9 @@
+import type { UserProfileUpdateData } from '../../types/models.js';
 import { queryOne, execute } from '../../config/database.js';
 import { hashPassword } from '../../utils/password.js';
 
 export const userProfileModel = {
-  async update(id, data) {
+  async update(id: number, data: UserProfileUpdateData) {
     const updateFields = [];
     const updateValues = [];
 
@@ -16,13 +17,13 @@ export const userProfileModel = {
     }
     if (data.password) {
       updateFields.push('password = ?');
-      updateValues.push(await hashPassword(data.password));
+      updateValues.push(await hashPassword(String(data.password)));
     }
 
     if (updateFields.length === 0) {
       // No fields to update, return current user
       return queryOne(
-        `SELECT id, email, name, phone, role, isActive FROM clients WHERE id = ? AND isActive = 1`,
+        `SELECT id, email, name, phone, role, isActive, customerCode FROM clients WHERE id = ? AND isActive = 1`,
         [id]
       );
     }
@@ -36,7 +37,7 @@ export const userProfileModel = {
     );
 
     return queryOne(
-      `SELECT id, email, name, phone, role, isActive FROM clients WHERE id = ? AND isActive = 1`,
+      `SELECT id, email, name, phone, role, isActive, customerCode FROM clients WHERE id = ? AND isActive = 1`,
       [id]
     );
   },

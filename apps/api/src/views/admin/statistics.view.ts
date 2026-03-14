@@ -1,55 +1,62 @@
 export const adminStatisticsView = {
-  overview(data) {
+  overview(data: Record<string, unknown>) {
     return {
-      totalOrders: data.totalOrders,
-      totalRevenue: data.totalRevenue,
-      totalUsers: data.totalUsers,
-      totalProducts: data.totalProducts,
-      pendingOrders: data.pendingOrders,
-      todayRevenue: data.todayRevenue,
-      monthRevenue: data.monthRevenue,
+      totalOrders: (data as { totalOrders?: unknown }).totalOrders,
+      totalRevenue: (data as { totalRevenue?: unknown }).totalRevenue,
+      totalUsers: (data as { totalUsers?: unknown }).totalUsers,
+      totalProducts: (data as { totalProducts?: unknown }).totalProducts,
+      pendingOrders: (data as { pendingOrders?: unknown }).pendingOrders,
+      todayRevenue: (data as { todayRevenue?: unknown }).todayRevenue,
+      monthRevenue: (data as { monthRevenue?: unknown }).monthRevenue,
     };
   },
 
-  salesByPeriod(data, period = '7d') {
+  salesByPeriod(data: Record<string, unknown>[], period = '7d') {
     return {
       period: period,
-      data: data.map(item => ({
-        date: item.date,
-        orders: item.orders,
-        revenue: item.revenue,
+      data: data.map((item: Record<string, unknown>) => ({
+        date: (item as { date?: unknown }).date,
+        orders: (item as { orders?: unknown }).orders,
+        revenue: (item as { revenue?: unknown }).revenue,
       })),
     };
   },
 
-  topProducts(data) {
+  topProducts(data: Record<string, unknown>[]) {
     return {
-      products: data.map(product => ({
+      products: data.map((product: Record<string, unknown>) => ({
         id: product.id,
         name: product.name,
         images: product.images,
         price: product.price,
-        totalSold: product.totalSold,
-        totalRevenue: product.totalRevenue,
+        totalSold: (product as { totalSold?: unknown }).totalSold,
+        totalRevenue: (product as { totalRevenue?: unknown }).totalRevenue,
       })),
     };
   },
 
-  ordersByStatus(data) {
+  ordersByStatus(data: Record<string, unknown>[]) {
     return {
-      statuses: data.map(item => ({
+      statuses: data.map((item: Record<string, unknown>) => ({
         status: item.status,
         count: item.count,
       })),
     };
   },
 
-  full(data) {
+  full(data: Record<string, unknown>) {
+    const d = data as {
+      overview?: Record<string, unknown>;
+      salesByPeriod?: Record<string, unknown>[];
+      period?: string;
+      topProducts?: Record<string, unknown>[];
+      ordersByStatus?: Record<string, unknown>[];
+    };
     return {
-      overview: this.overview(data.overview),
-      salesByPeriod: this.salesByPeriod(data.salesByPeriod, data.period),
-      topProducts: this.topProducts(data.topProducts),
-      ordersByStatus: this.ordersByStatus(data.ordersByStatus),
+      overview: this.overview(d.overview ?? {}),
+      salesByPeriod: this.salesByPeriod(d.salesByPeriod ?? [], d.period),
+      topProducts: this.topProducts(d.topProducts ?? []),
+      ordersByStatus: this.ordersByStatus(d.ordersByStatus ?? []),
     };
   },
 };

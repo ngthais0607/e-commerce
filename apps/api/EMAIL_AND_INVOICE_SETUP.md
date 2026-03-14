@@ -104,3 +104,45 @@ File mẫu: `apps/api/.env.example` đã được chuẩn hóa cho Gmail.
      - Đảm bảo đang dùng **App Password**, không dùng mật khẩu thường.  
      - Kiểm tra xem 2-Step Verification đã bật chưa.
 
+---
+
+### 4. Redis (tùy chọn)
+
+Redis dùng để **cache** (sản phẩm, danh mục) giúp API nhanh hơn. **Không bắt buộc**: nếu không cấu hình, API vẫn chạy bình thường, chỉ không dùng cache.
+
+#### Cách hoạt động
+
+- **Khởi động:** Trong `index.ts`, sau khi kết nối DB thành công, server gọi `initRedis()`. Nếu `REDIS_URL` trống hoặc `DISABLE_REDIS=1` → Redis bị bỏ qua, log: *"Redis disabled ... Running without cache."*. Nếu có `REDIS_URL` nhưng không kết nối được (dev) → log cảnh báo và chạy tiếp không cache; (production) → có thể throw.
+- **Health check:** `GET /health` gọi `pingRedis()`. Response có `redis: "ok"` hoặc `redis: "unavailable"`. Trạng thái 503 chỉ khi **database** lỗi, không phải Redis.
+- **Cache:** `src/utils/cache.ts` cung cấp `getCache`, `setCache`, `deleteCache`, `deleteCachePattern`, `cacheWrapper`. Hiện cache được dùng trong **product** và **category** (admin model) để cache danh sách / chi tiết.
+- **Xóa cache thủ công:** Script `apps/api/scripts/clear-cache.ts` (ví dụ: `npx tsx scripts/clear-cache.ts`) kết nối Redis và xóa các key `products:*`, `product:*`.
+
+#### Cài và chạy Redis (không dùng Docker)
+
+- **Windows:** Dùng WSL rồi `sudo apt install redis-server`, hoặc cài [Redis for Windows](https://github.com/microsoftarchive/redis/releases) / [Memurai](https://www.memurai.com/) (tương thích Redis).
+- **Mac:** `brew install redis` → chạy nền: `brew services start redis` hoặc tạm thời: `redis-server`.
+- **Linux:** `sudo apt install redis-server` (Ubuntu/Debian) hoặc tương đương.
+
+Sau khi cài, chạy Redis (mặc định port 6379):
+
+```bash
+redis-server
+```
+
+Giữ terminal này mở hoặc chạy Redis như service (tùy OS).
+
+#### Cấu hình trong `.env`
+
+Trong `apps/api/.env` (copy từ `.env.example` nếu chưa có):
+
+```env
+# Bật Redis (localhost:6379)
+REDIS_URL=redis://localhost:6379
+
+# Muốn tắt cache: bỏ trống REDIS_URL hoặc set
+# DISABLE_REDIS=1
+```
+
+- **Local:** Cài và chạy Redis như trên, set `REDIS_URL=redis://localhost:6379`.
+- **Production:** Dùng Redis managed (Redis Cloud, ElastiCache, …), set `REDIS_URL` theo URL họ cung cấp. Không dùng cache thì để trống `REDIS_URL` hoặc set `DISABLE_REDIS=1`.
+

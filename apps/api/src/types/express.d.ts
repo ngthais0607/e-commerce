@@ -1,4 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars -- Request used for module augmentation */
 import type { Request } from 'express';
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 declare global {
   namespace Express {

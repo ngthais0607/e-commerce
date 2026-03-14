@@ -5,7 +5,7 @@ import type { Order, PaginatedResponse } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { Eye } from 'lucide-react';
+import { Eye, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthStore } from '@/store/authStore';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -150,7 +150,7 @@ export default function AdminOrders() {
     <div>
       <h1 className="text-3xl font-bold mb-8 text-foreground dark:text-white">Orders</h1>
 
-      <div className="mb-6 flex gap-4">
+      <div className="mb-6 flex gap-4 items-center">
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
@@ -164,6 +164,12 @@ export default function AdminOrders() {
           <option value="COMPLETED">Completed</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
+        {loading && (
+          <span className="inline-flex items-center gap-2 text-xs text-sky-600 dark:text-sky-300">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Loading orders...
+          </span>
+        )}
       </div>
 
       {orders.items.length === 0 ? (

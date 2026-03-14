@@ -116,6 +116,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
           email: client.email,
           name: client.name,
           role: client.role,
+          customerCode: client.customerCode,
         },
         token,
       }),
@@ -146,7 +147,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response, next: Next
         message: 'Your account could not be found. Please contact support.',
       });
     }
-    res.json(authView.profile(client));
+    res.json(authView.profile(client as unknown as Record<string, unknown>));
   } catch (error) {
     next(error);
   }

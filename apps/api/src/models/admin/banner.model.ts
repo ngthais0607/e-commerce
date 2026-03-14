@@ -1,7 +1,8 @@
+import type { BannerListFilters } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
 
 export const adminBannerModel = {
-  async list(filters = {}) {
+  async list(filters: BannerListFilters = {}) {
     const { position, includeInactive } = filters;
     
     let sql = `SELECT * FROM banners WHERE 1=1`;
@@ -21,7 +22,7 @@ export const adminBannerModel = {
     return query(sql, params);
   },
 
-  async create(data) {
+  async create(data: Record<string, unknown>) {
     const bannerId = await insert(
       `INSERT INTO banners (title, image, link, description, position, isActive, sortOrder, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -42,7 +43,7 @@ export const adminBannerModel = {
     );
   },
 
-  async update(id, data) {
+  async update(id: number, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -76,7 +77,7 @@ export const adminBannerModel = {
     }
 
     if (updateFields.length === 0) {
-      return this.findById(id);
+      return this.getById(id);
     }
 
     updateFields.push('updatedAt = NOW()');
@@ -93,14 +94,14 @@ export const adminBannerModel = {
     );
   },
 
-  async getById(id) {
+  async getById(id: number) {
     return queryOne(
       `SELECT * FROM banners WHERE id = ?`,
       [id]
     );
   },
 
-  async remove(id) {
+  async remove(id: number) {
     const affectedRows = await execute(
       `DELETE FROM banners WHERE id = ?`,
       [id]

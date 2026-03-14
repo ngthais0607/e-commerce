@@ -89,7 +89,10 @@ export default function AdminCoupons() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-foreground dark:text-white">Coupons</h1>
-        <Button onClick={() => navigate('/admin/coupons/new')} className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+        <Button
+          onClick={() => navigate('/admin/coupons/new')}
+          className="bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-500 text-white shadow-md"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Coupon
         </Button>
@@ -99,7 +102,10 @@ export default function AdminCoupons() {
         <Card className="bg-card dark:bg-slate-900/50 border-border dark:border-white/10">
           <CardContent className="p-12 text-center">
             <p className="text-muted-foreground dark:text-muted-foreground/80 mb-4">No coupons found</p>
-            <Button onClick={() => navigate('/admin/coupons/new')} className="bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600">
+            <Button
+              onClick={() => navigate('/admin/coupons/new')}
+              className="bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-500 text-white shadow-md"
+            >
               <Plus className="h-4 w-4 mr-2" />
               Create First Coupon
             </Button>

@@ -1,3 +1,4 @@
+import type { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -10,10 +11,10 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Configure storage
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (_req: Request, _file: Express.Multer.File, cb: (error: Error | null, destination: string) => void) => {
     cb(null, uploadsDir);
   },
-  filename: (req, file, cb) => {
+  filename: (_req: Request, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
     // Generate unique filename: timestamp-random-originalname
     const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
@@ -23,7 +24,11 @@ const storage = multer.diskStorage({
 });
 
 // File filter
-const fileFilter = (req, file, cb) => {
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: multer.FileFilterCallback
+) => {
   // Allowed MIME types
   const allowedMimes = [
     'image/jpeg',
@@ -36,28 +41,29 @@ const fileFilter = (req, file, cb) => {
   if (allowedMimes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new Error(
-        `Invalid file type. Only ${allowedMimes.join(', ')} are allowed.`
-      ),
+    (cb as (err: Error | null, accept?: boolean) => void)(
+      new Error(`Invalid file type. Only ${allowedMimes.join(', ')} are allowed.`),
       false
     );
   }
 };
 
-// Multer configuration
+// Multer configuration (body/upload size limits to avoid oversized requests)
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB per file
+const MAX_FILES = 10;
+
 export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB max file size
-    files: 10, // Max 10 files
+    fileSize: MAX_FILE_SIZE,
+    files: MAX_FILES,
   },
 });
 
 // Middleware for single file upload
 export const uploadSingle = (fieldName = 'image') => {
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     upload.single(fieldName)(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
@@ -86,7 +92,7 @@ export const uploadSingle = (fieldName = 'image') => {
 
 // Middleware for multiple files upload
 export const uploadMultiple = (fieldName = 'images', maxCount = 10) => {
-  return (req, res, next) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     upload.array(fieldName, maxCount)(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
@@ -114,16 +120,16 @@ export const uploadMultiple = (fieldName = 'images', maxCount = 10) => {
 };
 
 // Get file URL helper
-export const getFileUrl = (filename) => {
+export const getFileUrl = (filename: string | undefined | null): string | null => {
   if (!filename) return null;
-  // In production, this should return CDN URL
-  // For now, return relative path
   return `/uploads/${filename}`;
 };
 
 // Get multiple file URLs
-export const getFileUrls = (files) => {
+export const getFileUrls = (
+  files: Array<{ filename?: string }> | undefined | null
+): (string | null)[] => {
   if (!files || files.length === 0) return [];
-  return files.map((file) => getFileUrl(file.filename));
+  return files.map((file: { filename?: string }) => getFileUrl(file.filename));
 };
 

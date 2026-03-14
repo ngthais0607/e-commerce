@@ -173,6 +173,29 @@ export default function ContactPage() {
               <p>Mon – Fri: 8:00 – 20:00</p>
               <p>Sat – Sun: 9:00 – 18:00</p>
             </div>
+
+            <div className="overflow-hidden rounded-xl border bg-background">
+              <iframe
+                title="Showroom location map"
+                className="h-56 w-full"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                src="https://www.openstreetmap.org/export/embed.html?bbox=106.695%2C10.770%2C106.705%2C10.780&layer=mapnik&marker=10.775%2C106.700"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() =>
+                window.open(
+                  'https://www.google.com/maps/search/?api=1&query=123%20Commerce%20Street%2C%20District%201%2C%20Ho%20Chi%20Minh%20City',
+                  '_blank',
+                  'noreferrer'
+                )
+              }
+            >
+              Open in Google Maps
+            </Button>
           </CardContent>
         </Card>
       </div>

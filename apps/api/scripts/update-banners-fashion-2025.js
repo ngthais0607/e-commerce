@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 async function updateBanners() {
-  console.log('\n=== Updating Banners to Fashion 2025 ===\n');
+  console.log('\n=== Updating Banners to Fashion 2026 ===\n');
   
   try {
     const sqlPath = join(__dirname, '../../../database/update-banners-fashion-2025.sql');
@@ -18,11 +18,11 @@ async function updateBanners() {
     await pool.execute('DELETE FROM banners WHERE position = ?', ['homepage']);
     console.log('✅ Old banners deleted\n');
     
-    // Insert new Fashion 2025 banners
-    console.log('Inserting Fashion 2025 banners...');
+    // Insert new Fashion 2026 banners
+    console.log('Inserting Fashion 2026 banners...');
     const banners = [
       {
-        title: 'Fashion 2025 Collection',
+        title: 'Fashion 2026 Collection',
         image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop',
         link: '/shop?category=clothing',
         sortOrder: 1,
@@ -34,25 +34,25 @@ async function updateBanners() {
         sortOrder: 2,
       },
       {
-        title: 'Designer Collection 2025',
+        title: 'Designer Collection 2026',
         image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&auto=format&fit=crop',
         link: '/shop?category=clothing',
         sortOrder: 3,
       },
       {
-        title: 'Street Style 2025',
+        title: 'Street Style 2026',
         image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&auto=format&fit=crop',
         link: '/shop?category=clothing',
         sortOrder: 4,
       },
       {
-        title: 'Luxury Fashion 2025',
+        title: 'Luxury Fashion 2026',
         image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&auto=format&fit=crop',
         link: '/shop?category=clothing',
         sortOrder: 5,
       },
       {
-        title: 'Sustainable Fashion 2025',
+        title: 'Sustainable Fashion 2026',
         image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&auto=format&fit=crop',
         link: '/shop?category=clothing',
         sortOrder: 6,

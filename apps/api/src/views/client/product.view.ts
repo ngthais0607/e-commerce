@@ -1,4 +1,4 @@
-const baseShape = (product) => ({
+const baseShape = (product: Record<string, unknown>) => ({
   id: product.id,
   name: product.name,
   slug: product.slug,
@@ -15,19 +15,21 @@ const baseShape = (product) => ({
 });
 
 export const userProductView = {
-  list(payload) {
+  list(payload: Record<string, unknown>) {
+    const p = payload as { items?: Record<string, unknown>[] };
     return {
       ...payload,
-      items: payload.items.map(baseShape),
+      items: (p.items || []).map(baseShape),
     };
   },
 
-  detail(product) {
+  detail(product: Record<string, unknown> | null) {
     if (!product) return null;
+    const prod = product as Record<string, unknown>;
     return {
-      ...baseShape(product),
-      category: product.category,
-      reviews: product.reviews,
+      ...baseShape(prod),
+      category: prod.category,
+      reviews: prod.reviews,
     };
   },
 };

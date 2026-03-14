@@ -30,7 +30,7 @@ export const addressModel = {
     );
   },
 
-  async findById(id) {
+  async findById(id: number) {
     return queryOne(
       `SELECT * FROM addresses WHERE id = ?`,
       [id]
@@ -72,7 +72,7 @@ export const addressModel = {
     );
   },
 
-  async update(id, data) {
+  async update(id: number, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -124,7 +124,7 @@ export const addressModel = {
     return this.findById(id);
   },
 
-  async remove(id) {
+  async remove(id: number) {
     const affectedRows = await execute(
       `DELETE FROM addresses WHERE id = ?`,
       [id]

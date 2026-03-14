@@ -1,6 +1,6 @@
 -- ============================================
--- Update Banners to Fashion 2025 Theme
--- Each banner with different fashion 2025 images and content
+-- Update Banners to Fashion 2026 Theme
+-- Each banner with different fashion 2026 images and content
 -- ============================================
 
 USE ecommerce;
@@ -11,11 +11,11 @@ DELETE FROM banners WHERE position = 'homepage';
 -- Reset AUTO_INCREMENT to start fresh
 ALTER TABLE banners AUTO_INCREMENT = 1;
 
--- Insert Fashion 2025 Banners with different images
+-- Insert Fashion 2026 Banners with different images
 INSERT INTO banners (title, image, link, position, isActive, sortOrder, createdAt, updatedAt) VALUES
 
--- Banner 1: Fashion 2025 Collection
-('Fashion 2025 Collection', 
+-- Banner 1: Fashion 2026 Collection
+('Fashion 2026 Collection', 
  'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&auto=format&fit=crop',
  '/shop?category=clothing',
  'homepage',
@@ -34,8 +34,8 @@ INSERT INTO banners (title, image, link, position, isActive, sortOrder, createdA
  NOW(),
  NOW()),
 
--- Banner 3: Designer Collection 2025
-('Designer Collection 2025',
+-- Banner 3: Designer Collection 2026
+('Designer Collection 2026',
  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200&auto=format&fit=crop',
  '/shop?category=clothing',
  'homepage',
@@ -44,8 +44,8 @@ INSERT INTO banners (title, image, link, position, isActive, sortOrder, createdA
  NOW(),
  NOW()),
 
--- Banner 4: Street Style 2025
-('Street Style 2025',
+-- Banner 4: Street Style 2026
+('Street Style 2026',
  'https://images.unsplash.com/photo-1445205170230-053b83016050?w=1200&auto=format&fit=crop',
  '/shop?category=clothing',
  'homepage',
@@ -54,8 +54,8 @@ INSERT INTO banners (title, image, link, position, isActive, sortOrder, createdA
  NOW(),
  NOW()),
 
--- Banner 5: Luxury Fashion 2025
-('Luxury Fashion 2025',
+-- Banner 5: Luxury Fashion 2026
+('Luxury Fashion 2026',
  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&auto=format&fit=crop',
  '/shop?category=clothing',
  'homepage',
@@ -64,8 +64,8 @@ INSERT INTO banners (title, image, link, position, isActive, sortOrder, createdA
  NOW(),
  NOW()),
 
--- Banner 6: Sustainable Fashion
-('Sustainable Fashion 2025',
+-- Banner 6: Sustainable Fashion 2026
+('Sustainable Fashion 2026',
  'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&auto=format&fit=crop',
  '/shop?category=clothing',
  'homepage',

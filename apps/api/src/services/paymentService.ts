@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { config } from '../config/index.js';
-import { query, queryOne, insert, execute, beginTransaction, commit, rollback } from '../config/database.js';
+import { queryOne, insert, execute, beginTransaction, commit, rollback } from '../config/database.js';
 import { log } from '../utils/logger.js';
 import { userOrderModel } from '../models/client/order.model.js';
 import { sendPaymentReceipt } from './emailService.js';
@@ -145,7 +145,8 @@ export class PaymentService {
       }
 
       // Remove secure hash from params for verification
-      const { vnp_SecureHash: _, ...paramsToVerify } = params;
+      const { vnp_SecureHash: _omit, ...paramsToVerify } = params;
+      void _omit;
 
       // Sort and create hash
       const sortedParams = Object.keys(paramsToVerify)
@@ -318,8 +319,8 @@ export class PaymentService {
     if (status === 'PAID' && previousPaymentStatus !== 'PAID') {
       try {
         const order = await userOrderModel.getById(orderId);
-        if (order && (order.user?.email || order.email)) {
-          await sendPaymentReceipt(order, transactionId);
+        if (order && ((order as { user?: { email?: string } | null; email?: string }).user?.email || (order as { email?: string }).email)) {
+          await sendPaymentReceipt(order as Parameters<typeof sendPaymentReceipt>[0], transactionId);
         }
       } catch (error) {
         log.error('Failed to send payment receipt email', error as Error, {

@@ -1,5 +1,6 @@
 import type { Response, NextFunction } from 'express';
 import type { AuthenticatedRequest } from '../../middleware/auth.js';
+import { supportMessageBodySchema } from '../../validators/orderValidator.js';
 import { supportConversationModel } from '../../models/supportConversation.model.js';
 import { supportMessageModel } from '../../models/supportMessage.model.js';
 import { emitSupportMessage, emitSupportAssignment, emitSupportClosure } from '../../realtime/socket.js';
@@ -66,17 +67,20 @@ export const addMessage = async (req: AuthenticatedRequest, res: Response, next:
   try {
     const staffId = req.user?.id;
     const conversationId = parseInt(req.params.id, 10);
-    const { message } = req.body;
+    const parsed = supportMessageBodySchema.safeParse({ body: req.body });
+    if (!parsed.success) {
+      return res.status(400).json({ error: parsed.error.errors.map((e) => e.message).join('; ') });
+    }
+    const { message } = parsed.data.body;
 
     if (!staffId) return res.status(401).json({ error: 'Unauthorized' });
     if (Number.isNaN(conversationId)) return res.status(400).json({ error: 'Invalid conversation ID' });
-    if (!message || typeof message !== 'string' || !message.trim()) return res.status(400).json({ error: 'Message is required' });
 
     const created = await supportMessageModel.createMessage({
       conversationId,
       senderRole: req.user?.role === 'ADMIN' ? 'ADMIN' : 'STAFF',
       staffId,
-      message: message.trim(),
+      message,
     });
 
     emitSupportMessage(req.app.get('io'), conversationId, created);

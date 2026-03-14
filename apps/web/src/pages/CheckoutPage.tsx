@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { formatPrice } from '@/lib/utils';
 import type { Address } from '@/types';
+import { Loader2 } from 'lucide-react';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -120,13 +121,15 @@ export default function CheckoutPage() {
       // Handle payment for online payment methods
       if (formData.paymentMethod === 'MOMO' || formData.paymentMethod === 'ZALOPAY' || formData.paymentMethod === 'BANK') {
         try {
-          const paymentRes = await api.post('/payments', {
+          const origin = window.location.origin;
+          const payload: Record<string, unknown> = {
             orderId: orderId,
-            returnUrl: `${window.location.origin}/orders/${orderId}`,
-          });
+            returnUrl: `${origin}/orders/${orderId}`,
+          };
+          const paymentRes = await api.post('/payments', payload);
 
           if (paymentRes.data.paymentUrl) {
-            // Redirect to payment gateway
+            // Redirect to payment gateway (VNPay, MoMo, ZaloPay)
             window.location.href = paymentRes.data.paymentUrl;
             return;
           } else if (formData.paymentMethod === 'BANK') {
@@ -421,7 +424,14 @@ export default function CheckoutPage() {
                   </div>
                 )}
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? 'Placing Order...' : 'Place Order'}
+                  {loading ? (
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Placing Order...</span>
+                    </span>
+                  ) : (
+                    'Place Order'
+                  )}
                 </Button>
               </CardContent>
             </Card>

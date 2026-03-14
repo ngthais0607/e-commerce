@@ -6,11 +6,11 @@ import { errorHandler, notFound } from './src/middleware/errorHandler.js';
 import { apiLimiter } from './src/middleware/rateLimiter.js';
 import { requestLogger } from './src/middleware/requestLogger.js';
 import { config } from './src/config/index.js';
-import { testConnection } from './src/config/database.js';
-import { initRedis, closeRedis } from './src/config/redis.js';
+import { log } from './src/utils/logger.js';
+import { testConnection, pingDatabase } from './src/config/database.js';
+import { initRedis, closeRedis, pingRedis } from './src/config/redis.js';
 import { initEmail } from './src/config/email.js';
 import { swaggerSpec } from './src/config/swagger.js';
-import { log } from './src/utils/logger.js';
 import { initSocket } from './src/realtime/socket.js';
 
 // Client-facing routes
@@ -50,8 +50,9 @@ app.use(cors({
   origin: config.corsOrigin,
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files
 app.use('/uploads', express.static('uploads'));
@@ -71,9 +72,17 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-// Health check
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check (DB + Redis for monitoring/load balancer)
+app.get('/health', async (_req, res) => {
+  const timestamp = new Date().toISOString();
+  const [database, redis] = await Promise.all([pingDatabase(), pingRedis()]);
+  const ok = database;
+  res.status(ok ? 200 : 503).json({
+    status: ok ? 'ok' : 'degraded',
+    timestamp,
+    database: database ? 'ok' : 'error',
+    redis: redis ? 'ok' : 'unavailable',
+  });
 });
 
 // API Documentation
@@ -116,6 +125,22 @@ app.use(errorHandler);
 
 // Start server
 const startServer = async (): Promise<void> => {
+  // Validate production env and log startup (thống nhất qua logger)
+  if (config.nodeEnv === 'production') {
+    const requiredVars = ['JWT_SECRET', 'DATABASE_URL'];
+    const missingVars = requiredVars.filter((varName) => !process.env[varName]);
+    if (missingVars.length > 0) {
+      log.error('Missing required environment variables in production', null, { missingVars });
+      log.error('Set these variables before starting the server', null, {});
+      process.exit(1);
+    }
+    if (process.env.JWT_SECRET === 'your-secret-key-change-in-production') {
+      log.warn('Using default JWT_SECRET in production is insecure', {
+        hint: 'Set a strong, random JWT_SECRET in .env',
+      });
+    }
+  }
+
   const dbConnected = await testConnection();
   if (!dbConnected) {
     log.error('Failed to connect to database', null, {

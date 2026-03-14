@@ -1,54 +1,45 @@
 #!/bin/bash
+# Automated database setup for E-Commerce (Linux/Mac)
+# Run from repo root: bash database/setup_database.sh
+# Requires: MySQL 8+
 
-# Automated database setup script for E-Commerce Project
-# Run: bash database/setup_database.sh
-
-echo "🚀 Starting database setup..."
-
-# Check if MySQL is installed
-if ! command -v mysql &> /dev/null; then
-    echo "❌ MySQL is not installed!"
-    echo "Please install MySQL 8.0+ first"
-    exit 1
-fi
-
-echo "✅ MySQL is installed"
-
-# Get root password
-read -sp "Enter MySQL root password: " ROOT_PASSWORD
+set -e
+echo "============================================"
+echo "E-Commerce Database Setup"
+echo "============================================"
 echo ""
 
-# Create database and user
-echo "Creating database and user..."
-mysql -u root -p"$ROOT_PASSWORD" < database/create_database.sql
-
-if [ $? -eq 0 ]; then
-    echo "Creating tables..."
-    mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/ecommerce_tables_v2.sql
-    echo "Applying support conversations schema..."
-    mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/add-support-conversations.sql
-    
-    if [ $? -eq 0 ]; then
-        echo ""
-        echo "✅ Database setup completed successfully!"
-        echo ""
-        echo "📋 Connection Information:"
-        echo "   Database: ecommerce"
-        echo "   User: ecommerce_user"
-        echo "   Password: ecommerce_pass"
-        echo "   Host: localhost"
-        echo "   Port: 3306"
-        echo ""
-        echo "🔗 Connection String for .env:"
-        echo "   DATABASE_URL=mysql://ecommerce_user:ecommerce_pass@localhost:3306/ecommerce"
-    else
-        echo "❌ Failed to create tables"
-        echo "Database created but tables failed"
-        exit 1
-    fi
-else
-    echo "❌ Failed to create database"
-    echo "Please check root password or permissions"
+if ! command -v mysql &> /dev/null; then
+    echo "[ERROR] MySQL not found. Install MySQL 8+ and add to PATH."
     exit 1
 fi
+echo "[OK] MySQL found"
+echo ""
 
+read -sp "Enter MySQL root password: " ROOT_PASSWORD
+echo ""
+echo ""
+
+echo "[1/4] Creating database and base tables..."
+mysql -u root -p"$ROOT_PASSWORD" < database/ecommerce_full_schema.sql
+
+echo "[2/4] Applying optimizations and extra indexes..."
+mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/ecommerce_schema_optimizations.sql || true
+mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/add_indexes_pagination.sql || true
+mysql -u root -p"$ROOT_PASSWORD" ecommerce < database/add_support_fk_cascade.sql || true
+
+echo "[3/4] Done. Optional: seed admin and test users."
+echo "  cd apps/api"
+echo "  npm run seed:admin"
+echo "  npm run seed:test-users"
+echo ""
+echo "[4/4] Optional: sample data"
+echo "  mysql -u root -p ecommerce < database/insert-products-with-images.sql"
+echo "  mysql -u root -p ecommerce < database/create-admin.sql"
+echo ""
+echo "============================================="
+echo "[SUCCESS] Database setup completed."
+echo "============================================="
+echo "Use in apps/api/.env (root user):"
+echo "  DATABASE_URL=mysql://root:YOUR_PASSWORD@localhost:3306/ecommerce"
+echo ""

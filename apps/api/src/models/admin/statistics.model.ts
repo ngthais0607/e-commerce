@@ -65,32 +65,28 @@ export const adminStatisticsModel = {
   },
 
   async getSalesByPeriod(period = '7d') {
-    let dateFormat, dateCondition, groupBy;
+    let dateCondition, groupBy;
     const now = new Date();
     const startDate = new Date();
 
     switch (period) {
       case '7d':
         startDate.setDate(now.getDate() - 7);
-        dateFormat = '%Y-%m-%d';
         dateCondition = `DATE(createdAt) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)`;
         groupBy = 'DATE(createdAt)';
         break;
       case '30d':
         startDate.setDate(now.getDate() - 30);
-        dateFormat = '%Y-%m-%d';
         dateCondition = `DATE(createdAt) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)`;
         groupBy = 'DATE(createdAt)';
         break;
       case '12m':
         startDate.setMonth(now.getMonth() - 12);
-        dateFormat = '%Y-%m';
         dateCondition = `DATE(createdAt) >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)`;
         groupBy = 'DATE_FORMAT(createdAt, "%Y-%m")';
         break;
       default:
         startDate.setDate(now.getDate() - 7);
-        dateFormat = '%Y-%m-%d';
         dateCondition = `DATE(createdAt) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)`;
         groupBy = 'DATE(createdAt)';
     }
@@ -114,10 +110,9 @@ export const adminStatisticsModel = {
     }));
   },
 
-  async getTopProducts(limit = 10) {
-    // Ensure limit is a safe integer (prevent SQL injection)
-    const safeLimit = Math.max(1, Math.min(parseInt(limit, 10) || 10, 100));
-    
+  async getTopProducts(limit: number | string = 10) {
+    const safeLimit = Math.max(1, Math.min(parseInt(String(limit), 10) || 10, 100));
+
     const products = await query(
       `SELECT 
         p.id,

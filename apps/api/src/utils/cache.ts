@@ -8,14 +8,14 @@ import { log } from './logger.js';
 /**
  * Get value from cache
  */
-export const getCache = async (key: string): Promise<any | null> => {
+export const getCache = async <T = unknown>(key: string): Promise<T | null> => {
   try {
     const client = getRedisClient();
     if (!client) return null;
 
     const value = await client.get(key);
     if (value) {
-      return JSON.parse(value);
+      return JSON.parse(value) as T;
     }
     return null;
   } catch (error) {
@@ -27,7 +27,7 @@ export const getCache = async (key: string): Promise<any | null> => {
 /**
  * Set value in cache
  */
-export const setCache = async (key: string, value: any, ttl: number = 3600): Promise<boolean> => {
+export const setCache = async (key: string, value: unknown, ttl: number = 3600): Promise<boolean> => {
   try {
     const client = getRedisClient();
     if (!client) return false;
@@ -85,10 +85,10 @@ export const cacheWrapper = async <T>(
   ttl: number = 3600
 ): Promise<T> => {
   // Try to get from cache
-  const cached = await getCache(key);
+  const cached = await getCache<T>(key);
   if (cached !== null) {
     log.debug('Cache hit', { key });
-    return cached;
+    return cached as T;
   }
 
   // Cache miss - execute function
@@ -102,12 +102,13 @@ export const cacheWrapper = async <T>(
 };
 
 /**
- * Generate cache key
+ * Generate cache key from prefix and optional params object (e.g. filters)
  */
-export const generateCacheKey = (prefix: string, params: Record<string, any> = {}): string => {
-  const sortedParams = Object.keys(params)
+export const generateCacheKey = (prefix: string, params: Record<string, unknown> | object = {}): string => {
+  const record = params as Record<string, unknown>;
+  const sortedParams = Object.keys(record)
     .sort()
-    .map((key) => `${key}:${params[key]}`)
+    .map((key) => `${key}:${String(record[key])}`)
     .join(':');
   
   return sortedParams ? `${prefix}:${sortedParams}` : prefix;

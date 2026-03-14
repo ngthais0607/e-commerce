@@ -12,7 +12,7 @@ interface EmailOptions {
   attachments?: Array<{ filename: string; path: string }>;
 }
 
-interface EmailResult {
+export interface EmailResult {
   success: boolean;
   messageId?: string;
   message?: string;

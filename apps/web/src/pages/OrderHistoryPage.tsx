@@ -4,7 +4,8 @@ import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import type { Order, PaginatedResponse } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
@@ -90,9 +91,9 @@ export default function OrderHistoryPage() {
         <h1 className="text-3xl font-bold mb-8">Order History</h1>
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">Please login to view your orders</p>
-          <Button asChild>
-            <Link to="/login" aria-label="Go to login page">Login</Link>
-          </Button>
+          <Link to="/login" className={cn(buttonVariants())} aria-label="Go to login page">
+            Login
+          </Link>
         </div>
       </div>
     );

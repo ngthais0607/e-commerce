@@ -68,12 +68,6 @@ export const ROUTES = {
   ADMIN: '/admin',
 } as const;
 
-// Pagination Constants
-export const PAGINATION = {
-  DEFAULT_PAGE_SIZE: 12,
-  MAX_PAGE_SIZE: 100,
-} as const;
-
 // Validation Constants
 export const VALIDATION = {
   EMAIL_REGEX: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,

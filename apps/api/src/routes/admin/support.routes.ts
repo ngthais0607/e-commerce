@@ -4,9 +4,8 @@ import * as supportController from '../../controllers/admin/support.controller.j
 
 const router = Router();
 
-// Chỉ cho phép STAFF dùng kênh support chat (admin không vào trang này)
-// Lưu ý: middleware authorize nhận danh sách role dưới dạng nhiều tham số, không phải mảng
-router.use(authenticate, authorize('STAFF'));
+// Admin và Staff đều được vào Support Chat
+router.use(authenticate, authorize('ADMIN', 'STAFF'));
 
 router.get('/conversations', supportController.listConversations);
 router.post('/conversations/:id/claim', supportController.assignConversation);

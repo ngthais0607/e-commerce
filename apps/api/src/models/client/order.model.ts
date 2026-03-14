@@ -1,15 +1,16 @@
+import type { OrderListFilters, OrderCreateData } from '../../types/models.js';
 import { adminOrderModel } from '../admin/order.model.js';
 
 export const userOrderModel = {
-  list(userId, filters) {
+  list(userId: number, filters: OrderListFilters = {}) {
     return adminOrderModel.listByUser(userId, filters);
   },
 
-  getById(id) {
+  getById(id: number) {
     return adminOrderModel.getById(id);
   },
 
-  create(orderData) {
+  create(orderData: OrderCreateData) {
     return adminOrderModel.create(orderData);
   },
 };

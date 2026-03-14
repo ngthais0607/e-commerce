@@ -78,19 +78,19 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-purple-100 to-pink-100 dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950 animate-gradient">
-      {/* Animated gradient background */}
+    <div className="min-h-screen flex items-center justify-center px-4 py-16 md:py-20 relative overflow-hidden bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:from-sky-950 dark:via-sky-900 dark:to-sky-950 animate-gradient">
+      {/* Animated pastel blue background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-96 h-96 bg-indigo-200/70 dark:bg-indigo-500/25 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-violet-200/70 dark:bg-violet-500/25 rounded-full blur-3xl animate-float-delayed"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-fuchsia-200/60 dark:bg-fuchsia-500/15 rounded-full blur-3xl animate-pulse-glow"></div>
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-rose-200/60 dark:bg-rose-400/10 rounded-full blur-3xl animate-float"></div>
-        
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-sky-200/70 dark:bg-sky-500/25 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-sky-100/80 dark:bg-sky-700/30 rounded-full blur-3xl animate-float-delayed"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-sky-200/60 dark:bg-sky-500/15 rounded-full blur-3xl animate-pulse-glow"></div>
+        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-cyan-200/60 dark:bg-cyan-400/10 rounded-full blur-3xl animate-float"></div>
+
         {/* Floating particles */}
         {[...Array(25)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1.5 h-1.5 bg-gradient-to-r from-indigo-400/70 via-violet-400/70 to-fuchsia-400/70 dark:from-indigo-300/40 dark:via-violet-300/40 dark:to-fuchsia-300/40 rounded-full animate-float"
+            className="absolute w-1.5 h-1.5 bg-sky-300/70 dark:bg-sky-200/40 rounded-full animate-float"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -101,22 +101,22 @@ export default function RegisterPage() {
         ))}
       </div>
 
-      <Card className="w-full max-w-2xl relative z-10 shadow-2xl border border-indigo-200/60 dark:border-white/10 bg-white dark:bg-card/95 backdrop-blur-md">
-        <CardHeader className="space-y-4 text-center pb-8">
-          <div className="mx-auto inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white shadow-2xl transform transition-all duration-500 hover:scale-110 hover:rotate-6 glow-effect relative overflow-hidden group">
+      <Card className="w-full max-w-xl relative z-10 shadow-2xl border border-sky-100/80 dark:border-sky-900/60 bg-white/95 dark:bg-card/95 backdrop-blur-md">
+        <CardHeader className="space-y-4 text-center pb-6">
+          <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 via-sky-400 to-cyan-400 text-white shadow-2xl transform transition-all duration-500 hover:scale-110 hover:rotate-3 glow-effect relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
             <ShieldCheck className="h-10 w-10 relative z-10 drop-shadow-lg" />
           </div>
           <div className="space-y-3">
-            <CardTitle className="text-5xl font-extrabold bg-gradient-to-r from-indigo-600 via-violet-600 via-fuchsia-600 to-rose-600 dark:from-indigo-300 dark:via-violet-300 dark:via-fuchsia-300 dark:to-rose-300 bg-clip-text text-transparent animate-shimmer">
+            <CardTitle className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-50">
               Create your account
             </CardTitle>
-            <CardDescription className="text-base text-foreground/70 dark:text-white/70">
+            <CardDescription className="text-base text-slate-600 dark:text-slate-300">
               One account for cart, orders and access to the admin dashboard (if approved).
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-6 px-8 pb-8">
+        <CardContent className="space-y-5 px-6 pb-6">
           {serverError && (
             <Alert variant="destructive" className="animate-in fade-in-0 slide-in-from-top-2">
               <AlertTitle>Something went wrong</AlertTitle>
@@ -125,10 +125,10 @@ export default function RegisterPage() {
           )}
 
           <Tabs defaultValue="email" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 h-14 bg-indigo-100/60 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/60 dark:border-white/10 rounded-xl p-1">
+            <TabsList className="grid w-full grid-cols-2 h-14 bg-sky-100/60 dark:bg-white/5 backdrop-blur-sm border border-sky-200/80 dark:border-white/10 rounded-xl p-1">
               <TabsTrigger 
                 value="email" 
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:via-violet-500 data-[state=active]:to-fuchsia-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-semibold text-foreground/70 dark:text-white/40"
+                className="data-[state=active]:bg-sky-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-semibold text-foreground/70 dark:text-white/40"
               >
                 Email sign up
               </TabsTrigger>
@@ -149,6 +149,7 @@ export default function RegisterPage() {
                           <div className="relative group">
                             <Input 
                               placeholder="Jane Doe" 
+                              autoComplete="name"
                               {...field} 
                               className="pl-11 h-14 border-2 border-border dark:border-white/20 bg-background/50 dark:bg-white/10 backdrop-blur-sm transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-400/60 focus:bg-background dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/30 group-hover:border-violet-400/40 dark:group-hover:border-violet-400/40 group-hover:bg-background/80 dark:group-hover:bg-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/60" 
                             />
@@ -171,6 +172,7 @@ export default function RegisterPage() {
                             <Input 
                               type="email" 
                               placeholder="you@example.com" 
+                              autoComplete="email"
                               {...field} 
                               className="pl-11 h-14 border-2 border-border dark:border-white/20 bg-background/50 dark:bg-white/10 backdrop-blur-sm transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-400/60 focus:bg-background dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/30 group-hover:border-violet-400/40 dark:group-hover:border-violet-400/40 group-hover:bg-background/80 dark:group-hover:bg-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/60" 
                             />
@@ -193,6 +195,7 @@ export default function RegisterPage() {
                             <Input 
                               type="tel" 
                               placeholder="+84 987 654 321" 
+                              autoComplete="tel"
                               {...field} 
                               className="pl-11 h-14 border-2 border-border dark:border-white/20 bg-background/50 dark:bg-white/10 backdrop-blur-sm transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-400/60 focus:bg-background dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/30 group-hover:border-violet-400/40 dark:group-hover:border-violet-400/40 group-hover:bg-background/80 dark:group-hover:bg-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/60" 
                             />
@@ -218,6 +221,7 @@ export default function RegisterPage() {
                             <Input 
                               type="password" 
                               placeholder="••••••••" 
+                              autoComplete="new-password"
                               {...field} 
                               className="pl-11 h-14 border-2 border-border dark:border-white/20 bg-background/50 dark:bg-white/10 backdrop-blur-sm transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-400/60 focus:bg-background dark:focus:bg-white/10 focus:ring-2 focus:ring-indigo-500/30 group-hover:border-violet-400/40 dark:group-hover:border-violet-400/40 group-hover:bg-background/80 dark:group-hover:bg-white/10 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-white/60" 
                             />
@@ -233,12 +237,13 @@ export default function RegisterPage() {
                     )}
                   />
 
-                  <div className="space-y-2 p-5 rounded-xl bg-indigo-100/60 dark:bg-white/5 backdrop-blur-sm border border-indigo-300/60 dark:border-white/10">
-                    <div className="flex items-center justify-between text-xs uppercase tracking-wide text-foreground/70 dark:text-white/70 mb-3">
+                  {/* Password strength meter - simplified, aligned with blue theme */}
+                  <div className="space-y-2 p-5 rounded-xl bg-sky-50 dark:bg-white/5 backdrop-blur-sm border border-sky-100 dark:border-white/10">
+                    <div className="flex items-center justify-between text-xs uppercase tracking-wide text-slate-600 dark:text-white/70 mb-3">
                       <span>Password strength</span>
-                      <span className="font-bold text-indigo-600 dark:text-indigo-300">{strengthMeta.label}</span>
+                      <span className="font-bold text-sky-600 dark:text-sky-300">{strengthMeta.label}</span>
                     </div>
-                    <div className="h-3 w-full rounded-full bg-white/10 overflow-hidden relative">
+                    <div className="h-2.5 w-full rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden relative">
                       <div
                         className={`h-full rounded-full transition-all duration-700 ${strengthMeta.className} shadow-lg relative overflow-hidden`}
                         style={{ width: `${((passwordScore + 1) / strengthSteps.length) * 100}%` }}
@@ -248,28 +253,29 @@ export default function RegisterPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-3 rounded-xl border-2 border-indigo-300 dark:border-indigo-500/30 bg-gradient-to-r from-indigo-100 via-violet-100 to-fuchsia-100 dark:from-indigo-500/10 dark:via-violet-500/10 dark:to-fuchsia-500/10 backdrop-blur-sm p-4 text-sm">
-                    <ShieldCheck className="h-5 w-5 text-indigo-600 dark:text-indigo-300 flex-shrink-0 mt-0.5 animate-pulse" />
-                    <p className="text-foreground/70 dark:text-white/70">
+                  {/* Security note - calmer styling */}
+                  <div className="flex items-start gap-3 rounded-xl border border-sky-200 dark:border-sky-700 bg-sky-50/80 dark:bg-sky-900/40 backdrop-blur-sm p-4 text-sm">
+                    <ShieldCheck className="h-5 w-5 text-sky-600 dark:text-sky-300 flex-shrink-0 mt-0.5" />
+                    <p className="text-slate-700 dark:text-white/80">
                       We protect your data with encrypted storage & JWT-based sessions.
                     </p>
                   </div>
 
+                  {/* Primary action - match login CTA */}
                   <Button 
                     type="submit" 
-                    className="w-full h-14 text-base font-bold bg-gradient-to-r from-indigo-500 via-violet-500 to-fuchsia-500 hover:from-indigo-600 hover:via-violet-600 hover:to-fuchsia-600 text-white shadow-2xl hover:shadow-indigo-500/50 transition-all duration-500 transform hover:scale-[1.02] hover:-translate-y-0.5 relative overflow-hidden group glow-effect" 
+                    className="w-full h-14 text-base font-semibold bg-sky-500 hover:bg-sky-600 text-white shadow-lg hover:shadow-sky-400/70 transition-all duration-300 transform hover:scale-[1.01] hover:-translate-y-0.5 rounded-full relative overflow-hidden group" 
                     disabled={form.formState.isSubmitting}
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                     {form.formState.isSubmitting ? (
                       <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin relative z-10" />
-                        <span className="relative z-10">Creating account...</span>
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                        <span>Creating account...</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="mr-2 h-5 w-5 relative z-10 animate-pulse" />
-                        <span className="relative z-10">Create account</span>
+                        <Sparkles className="mr-2 h-5 w-5 animate-pulse" />
+                        <span>Create account</span>
                       </>
                     )}
                   </Button>

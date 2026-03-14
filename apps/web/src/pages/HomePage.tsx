@@ -73,8 +73,8 @@ export default function HomePage() {
         if (bannersData.length === 0) {
           setBanners([{
             id: 0,
-            title: 'Fashion 2025 Collection',
-            description: 'Discover the latest trends and styles for 2025. Premium quality, modern designs.',
+            title: 'Fashion 2026 Collection',
+            description: 'Discover the latest trends and styles for 2026. Premium quality, modern designs.',
             image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop',
             link: '/shop',
             position: 'homepage',
@@ -87,8 +87,8 @@ export default function HomePage() {
         // Set default banner on error
         setBanners([{
           id: 0,
-          title: 'Fashion 2025 Collection',
-          description: 'Discover the latest trends and styles for 2025. Premium quality, modern designs.',
+          title: 'Fashion 2026 Collection',
+          description: 'Discover the latest trends and styles for 2026. Premium quality, modern designs.',
           image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop',
           link: '/shop',
           position: 'homepage',
@@ -106,7 +106,7 @@ export default function HomePage() {
   useEffect(() => {
     document.title = 'Home | Stay Store';
     const description =
-      'Discover the latest fashion 2025 collection at Stay Store. Browse featured products, exclusive deals, and fast delivery.';
+      'Discover the latest fashion 2026 collection at Stay Store. Browse featured products, exclusive deals, and fast delivery.';
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
       metaDescription.setAttribute('content', description);
@@ -229,50 +229,46 @@ export default function HomePage() {
             style={{ transform: `translateX(-${currentBannerIndex * 100}%)` }}
           >
             {banners.map((banner, index) => {
-              // Different fashion 2025 images for each banner
-              const fashion2025Images = [
+              // Different fashion 2026 images for each banner
+              // Limited set of distinct hero images (max 5) to avoid too many similar slides
+              const fashion2026Images = [
                 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1200&auto=format&fit=crop', // Fashion store
                 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1200&auto=format&fit=crop', // Fashion model
                 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1200&auto=format&fit=crop', // Fashion clothing
                 'https://images.unsplash.com/photo-1445205170230-053b83016050?q=80&w=1200&auto=format&fit=crop', // Fashion accessories
                 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1200&auto=format&fit=crop', // Fashion runway
-                'https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1200&auto=format&fit=crop', // Fashion shopping
               ];
               
-              // Fashion 2025 titles and descriptions
-              const fashion2025Content = [
+              // Up to 5 different titles/descriptions to pair with the images above
+              const fashion2026Content = [
                 {
-                  title: 'Fashion 2025 Collection',
-                  description: 'Discover the latest trends and styles for 2025. Premium quality, modern designs.',
+                  title: 'Fashion 2026 Collection',
+                  description: 'Discover the latest trends and styles for 2026. Premium quality, modern designs.',
                 },
                 {
                   title: 'New Season Arrivals',
-                  description: 'Fresh styles and colors for the new season. Shop the hottest fashion trends of 2025.',
+                  description: 'Fresh styles and colors for the new season. Shop the hottest fashion trends of 2026.',
                 },
                 {
-                  title: 'Designer Collection 2025',
+                  title: 'Designer Collection 2026',
                   description: 'Exclusive designer pieces curated for the modern fashionista. Limited edition items.',
                 },
                 {
-                  title: 'Street Style 2025',
+                  title: 'Street Style 2026',
                   description: 'Urban fashion meets high style. Express yourself with our streetwear collection.',
                 },
                 {
-                  title: 'Luxury Fashion 2025',
-                  description: 'Elevate your wardrobe with our luxury collection. Timeless elegance meets modern trends.',
-                },
-                {
-                  title: 'Sustainable Fashion',
-                  description: 'Eco-friendly fashion for 2025. Style that cares for the planet and your wardrobe.',
+                  title: 'Sustainable Fashion 2026',
+                  description: 'Eco-friendly fashion for 2026. Style that cares for the planet and your wardrobe.',
                 },
               ];
               
               // Match banner title with content, or use index-based fallback
-              const matchedContent = fashion2025Content.find(c => 
+              const matchedContent = fashion2026Content.find(c => 
                 banner.title?.toLowerCase().includes(c.title.toLowerCase().split(' ')[0])
-              ) || fashion2025Content[index % fashion2025Content.length];
+              ) || fashion2026Content[index % fashion2026Content.length];
               
-              const defaultImage = fashion2025Images[index % fashion2025Images.length];
+              const defaultImage = fashion2026Images[index % fashion2026Images.length];
               const displayTitle = banner.title || matchedContent.title;
               const displayDescription = matchedContent.description;
               
@@ -299,7 +295,7 @@ export default function HomePage() {
                     <div className="max-w-3xl animate-fade-in">
                       <div className="inline-flex items-center gap-2 mb-3 md:mb-4 px-3 md:px-4 py-1.5 md:py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20">
                         <Sparkles className="h-3 w-3 md:h-4 md:w-4 text-yellow-300 animate-pulse" />
-                        <span className="text-xs md:text-sm font-medium text-white/90">New Collection 2025</span>
+                        <span className="text-xs md:text-sm font-medium text-white/90">New Collection 2026</span>
                       </div>
                       <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight mb-4 md:mb-6 leading-tight text-white drop-shadow-2xl bg-gradient-to-r from-white via-white to-gray-200 bg-clip-text text-transparent">
                         {displayTitle}
@@ -308,8 +304,12 @@ export default function HomePage() {
                         {displayDescription}
                       </p>
                       <Link to={banner.link || '/shop'}>
-                        <Button size="lg" className="group text-sm md:text-base lg:text-lg px-6 md:px-8 lg:px-10 py-4 md:py-5 lg:py-6 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 hover:from-indigo-700 hover:via-violet-700 hover:to-fuchsia-700 text-white shadow-2xl hover:shadow-indigo-500/50 transition-all duration-300 rounded-full font-semibold">
-                          Shop Now <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 group-hover:translate-x-1 transition-transform" />
+                        <Button
+                          size="lg"
+                          className="group text-sm md:text-base lg:text-lg px-6 md:px-8 lg:px-10 py-4 md:py-5 lg:py-6 bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 hover:from-sky-600 hover:via-sky-500 hover:to-cyan-500 text-white shadow-2xl hover:shadow-sky-400/60 transition-all duration-300 rounded-full font-semibold"
+                        >
+                          Shop Now{' '}
+                          <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 group-hover:translate-x-1 transition-transform" />
                         </Button>
                       </Link>
                     </div>
@@ -359,43 +359,55 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-b from-background via-muted/30 to-background py-4 md:py-6">
+      <section className="bg-gradient-to-b from-sky-50/80 via-sky-100/90 to-sky-100/90 dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 py-4 md:py-6">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-background rounded-lg md:rounded-xl shadow-md hover:shadow-lg border border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-300">
-              <div className="p-2 md:p-2.5 bg-gradient-to-br from-indigo-500/10 to-violet-500/10 rounded-lg text-indigo-600 dark:text-indigo-400 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            {/* Feature 1 */}
+            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-white shadow-md hover:shadow-xl dark:bg-slate-900 rounded-2xl border border-sky-100/80 dark:border-sky-800 hover:border-sky-400 dark:hover:border-sky-500 transition-all duration-300 hover:-translate-y-1 hover:bg-white/95">
+              <div className="p-2.5 md:p-3 bg-gradient-to-br from-sky-500 to-sky-400 rounded-full text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-md">
                 <Truck className="h-4 w-4 md:h-5 md:w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-xs md:text-sm mb-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-tight">Free Shipping</h3>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">On orders over $100</p>
+                <h3 className="font-semibold text-xs md:text-sm mb-0.5 text-slate-900 dark:text-slate-50 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors leading-tight">
+                  Free Shipping
+                </h3>
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-300 leading-tight">On orders over $100</p>
               </div>
             </div>
-            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-background rounded-lg md:rounded-xl shadow-md hover:shadow-lg border border-border/50 hover:border-violet-300 dark:hover:border-violet-600 transition-all duration-300">
-              <div className="p-2 md:p-2.5 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/10 rounded-lg text-violet-600 dark:text-violet-400 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            {/* Feature 2 */}
+            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-white shadow-md hover:shadow-xl dark:bg-slate-900 rounded-2xl border border-sky-100/80 dark:border-sky-800 hover:border-sky-400 dark:hover:border-sky-500 transition-all duration-300 hover:-translate-y-1 hover:bg-white/95">
+              <div className="p-2.5 md:p-3 bg-gradient-to-br from-sky-500 to-cyan-400 rounded-full text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-md">
                 <ShieldCheck className="h-4 w-4 md:h-5 md:w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-xs md:text-sm mb-0.5 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors leading-tight">Secure Payment</h3>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">100% protected payments</p>
+                <h3 className="font-semibold text-xs md:text-sm mb-0.5 text-slate-900 dark:text-slate-50 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors leading-tight">
+                  Secure Payment
+                </h3>
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-300 leading-tight">100% protected payments</p>
               </div>
             </div>
-            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-background rounded-lg md:rounded-xl shadow-md hover:shadow-lg border border-border/50 hover:border-fuchsia-300 dark:hover:border-fuchsia-600 transition-all duration-300">
-              <div className="p-2 md:p-2.5 bg-gradient-to-br from-fuchsia-500/10 to-pink-500/10 rounded-lg text-fuchsia-600 dark:text-fuchsia-400 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            {/* Feature 3 */}
+            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-white shadow-md hover:shadow-xl dark:bg-slate-900 rounded-2xl border border-sky-100/80 dark:border-sky-800 hover:border-sky-400 dark:hover:border-sky-500 transition-all duration-300 hover:-translate-y-1 hover:bg-white/95">
+              <div className="p-2.5 md:p-3 bg-gradient-to-br from-sky-500 to-indigo-400 rounded-full text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-md">
                 <Clock className="h-4 w-4 md:h-5 md:w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-xs md:text-sm mb-0.5 group-hover:text-fuchsia-600 dark:group-hover:text-fuchsia-400 transition-colors leading-tight">24/7 Support</h3>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">Dedicated support team</p>
+                <h3 className="font-semibold text-xs md:text-sm mb-0.5 text-slate-900 dark:text-slate-50 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors leading-tight">
+                  24/7 Support
+                </h3>
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-300 leading-tight">Dedicated support team</p>
               </div>
             </div>
-            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-background rounded-lg md:rounded-xl shadow-md hover:shadow-lg border border-border/50 hover:border-indigo-300 dark:hover:border-indigo-600 transition-all duration-300">
-              <div className="p-2 md:p-2.5 bg-gradient-to-br from-indigo-500/10 to-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+            {/* Feature 4 */}
+            <div className="group flex items-center gap-2 md:gap-3 p-3 md:p-4 bg-white shadow-md hover:shadow-xl dark:bg-slate-900 rounded-2xl border border-sky-100/80 dark:border-sky-800 hover:border-sky-400 dark:hover:border-sky-500 transition-all duration-300 hover:-translate-y-1 hover:bg-white/95">
+              <div className="p-2.5 md:p-3 bg-gradient-to-br from-sky-500 to-blue-500 rounded-full text-white group-hover:scale-110 transition-transform duration-300 flex-shrink-0 shadow-md">
                 <CreditCard className="h-4 w-4 md:h-5 md:w-5" />
               </div>
               <div className="min-w-0">
-                <h3 className="font-semibold text-xs md:text-sm mb-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">Money Back</h3>
-                <p className="text-[10px] md:text-xs text-muted-foreground leading-tight">30 days guarantee</p>
+                <h3 className="font-semibold text-xs md:text-sm mb-0.5 text-slate-900 dark:text-slate-50 group-hover:text-sky-700 dark:group-hover:text-sky-300 transition-colors leading-tight">
+                  Money Back
+                </h3>
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-300 leading-tight">30 days guarantee</p>
               </div>
             </div>
           </div>
@@ -410,14 +422,18 @@ export default function HomePage() {
               <span className="text-sm font-semibold text-indigo-600 dark:text-indigo-400">Featured Collection</span>
             </div>
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold tracking-tight bg-gradient-to-r from-foreground via-indigo-600 to-violet-600 bg-clip-text text-transparent">
-              Fashion 2025 Collection
+              Fashion 2026 Collection
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl">
               Discover the latest trends and premium fashion items curated for the modern lifestyle
             </p>
           </div>
           <Link to="/shop?category=clothing">
-            <Button variant="outline" size="lg" className="gap-2 border-2 hover:bg-gradient-to-r hover:from-indigo-500 hover:to-violet-500 hover:text-white hover:border-transparent transition-all duration-300 rounded-full font-semibold">
+            <Button
+              variant="outline"
+              size="lg"
+              className="gap-2 border-2 border-sky-400 text-sky-700 hover:bg-sky-500 hover:text-white hover:border-sky-500 transition-all duration-300 rounded-full font-semibold"
+            >
               View All Fashion <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Link>
@@ -498,7 +514,7 @@ export default function HomePage() {
                     </div>
                     <Button
                       size="icon"
-                      className="rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white"
+                      className="rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-110 bg-sky-500 hover:bg-sky-600 text-white"
                       onClick={(e) => {
                         e.preventDefault();
                         addItem(product);

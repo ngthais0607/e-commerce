@@ -16,7 +16,7 @@ const parseDatabaseUrl = (url: string) => {
       password: match[2],
       database: match[5],
     };
-  } catch (_error) {
+  } catch {
     // Fallback: try to parse as standard format
     const urlObj = new URL(url.replace('mysql://', 'http://'));
     return {
@@ -52,12 +52,14 @@ export const pool = mysql.createPool({
 /**
  * Execute a query with parameters
  * @param {string} sql - SQL query string
- * @param {any[]} params - Query parameters
+ * @param params - Query parameters (primitives for prepared statements)
  * @returns {Promise<T[]>} Array of result rows
  * @throws {Error} If query execution fails
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const query = async <T = any>(
   sql: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[]
 ): Promise<T[]> => {
   const startTime = Date.now();
@@ -88,8 +90,10 @@ export const query = async <T = any>(
 /**
  * Execute a query and return first row
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const queryOne = async <T = any>(
   sql: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[]
 ): Promise<T | null> => {
   const rows = await query<T>(sql, params);
@@ -99,17 +103,18 @@ export const queryOne = async <T = any>(
 /**
  * Execute an insert query and return the insert ID
  * @param {string} sql - SQL INSERT query string
- * @param {any[]} params - Query parameters
+ * @param params - Query parameters
  * @returns {Promise<number>} Insert ID of the new record
  * @throws {Error} If insert fails
  */
 export const insert = async (
   sql: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[]
 ): Promise<number> => {
   const startTime = Date.now();
   try {
-    const [result] = await pool.execute(sql, params) as any;
+    const [result] = await pool.execute(sql, params) as [mysql.ResultSetHeader, unknown];
     const duration = Date.now() - startTime;
     
     if (duration > 100 && process.env.NODE_ENV === 'development') {
@@ -133,17 +138,18 @@ export const insert = async (
 /**
  * Execute an update/delete query and return affected rows
  * @param {string} sql - SQL UPDATE/DELETE query string
- * @param {any[]} params - Query parameters
+ * @param params - Query parameters
  * @returns {Promise<number>} Number of affected rows
  * @throws {Error} If execution fails
  */
 export const execute = async (
   sql: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   params?: any[]
 ): Promise<number> => {
   const startTime = Date.now();
   try {
-    const [result] = await pool.execute(sql, params) as any;
+    const [result] = await pool.execute(sql, params) as [mysql.ResultSetHeader, unknown];
     const duration = Date.now() - startTime;
     
     if (duration > 100 && process.env.NODE_ENV === 'development') {
@@ -200,6 +206,18 @@ export const testConnection = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     log.error('Database connection failed', error as Error);
+    return false;
+  }
+};
+
+/**
+ * Ping database for health check (no log, fast)
+ */
+export const pingDatabase = async (): Promise<boolean> => {
+  try {
+    await pool.execute('SELECT 1');
+    return true;
+  } catch {
     return false;
   }
 };

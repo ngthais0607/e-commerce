@@ -1,22 +1,21 @@
 export const userCategoryView = {
-  list(result) {
-    // Handle paginated result
-    if (result.items) {
+  list(result: Record<string, unknown>) {
+    const r = result as { items?: unknown; total?: unknown; page?: unknown; pageSize?: unknown; totalPages?: unknown };
+    if (r.items) {
       return {
-        items: result.items,
+        items: r.items,
         pagination: {
-          total: result.total,
-          page: result.page,
-          pageSize: result.pageSize,
-          totalPages: result.totalPages,
+          total: r.total,
+          page: r.page,
+          pageSize: r.pageSize,
+          totalPages: r.totalPages,
         },
       };
     }
-    // Handle array result (backward compatibility)
     return result;
   },
 
-  detail(category) {
+  detail(category: Record<string, unknown>) {
     return category;
   },
 };

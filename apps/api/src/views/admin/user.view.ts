@@ -1,9 +1,9 @@
 export const adminUserView = {
-  list(payload) {
+  list(payload: Record<string, unknown>) {
     return payload;
   },
 
-  detail(user) {
+  detail(user: Record<string, unknown>) {
     return user;
   },
 };

@@ -31,10 +31,8 @@ export const createReview = async (req: AuthenticatedRequest, res: Response, nex
     const data = createReviewSchema.parse({ body: req.body }).body;
 
     const existing = await reviewModel.findUnique({
-      userId_productId: {
-        userId: req.user!.id,
-        productId: data.productId,
-      },
+      clientId: req.user!.id,
+      productId: data.productId,
     });
 
     if (existing) {

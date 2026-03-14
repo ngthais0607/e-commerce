@@ -120,7 +120,7 @@ export default function AdminBannerForm() {
       
       navigate('/admin/banners');
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string; details?: any } } };
+      const err = error as { response?: { data?: { message?: string; details?: unknown } } };
       console.error('Error saving banner:', error);
       toast({
         variant: 'destructive',

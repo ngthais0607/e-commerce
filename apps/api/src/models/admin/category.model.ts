@@ -1,8 +1,9 @@
+import type { CategoryListFilters } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
 import { cacheWrapper, generateCacheKey, deleteCachePattern, CACHE_KEYS } from '../../utils/cache.js';
 
 export const adminCategoryModel = {
-  async list(includeInactive = true, filters = {}) {
+  async list(includeInactive = true, filters: CategoryListFilters = {}) {
     const { page, pageSize, search, parentId } = filters;
     
     // Use cache for category listings (10 minutes TTL - categories change less frequently)
@@ -31,6 +32,11 @@ export const adminCategoryModel = {
 
       // If pagination is requested, return paginated results
       if (page !== undefined && pageSize !== undefined) {
+        const MAX_PAGE_SIZE = 100;
+        const limitValue = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(String(pageSize), 10) || 20));
+        const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+        const offsetValue = (pageNum - 1) * limitValue;
+
         const [totalResult] = await query(
           `SELECT COUNT(*) as total FROM categories ${whereClause}`,
           params
@@ -44,8 +50,8 @@ export const adminCategoryModel = {
           FROM categories c
           ${whereClause}
           ORDER BY c.name ASC
-          LIMIT ? OFFSET ?`,
-          [...params, pageSize, (page - 1) * pageSize]
+          LIMIT ${limitValue} OFFSET ${offsetValue}`,
+          params
         );
 
         // Get parent and children for each category
@@ -70,9 +76,9 @@ export const adminCategoryModel = {
         return {
           items: itemsWithRelations,
           total,
-          page,
-          pageSize,
-          totalPages: Math.ceil(total / pageSize),
+          page: pageNum,
+          pageSize: limitValue,
+          totalPages: Math.ceil(total / limitValue),
         };
       }
 
@@ -110,7 +116,7 @@ export const adminCategoryModel = {
     }, 600); // 10 minutes cache
   },
 
-  async getById(id) {
+  async getById(id: number) {
     const cacheKey = `${CACHE_KEYS.CATEGORY}:${id}`;
     
     return cacheWrapper(cacheKey, async () => {
@@ -142,7 +148,7 @@ export const adminCategoryModel = {
     }, 600); // 10 minutes cache
   },
 
-  async getBySlug(slug) {
+  async getBySlug(slug: string) {
     const cacheKey = `${CACHE_KEYS.CATEGORY}:slug:${slug}`;
     
     return cacheWrapper(cacheKey, async () => {
@@ -153,14 +159,14 @@ export const adminCategoryModel = {
     }, 600); // 10 minutes cache
   },
 
-  async findBySlugExcludingId(slug, id) {
+  async findBySlugExcludingId(slug: string, id: number) {
     return queryOne(
       `SELECT * FROM categories WHERE slug = ? AND id != ?`,
       [slug, id]
     );
   },
 
-  async create(data) {
+  async create(data: Record<string, unknown>) {
     const categoryId = await insert(
       `INSERT INTO categories (name, slug, description, image, parentId, isActive, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -182,7 +188,7 @@ export const adminCategoryModel = {
     return category;
   },
 
-  async update(id, data) {
+  async update(id: number, data: Record<string, unknown>) {
     const updateFields = [];
     const updateValues = [];
 
@@ -230,7 +236,7 @@ export const adminCategoryModel = {
     return category;
   },
 
-  async remove(id) {
+  async remove(id: number) {
     const affectedRows = await execute(
       `DELETE FROM categories WHERE id = ?`,
       [id]
