@@ -46,8 +46,27 @@ const server = http.createServer(app);
 const PORT = config.port;
 
 // Middleware
+app.set('trust proxy', 1);
+
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGIN || config.corsOrigin || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+);
+
 app.use(cors({
-  origin: config.corsOrigin,
+  origin: (origin, callback) => {
+    // Non-browser clients (curl, server-to-server) may not send Origin
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.has(origin)) return callback(null, true);
+
+    // Allow common Vercel preview/prod domains when wildcard is desired
+    if (allowedOrigins.has('*')) return callback(null, true);
+
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
   credentials: true,
 }));
 
