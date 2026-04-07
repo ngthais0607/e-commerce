@@ -4,10 +4,6 @@ import { config } from '../config/index.js';
 import { log } from '../utils/logger.js';
 import { verifyToken } from '../utils/jwt.js';
 
-/**
- * Initialize Socket.IO server and set up event handlers.
- * This provides realtime chat for orders between customers and staff/admin.
- */
 export function initSocket(server: HttpServer): Server {
   const io = new Server(server, {
     cors: {
@@ -48,16 +44,6 @@ export function initSocket(server: HttpServer): Server {
       socket.leave(`order:${orderId}`);
     });
 
-    socket.on('join-order-room', (orderId) => {
-      if (!orderId) return;
-      socket.join(`order:${orderId}`);
-    });
-
-    socket.on('leave-order-room', (orderId) => {
-      if (!orderId) return;
-      socket.leave(`order:${orderId}`);
-    });
-
     socket.on('join-support-conv', (conversationId) => {
       if (!conversationId) return;
       socket.join(`support:conv:${conversationId}`);
@@ -71,6 +57,7 @@ export function initSocket(server: HttpServer): Server {
 
     if (socket.data.role === 'ADMIN' || socket.data.role === 'STAFF') {
       socket.join('support:staff');
+      socket.join('admin:notifications');
     }
 
     socket.on('disconnect', () => {
@@ -81,11 +68,11 @@ export function initSocket(server: HttpServer): Server {
   return io;
 }
 
-export function emitOrderMessage(io: Server, orderId: number, message: string): void {
+export function emitOrderMessage(io: Server, orderId: number, message: unknown): void {
   io.to(`order:${orderId}`).emit('order-message', { orderId, message });
 }
 
-export function emitSupportMessage(io: Server, conversationId: number, message: string): void {
+export function emitSupportMessage(io: Server, conversationId: number, message: unknown): void {
   io.to(`support:conv:${conversationId}`).emit('support-message', { conversationId, message });
   io.to('support:staff').emit('support-message', { conversationId, message });
 }
@@ -103,4 +90,10 @@ export function emitSupportNew(io: Server, conversation: Record<string, unknown>
   io.to('support:staff').emit('support-new', { conversation });
 }
 
-
+export function emitAdminNotification(
+  io: Server,
+  type: 'new-order' | 'new-review' | 'low-stock',
+  payload: Record<string, unknown>,
+): void {
+  io.to('admin:notifications').emit('admin:notification', { type, payload, createdAt: new Date().toISOString() });
+}

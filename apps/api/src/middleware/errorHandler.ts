@@ -32,6 +32,13 @@ export const errorHandler = (
   });
 
   // Handle specific error types
+  if (err.name === 'CustomValidationError') {
+    res.status(err.status || 400).json({
+      error: err.message,
+    });
+    return;
+  }
+
   if (err.name === 'ValidationError') {
     res.status(400).json({
       error: 'Validation error',

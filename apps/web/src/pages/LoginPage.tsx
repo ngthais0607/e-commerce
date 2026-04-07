@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -121,10 +121,12 @@ export default function LoginPage() {
               />
               <div className="flex items-center justify-end text-sm">
                 <p className="text-foreground/80 dark:text-white/70">
-                  Forgot password?{' '}
-                  <span className="text-teal-600 dark:text-teal-300 hover:text-sky-600 dark:hover:text-sky-300 hover:underline cursor-pointer transition-colors font-medium">
-                    Contact support
-                  </span>
+                  <Link
+                    to="/forgot-password"
+                    className="text-teal-600 dark:text-teal-300 hover:text-sky-600 dark:hover:text-sky-300 hover:underline transition-colors font-medium"
+                  >
+                    Forgot password?
+                  </Link>
                 </p>
               </div>
               <Button 

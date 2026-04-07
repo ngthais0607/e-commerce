@@ -439,7 +439,7 @@ export default function HomePage() {
           </Link>
         </div>
 
-        {featuredProducts.length === 0 ? (
+        {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
               <Card key={i} className="overflow-hidden border-none shadow-md">
@@ -454,6 +454,11 @@ export default function HomePage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        ) : featuredProducts.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            <p className="text-lg font-medium">No products available</p>
+            <p className="text-sm mt-1">Check back soon for new arrivals.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

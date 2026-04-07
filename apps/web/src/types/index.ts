@@ -102,6 +102,8 @@ export interface Review {
   rating: number;
   title?: string;
   comment?: string;
+  adminReply?: string | null;
+  adminRepliedAt?: string | null;
   isVerified: boolean;
   user?: User;
   product?: Product;

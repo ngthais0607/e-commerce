@@ -33,12 +33,17 @@ export const authenticate = async (
       return;
     }
 
+    if (!user.isActive) {
+      res.status(403).json({ error: 'Account disabled' });
+      return;
+    }
+
     req.user = {
       id: user.id,
       email: user.email,
       name: user.name,
       role: user.role,
-      isActive: true,
+      isActive: user.isActive,
     };
     next();
   } catch {

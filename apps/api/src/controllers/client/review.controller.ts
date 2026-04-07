@@ -3,6 +3,7 @@ import type { AuthenticatedRequest } from '../../middleware/auth.js';
 import { z } from 'zod';
 import { reviewModel } from '../../models/client/review.model.js';
 import { reviewView } from '../../views/client/review.view.js';
+import { emitAdminNotification } from '../../realtime/socket.js';
 
 const createReviewSchema = z.object({
   body: z.object({
@@ -40,6 +41,20 @@ export const createReview = async (req: AuthenticatedRequest, res: Response, nex
     }
 
     const review = await reviewModel.create(req.user!.id, data);
+
+    // Notify admin/staff in real-time (non-blocking)
+    try {
+      const io = (req as AuthenticatedRequest).app.get('io');
+      if (io) {
+        emitAdminNotification(io, 'new-review', {
+          reviewId: review.id,
+          productId: review.productId,
+          rating: review.rating,
+          customerName: (review.user as { name?: string } | null)?.name || 'Customer',
+        });
+      }
+    } catch { /* non-critical */ }
+
     res.status(201).json(reviewView.detail(review));
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -59,7 +74,7 @@ export const updateReview = async (req: AuthenticatedRequest, res: Response, nex
       return res.status(404).json({ error: 'Review not found' });
     }
 
-    if (review.userId !== req.user!.id && req.user!.role !== 'ADMIN') {
+    if ((review as { clientId: number }).clientId !== req.user!.id && req.user!.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -84,7 +99,7 @@ export const deleteReview = async (req: AuthenticatedRequest, res: Response, nex
       return res.status(404).json({ error: 'Review not found' });
     }
 
-    if (review.userId !== req.user!.id && req.user!.role !== 'ADMIN') {
+    if ((review as { clientId: number }).clientId !== req.user!.id && req.user!.role !== 'ADMIN') {
       return res.status(403).json({ error: 'Access denied' });
     }
 

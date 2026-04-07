@@ -12,7 +12,8 @@ const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'));
 const CartPage = lazy(() => import('./pages/CartPage'));
 const CheckoutPage = lazy(() => import('./pages/CheckoutPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const RegisterPage = lazy(() => import('./pages/RegisterPage'));
+const RegisterPage = lazy(() => import('./pages/RegisterPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'));
 const AccountPage = lazy(() => import('./pages/AccountPage'));
 const OrderHistoryPage = lazy(() => import('./pages/OrderHistoryPage'));
 const OrderDetailPage = lazy(() => import('./pages/OrderDetailPage'));
@@ -39,6 +40,8 @@ const AdminBanners = lazy(() => import('./pages/admin/AdminBanners'));
 const AdminBannerForm = lazy(() => import('./pages/admin/AdminBannerForm'));
 const AdminAddresses = lazy(() => import('./pages/admin/AdminAddresses'));
 const AdminSupport = lazy(() => import('./pages/admin/AdminSupport'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
+const AdminRefunds = lazy(() => import('./pages/admin/AdminRefunds'));
 const StaffDashboard = lazy(() => import('./pages/admin/StaffDashboard'));
 
 function AdminHome() {
@@ -63,6 +66,7 @@ function App() {
           <Route path="cart" element={<CartPage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="forgot-password" element={<ForgotPasswordPage />} />
           <Route
             path="checkout"
             element={
@@ -232,6 +236,22 @@ function App() {
             element={
               <ProtectedRoute requiredRole={['ADMIN', 'STAFF']}>
                 <AdminSupport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="reviews"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminReviews />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="refunds"
+            element={
+              <ProtectedRoute requiredRole="ADMIN">
+                <AdminRefunds />
               </ProtectedRoute>
             }
           />

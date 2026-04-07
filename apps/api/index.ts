@@ -40,6 +40,9 @@ import adminStaffDashboardRoutes from './src/routes/admin/staffDashboard.routes.
 import adminUploadRoutes from './src/routes/admin/upload.routes.js';
 import adminStatisticsRoutes from './src/routes/admin/statistics.routes.js';
 import adminOrderMessageRoutes from './src/routes/admin/orderMessage.routes.js';
+import adminReviewRoutes from './src/routes/admin/review.routes.js';
+import adminRefundRoutes from './src/routes/admin/refund.routes.js';
+import clientRefundRoutes from './src/routes/client/refund.routes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -137,6 +140,9 @@ app.use('/api/admin/statistics', adminStatisticsRoutes);
 app.use('/api/admin', adminOrderMessageRoutes);
 app.use('/api/admin/support', adminSupportRoutes);
 app.use('/api/admin/staff', adminStaffDashboardRoutes);
+app.use('/api/admin/reviews', adminReviewRoutes);
+app.use('/api/admin/refunds', adminRefundRoutes);
+app.use('/api', clientRefundRoutes);
 
 // Error handling
 app.use(notFound);

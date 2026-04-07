@@ -6,6 +6,10 @@ import { userOrderView } from '../../views/client/order.view.js';
 import { sendOrderConfirmation } from '../../services/emailService.js';
 import { authClientModel } from '../../models/client/auth.model.js';
 import { log } from '../../utils/logger.js';
+import { emitAdminNotification } from '../../realtime/socket.js';
+import { query } from '../../config/database.js';
+
+const LOW_STOCK_THRESHOLD = 5;
 
 const createOrderSchema = z.object({
   body: z.object({
@@ -112,6 +116,39 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response, next
     }
 
     log.info('Order created', { orderId: order.id, orderNumber: order.orderNumber, userId });
+
+    // Notify admin/staff in real-time (non-blocking)
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        emitAdminNotification(io, 'new-order', {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          total: order.total,
+          customerName: req.user?.name || 'Customer',
+        });
+      }
+    } catch { /* non-critical */ }
+
+    // Check inventory levels and alert admin for low-stock products (non-blocking)
+    try {
+      const io = req.app.get('io');
+      if (io && order.items?.length) {
+        const productIds = order.items.map((item: { productId: number }) => item.productId);
+        const placeholders = productIds.map(() => '?').join(',');
+        const lowStockProducts = await query(
+          `SELECT id, name, stock FROM products WHERE id IN (${placeholders}) AND stock <= ?`,
+          [...productIds, LOW_STOCK_THRESHOLD]
+        );
+        for (const p of lowStockProducts) {
+          emitAdminNotification(io, 'low-stock', {
+            productId: p.id,
+            productName: p.name,
+            stock: p.stock,
+          });
+        }
+      }
+    } catch { /* non-critical */ }
 
     // Send order confirmation email (non-blocking)
     try {

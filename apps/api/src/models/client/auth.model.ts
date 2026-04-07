@@ -14,7 +14,8 @@ export interface Client {
   name: string;
   phone: string | null;
   role: string;
-  customerCode: string;
+  isActive: boolean;
+  customerCode: string | null;
   createdAt: Date;
 }
 
@@ -81,6 +82,13 @@ export const authClientModel = {
       ]
     );
 
+    // Generate customerCode after getting the auto-increment ID
+    const customerCode = `KH${String(clientId).padStart(6, '0')}`;
+    await execute(
+      `UPDATE clients SET customerCode = ? WHERE id = ?`,
+      [customerCode, clientId]
+    );
+
     const client = await queryOne<{
       id: number;
       email: string;
@@ -88,8 +96,8 @@ export const authClientModel = {
       role: string;
       customerCode: string;
     }>(
-      `SELECT id, email, name, role, customerCode 
-       FROM clients 
+      `SELECT id, email, name, role, customerCode
+       FROM clients
        WHERE id = ?`,
       [clientId]
     );
@@ -104,12 +112,13 @@ export const authClientModel = {
       name: string;
       phone: string | null;
       role: string;
-      customerCode: string;
+      isActive: boolean;
+      customerCode: string | null;
       createdAt: Date;
     }>(
-      `SELECT id, email, name, phone, role, customerCode, createdAt 
-       FROM clients 
-       WHERE id = ? AND isActive = 1`,
+      `SELECT id, email, name, phone, role, isActive, customerCode, createdAt
+       FROM clients
+       WHERE id = ?`,
       [id]
     );
 
@@ -121,7 +130,8 @@ export const authClientModel = {
       name: client.name,
       phone: client.phone,
       role: client.role,
-      customerCode: client.customerCode,
+      isActive: Boolean(client.isActive),
+      customerCode: client.customerCode ?? null,
       createdAt: client.createdAt,
     };
   },

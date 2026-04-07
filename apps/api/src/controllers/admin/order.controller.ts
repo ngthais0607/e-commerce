@@ -3,7 +3,7 @@ import type { AuthenticatedRequest } from '../../middleware/auth.js';
 import { updateOrderStatusSchema, updateOrderPaymentStatusSchema } from '../../validators/orderValidator.js';
 import { adminOrderModel } from '../../models/admin/order.model.js';
 import { adminOrderView } from '../../views/admin/order.view.js';
-import { sendOrderStatusUpdate } from '../../services/emailService.js';
+import { sendOrderStatusUpdate, sendOrderShipped, sendOrderCancelled } from '../../services/emailService.js';
 import { authClientModel } from '../../models/client/auth.model.js';
 import { log } from '../../utils/logger.js';
 import { PaymentService } from '../../services/paymentService.js';
@@ -146,13 +146,16 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
     if (status && status !== oldOrder.status) {
       try {
         const user = await authClientModel.findById(order.clientId);
-        
+
         if (user) {
-          await sendOrderStatusUpdate(order, {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-          }, oldOrder.status, status);
+          const userPayload = { id: user.id, email: user.email, name: user.name };
+          if (status === 'SHIPPED') {
+            await sendOrderShipped(order, userPayload);
+          } else if (status === 'CANCELLED') {
+            await sendOrderCancelled(order, userPayload, reason);
+          } else {
+            await sendOrderStatusUpdate(order, userPayload, oldOrder.status, status);
+          }
         }
       } catch (emailError) {
         log.error('Failed to send order status update email', emailError instanceof Error ? emailError : null, {

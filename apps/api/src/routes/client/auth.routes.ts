@@ -154,6 +154,37 @@ router.post('/forgot-password', authLimiter, authController.requestPasswordReset
 
 /**
  * @swagger
+ * /api/auth/verify-otp:
+ *   post:
+ *     summary: Verify OTP for password reset
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *                 minLength: 6
+ *                 maxLength: 6
+ *     responses:
+ *       200:
+ *         description: OTP verified, returns resetToken
+ *       400:
+ *         description: Invalid or expired OTP
+ */
+router.post('/verify-otp', authLimiter, authController.verifyOtp);
+
+/**
+ * @swagger
  * /api/auth/reset-password:
  *   post:
  *     summary: Reset password with token
@@ -165,11 +196,14 @@ router.post('/forgot-password', authLimiter, authController.requestPasswordReset
  *           schema:
  *             type: object
  *             required:
- *               - token
  *               - password
  *             properties:
+ *               resetToken:
+ *                 type: string
+ *                 description: Token from OTP verification (Redis-backed)
  *               token:
  *                 type: string
+ *                 description: Legacy DB-backed token
  *               password:
  *                 type: string
  *                 minLength: 6

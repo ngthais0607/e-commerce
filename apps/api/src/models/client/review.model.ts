@@ -1,5 +1,18 @@
 import type { ReviewListFilters, ReviewCreateData, ReviewUpdateData } from '../../types/models.js';
 import { query, queryOne, insert, execute } from '../../config/database.js';
+import { deleteCache, deleteCachePattern } from '../../utils/cache.js';
+
+const invalidateProductCache = async (productId: number): Promise<void> => {
+  const productRow = await queryOne<{ slug: string }>(
+    `SELECT slug FROM products WHERE id = ?`,
+    [productId]
+  );
+  await deleteCache(`product:${productId}`);
+  if (productRow?.slug) {
+    await deleteCache(`product:slug:${productRow.slug}`);
+  }
+  await deleteCachePattern('products:*');
+};
 
 const recalcProductRating = async (productId: number): Promise<void> => {
   const reviews = await query(
@@ -12,15 +25,15 @@ const recalcProductRating = async (productId: number): Promise<void> => {
       `UPDATE products SET rating = 0, reviewCount = 0, updatedAt = NOW() WHERE id = ?`,
       [productId]
     );
-    return;
+  } else {
+    const avgRating = reviews.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviews.length;
+    await execute(
+      `UPDATE products SET rating = ?, reviewCount = ?, updatedAt = NOW() WHERE id = ?`,
+      [avgRating.toFixed(2), reviews.length, productId]
+    );
   }
 
-  const avgRating = reviews.reduce((sum, r) => sum + parseFloat(r.rating), 0) / reviews.length;
-
-  await execute(
-    `UPDATE products SET rating = ?, reviewCount = ?, updatedAt = NOW() WHERE id = ?`,
-    [avgRating.toFixed(2), reviews.length, productId]
-  );
+  await invalidateProductCache(productId);
 };
 
 export const reviewModel = {
@@ -71,6 +84,8 @@ export const reviewModel = {
         rating: review.rating,
         title: review.title,
         comment: review.comment,
+        adminReply: review.adminReply ?? null,
+        adminRepliedAt: review.adminRepliedAt ?? null,
         isVerified: Boolean(review.isVerified),
         createdAt: review.createdAt,
         updatedAt: review.updatedAt,
@@ -104,7 +119,7 @@ export const reviewModel = {
     }
 
     return queryOne(
-      `SELECT * FROM reviews ${whereClause}`,
+      `SELECT id, clientId, productId, rating, title, comment, adminReply, adminRepliedAt, isVerified, createdAt, updatedAt FROM reviews ${whereClause}`,
       params
     );
   },
@@ -169,6 +184,8 @@ export const reviewModel = {
       rating: review.rating,
       title: review.title,
       comment: review.comment,
+      adminReply: review.adminReply ?? null,
+      adminRepliedAt: review.adminRepliedAt ?? null,
       isVerified: Boolean(review.isVerified),
       createdAt: review.createdAt,
       updatedAt: review.updatedAt,
@@ -236,5 +253,78 @@ export const reviewModel = {
     }
 
     return affectedRows > 0;
+  },
+
+  async replyToReview(id: number, reply: string | null) {
+    await execute(
+      `UPDATE reviews SET adminReply = ?, adminRepliedAt = IF(? IS NULL, NULL, NOW(3)), updatedAt = NOW() WHERE id = ?`,
+      [reply, reply, id]
+    );
+    const updated = await this.findUnique({ id });
+    if (updated && (updated as { productId?: number }).productId) {
+      await invalidateProductCache((updated as { productId: number }).productId);
+    }
+    return updated;
+  },
+
+  async listAll(filters: { page?: number; pageSize?: number; productId?: number } = {}) {
+    const { page = 1, pageSize = 20, productId } = filters;
+    const MAX_PAGE_SIZE = 100;
+    const limitValue = Math.min(MAX_PAGE_SIZE, Math.max(1, parseInt(String(pageSize), 10) || 20));
+    const pageNum = Math.max(1, parseInt(String(page), 10) || 1);
+    const offsetValue = (pageNum - 1) * limitValue;
+
+    let whereClause = 'WHERE 1=1';
+    const params: unknown[] = [];
+
+    if (productId) {
+      whereClause += ' AND r.productId = ?';
+      params.push(productId);
+    }
+
+    const [totalResult] = await query(
+      `SELECT COUNT(*) as total FROM reviews r ${whereClause}`,
+      params
+    );
+    const total = totalResult.total;
+
+    const reviews = await query(
+      `SELECT r.*, cl.id as user_id, cl.name as user_name, p.id as product_id, p.name as product_name
+       FROM reviews r
+       LEFT JOIN clients cl ON r.clientId = cl.id
+       LEFT JOIN products p ON r.productId = p.id
+       ${whereClause}
+       ORDER BY r.createdAt DESC
+       LIMIT ${limitValue} OFFSET ${offsetValue}`,
+      params
+    );
+
+    return {
+      items: reviews.map(review => ({
+        id: review.id,
+        clientId: review.clientId,
+        productId: review.productId,
+        rating: review.rating,
+        title: review.title,
+        comment: review.comment,
+        adminReply: review.adminReply ?? null,
+        adminRepliedAt: review.adminRepliedAt ?? null,
+        isVerified: Boolean(review.isVerified),
+        createdAt: review.createdAt,
+        updatedAt: review.updatedAt,
+        user: review.user_id ? {
+          id: review.user_id,
+          name: review.user_name,
+        } : null,
+        product: review.product_id ? {
+          id: review.product_id,
+          name: review.product_name,
+        } : null,
+      })),
+      total,
+      page: pageNum,
+      pageSize: limitValue,
+      totalPages: Math.ceil(total / limitValue),
+    };
   },
 };

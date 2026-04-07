@@ -30,6 +30,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(0);
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<'description' | 'reviews'>('description');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
@@ -216,14 +217,17 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-16">
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 border-2 border-gray-200 relative shadow-lg">
+              {!imgLoaded && <Skeleton className="absolute inset-0 w-full h-full rounded-2xl" />}
               <img
                 src={product.images?.[activeImage] || '/placeholder.jpg'}
                 alt={product.name}
-                className="w-full h-full object-cover object-center transition-opacity duration-300"
+                className={`w-full h-full object-cover object-center transition-opacity duration-300 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
                 loading="eager"
+                onLoad={() => setImgLoaded(true)}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&auto=format&fit=crop';
+                  setImgLoaded(true);
                 }}
               />
               {product.salePrice && (
@@ -237,7 +241,7 @@ export default function ProductDetailPage() {
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
-                    onClick={() => setActiveImage(idx)}
+                    onClick={() => { setActiveImage(idx); setImgLoaded(false); }}
                     className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
                       activeImage === idx
                         ? 'border-primary ring-2 ring-primary/20'
@@ -264,13 +268,17 @@ export default function ProductDetailPage() {
                 {product.name}
               </h1>
               <div className="flex items-center gap-3">
-                <div className="flex items-center bg-yellow-50 px-2 py-1 rounded-md">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" />
+                <div
+                  className="flex items-center bg-yellow-50 px-2 py-1 rounded-md"
+                  aria-label={`Rating: ${product.rating.toFixed(1)} out of 5`}
+                  role="img"
+                >
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 mr-1" aria-hidden="true" />
                   <span className="font-semibold text-yellow-700">
                     {product.rating.toFixed(1)}
                   </span>
                 </div>
-                <span className="text-gray-400">|</span>
+                <span className="text-gray-400" aria-hidden="true">|</span>
                 <span className="text-muted-foreground">{product.reviewCount} reviews</span>
                 <span className="text-gray-400">|</span>
                 <span
@@ -341,6 +349,11 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
+            {product.stock === 0 && (
+              <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                This product is currently out of stock. Check back soon for availability.
+              </div>
+            )}
             <div className="flex gap-4 mb-8">
               <Button
                 onClick={handleAddToCart}
@@ -349,7 +362,7 @@ export default function ProductDetailPage() {
                 className="flex-1 text-base h-12"
               >
                 <ShoppingCart className="h-5 w-5 mr-2" />
-                Add to Cart
+                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
               </Button>
               <Button
                 variant="secondary"
@@ -537,6 +550,12 @@ export default function ProductDetailPage() {
                         )}
                         {review.comment && (
                           <p className="text-sm text-gray-600">{review.comment}</p>
+                        )}
+                        {review.adminReply && (
+                          <div className="mt-3 ml-4 border-l-2 border-sky-300 pl-3 bg-sky-50 rounded-r-lg py-2 pr-2">
+                            <p className="text-xs font-semibold text-sky-700 mb-0.5">Shop Reply</p>
+                            <p className="text-sm text-sky-900">{review.adminReply}</p>
+                          </div>
                         )}
                       </div>
                     ))}

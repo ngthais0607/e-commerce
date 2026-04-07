@@ -6,9 +6,19 @@ import type { Order } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { formatPrice, formatDate } from '@/lib/utils';
-import { CreditCard, Loader2 } from 'lucide-react';
+import { CreditCard, Loader2, RotateCcw } from 'lucide-react';
 import { getSocket } from '@/lib/socket';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useToast } from '@/hooks/use-toast';
+
+interface RefundRequest {
+  id: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  reason: string;
+  adminNote: string | null;
+  requestedAt: string;
+  resolvedAt: string | null;
+}
 
 interface OrderMessage {
   id: number;
@@ -24,12 +34,17 @@ export default function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, token } = useAuthStore();
+  const { toast } = useToast();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [messages, setMessages] = useState<OrderMessage[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [refundRequest, setRefundRequest] = useState<RefundRequest | null>(null);
+  const [showRefundForm, setShowRefundForm] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [submittingRefund, setSubmittingRefund] = useState(false);
 
   useEffect(() => {
     // Redirect admin and staff to admin order detail page
@@ -41,6 +56,7 @@ export default function OrderDetailPage() {
     if (id) {
       fetchOrder();
       fetchMessages();
+      fetchRefundStatus();
 
       const socket = getSocket(token ?? null);
       if (socket) {
@@ -80,6 +96,32 @@ export default function OrderDetailPage() {
     }
   };
 
+  const fetchRefundStatus = async () => {
+    if (!id) return;
+    try {
+      const res = await api.get<RefundRequest>(`/orders/${id}/refund`);
+      setRefundRequest(res.data);
+    } catch {
+      // 404 means no refund request yet — that's fine
+    }
+  };
+
+  const handleRefundSubmit = async () => {
+    if (!id || refundReason.trim().length < 10) return;
+    setSubmittingRefund(true);
+    try {
+      const res = await api.post<RefundRequest>(`/orders/${id}/refund`, { reason: refundReason.trim() });
+      setRefundRequest(res.data);
+      setShowRefundForm(false);
+      setRefundReason('');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { error?: string } } };
+      toast({ title: 'Error', description: err.response?.data?.error || 'Failed to submit refund request', variant: 'destructive' });
+    } finally {
+      setSubmittingRefund(false);
+    }
+  };
+
   const fetchMessages = async () => {
     if (!id) return;
     try {
@@ -100,7 +142,7 @@ export default function OrderDetailPage() {
     try {
       // For COD, just show message
       if (order.paymentMethod === 'COD') {
-        alert('Payment will be collected on delivery. Your order is being processed.');
+        toast({ title: 'Order Confirmed', description: 'Payment will be collected on delivery. Your order is being processed.' });
         return;
       }
 
@@ -126,7 +168,7 @@ export default function OrderDetailPage() {
       console.error('Payment error:', error);
       const err = error as { response?: { data?: { error?: string } } };
       const errorMessage = err.response?.data?.error || 'Failed to process payment';
-      alert(errorMessage);
+      toast({ title: 'Payment Failed', description: errorMessage, variant: 'destructive' });
     } finally {
       setProcessingPayment(false);
     }
@@ -145,7 +187,7 @@ export default function OrderDetailPage() {
       console.error('Error sending message:', error);
       const err = error as { response?: { data?: { error?: string } } };
       const errorMessage = err.response?.data?.error || 'Failed to send message';
-      alert(errorMessage);
+      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
     }
   };
 
@@ -314,6 +356,70 @@ export default function OrderDetailPage() {
                 )}
               </div>
               
+              {/* Refund Request Section */}
+              {(order.status === 'PAID' || order.status === 'PROCESSING') && (
+                <div className="mt-4 pt-4 border-t">
+                  {refundRequest ? (
+                    <div className={`rounded-lg p-3 text-sm border ${
+                      refundRequest.status === 'APPROVED'
+                        ? 'bg-green-50 border-green-200 dark:bg-green-900/20'
+                        : refundRequest.status === 'REJECTED'
+                        ? 'bg-red-50 border-red-200 dark:bg-red-900/20'
+                        : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20'
+                    }`}>
+                      <p className="font-medium">
+                        Refund Request:{' '}
+                        {refundRequest.status === 'PENDING' && '⏳ Pending review'}
+                        {refundRequest.status === 'APPROVED' && '✅ Approved'}
+                        {refundRequest.status === 'REJECTED' && '❌ Rejected'}
+                      </p>
+                      <p className="text-muted-foreground mt-1">Reason: {refundRequest.reason}</p>
+                      {refundRequest.adminNote && (
+                        <p className="text-muted-foreground mt-1">Admin note: {refundRequest.adminNote}</p>
+                      )}
+                    </div>
+                  ) : showRefundForm ? (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">Why do you want a refund?</p>
+                        <span className={`text-xs tabular-nums ${refundReason.trim().length >= 10 ? 'text-green-600' : 'text-muted-foreground'}`}>
+                          {refundReason.trim().length} / 10+ chars
+                        </span>
+                      </div>
+                      <textarea
+                        value={refundReason}
+                        onChange={(e) => setRefundReason(e.target.value)}
+                        maxLength={500}
+                        className="w-full px-3 py-2 border rounded-md text-sm resize-none h-24"
+                        placeholder="Please describe the reason for your refund request (min. 10 characters)..."
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleRefundSubmit}
+                          disabled={submittingRefund || refundReason.trim().length < 10}
+                        >
+                          {submittingRefund ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit Request'}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setShowRefundForm(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-destructive border-destructive/40 hover:bg-destructive/10"
+                      onClick={() => setShowRefundForm(true)}
+                    >
+                      <RotateCcw className="mr-2 h-4 w-4" />
+                      Request Refund
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Payment Button for PENDING orders */}
               {order.status === 'PENDING' && order.paymentStatus === 'PENDING' && (
                 <div className="mt-4 pt-4 border-t">
