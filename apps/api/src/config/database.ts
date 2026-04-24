@@ -2,31 +2,20 @@ import mysql from 'mysql2/promise';
 import { config } from './index.js';
 import { log } from '../utils/logger.js';
 
-// Parse DATABASE_URL: mysql://user:password@host:port/database
+// Parse DATABASE_URL: mysql://user:password@host:port/database[?ssl-mode=REQUIRED]
 const parseDatabaseUrl = (url: string) => {
-  try {
-    const match = url.match(/mysql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)/);
-    if (!match) {
-      throw new Error('Invalid DATABASE_URL format');
-    }
-    return {
-      host: match[3],
-      port: parseInt(match[4], 10),
-      user: match[1],
-      password: match[2],
-      database: match[5],
-    };
-  } catch {
-    // Fallback: try to parse as standard format
-    const urlObj = new URL(url.replace('mysql://', 'http://'));
-    return {
-      host: urlObj.hostname,
-      port: parseInt(urlObj.port || '3306', 10),
-      user: urlObj.username,
-      password: urlObj.password,
-      database: urlObj.pathname.slice(1),
-    };
-  }
+  const urlObj = new URL(url.replace(/^mysql:\/\//, 'http://'));
+  const sslMode = urlObj.searchParams.get('ssl-mode') || urlObj.searchParams.get('sslmode');
+  return {
+    host: urlObj.hostname,
+    port: parseInt(urlObj.port || '3306', 10),
+    user: decodeURIComponent(urlObj.username),
+    password: decodeURIComponent(urlObj.password),
+    database: urlObj.pathname.slice(1),
+    ssl: sslMode === 'REQUIRED' || sslMode === 'require'
+      ? { rejectUnauthorized: false }
+      : undefined,
+  };
 };
 
 const dbConfig = config.database.url
@@ -41,7 +30,12 @@ const dbConfig = config.database.url
 
 // Create connection pool
 export const pool = mysql.createPool({
-  ...dbConfig,
+  host: dbConfig.host,
+  port: dbConfig.port,
+  user: dbConfig.user,
+  password: dbConfig.password,
+  database: dbConfig.database,
+  ssl: 'ssl' in dbConfig ? dbConfig.ssl : undefined,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
