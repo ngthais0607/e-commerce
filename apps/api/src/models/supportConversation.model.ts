@@ -3,10 +3,12 @@ import { query, queryOne, insert, execute } from '../config/database.js';
 export const supportConversationModel = {
   async createOrGetOpenByUser(userId: number) {
     const existing = await queryOne(
-      `SELECT id, userId, status, assignedStaffId, lastMessageAt, createdAt, updatedAt
-       FROM support_conversations
-       WHERE userId = ? AND status IN ('OPEN', 'ASSIGNED')
-       ORDER BY createdAt DESC
+      `SELECT sc.id, sc.userId, sc.status, sc.assignedStaffId, sc.lastMessageAt, sc.createdAt, sc.updatedAt,
+              c.name AS userName, c.email AS userEmail
+       FROM support_conversations sc
+       LEFT JOIN clients c ON sc.userId = c.id
+       WHERE sc.userId = ? AND sc.status IN ('OPEN', 'ASSIGNED')
+       ORDER BY sc.createdAt DESC
        LIMIT 1`,
       [userId]
     );
@@ -24,9 +26,11 @@ export const supportConversationModel = {
 
   async getById(id: number) {
     return queryOne(
-      `SELECT id, userId, status, assignedStaffId, lastMessageAt, createdAt, updatedAt
-       FROM support_conversations
-       WHERE id = ?`,
+      `SELECT sc.id, sc.userId, sc.status, sc.assignedStaffId, sc.lastMessageAt, sc.createdAt, sc.updatedAt,
+              c.name AS userName, c.email AS userEmail
+       FROM support_conversations sc
+       LEFT JOIN clients c ON sc.userId = c.id
+       WHERE sc.id = ?`,
       [id]
     );
   },

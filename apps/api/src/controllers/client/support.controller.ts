@@ -97,6 +97,9 @@ export const createConversation = async (req: AuthenticatedRequest, res: Respons
     if (!userId) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
+    if (req.user?.role === 'ADMIN' || req.user?.role === 'STAFF') {
+      return res.status(403).json({ error: 'Staff accounts cannot create support conversations' });
+    }
 
     const conv = await supportConversationModel.createOrGetOpenByUser(userId);
     // Notify staff there is a new/active conversation

@@ -22,6 +22,19 @@ export const adminStatisticsModel = {
     );
     const totalUsers = usersResult?.total || 0;
 
+    // New users registered today
+    const newUsersTodayResult = await queryOne(
+      `SELECT COUNT(*) as total FROM clients WHERE DATE(createdAt) = CURDATE()`
+    );
+    const newUsersToday = newUsersTodayResult?.total || 0;
+
+    // New users registered this month
+    const newUsersMonthResult = await queryOne(
+      `SELECT COUNT(*) as total FROM clients
+       WHERE YEAR(createdAt) = YEAR(CURDATE()) AND MONTH(createdAt) = MONTH(CURDATE())`
+    );
+    const newUsersThisMonth = newUsersMonthResult?.total || 0;
+
     // Total products
     const productsResult = await queryOne(
       `SELECT COUNT(*) as total FROM products WHERE isActive = 1`
@@ -61,6 +74,8 @@ export const adminStatisticsModel = {
       pendingOrders,
       todayRevenue,
       monthRevenue,
+      newUsersToday,
+      newUsersThisMonth,
     };
   },
 

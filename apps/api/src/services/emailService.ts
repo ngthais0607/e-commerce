@@ -167,10 +167,9 @@ export const sendOrderConfirmation = async (order: OrderLike, user: UserLike) =>
     `Order Confirmation — #${order.orderNumber}`,
     `Your order #${order.orderNumber} has been received! We'll get it ready right away.`,
     `<!--HEADER_CONTENT-->
-      <div style="width:64px;height:64px;background:rgba(255,255,255,0.25);border-radius:50%;margin:0 auto 16px;">
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="32" cy="32" r="30" fill="rgba(255,255,255,0.25)"/>
-          <path d="M20 33l9 9 15-18" stroke="#ffffff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      <div style="width:72px;height:72px;background:#ffffff;border-radius:50%;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(0,0,0,0.12);">
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8 21l8 8 16-17" stroke="#0284c7" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
       <h1 style="margin:0 0 8px;font-size:26px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Order Confirmed!</h1>

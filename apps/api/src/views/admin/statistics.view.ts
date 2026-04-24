@@ -8,6 +8,8 @@ export const adminStatisticsView = {
       pendingOrders: (data as { pendingOrders?: unknown }).pendingOrders,
       todayRevenue: (data as { todayRevenue?: unknown }).todayRevenue,
       monthRevenue: (data as { monthRevenue?: unknown }).monthRevenue,
+      newUsersToday: (data as { newUsersToday?: unknown }).newUsersToday,
+      newUsersThisMonth: (data as { newUsersThisMonth?: unknown }).newUsersThisMonth,
     };
   },
 

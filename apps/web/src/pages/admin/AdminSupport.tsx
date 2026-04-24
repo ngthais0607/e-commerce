@@ -5,7 +5,7 @@ import { formatDate } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
 import { getSocket } from '@/lib/socket';
 import { useToast } from '@/hooks/use-toast';
-import { Send, RefreshCw, MessageSquare, Search, CheckCheck, Clock, ChevronDown, ArrowLeft } from 'lucide-react';
+import { Send, RefreshCw, MessageSquare, Search, CheckCheck, ChevronDown, ArrowLeft, Inbox } from 'lucide-react';
 
 const formatMessageTime = (date: string) =>
   new Date(date).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -48,9 +48,9 @@ function getAvatarColor(id: number): string {
 }
 
 const STATUS_META = {
-  OPEN:     { label: 'Open',     cls: 'bg-emerald-100 text-emerald-700 ring-1 ring-emerald-300' },
-  ASSIGNED: { label: 'Assigned', cls: 'bg-sky-100 text-sky-700 ring-1 ring-sky-300' },
-  CLOSED:   { label: 'Closed',   cls: 'bg-slate-100 text-slate-500 ring-1 ring-slate-200' },
+  OPEN:     { label: 'Open',     dot: 'bg-emerald-400', cls: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400' },
+  ASSIGNED: { label: 'Assigned', dot: 'bg-sky-400',     cls: 'bg-sky-50 text-sky-700 ring-1 ring-sky-200 dark:bg-sky-900/30 dark:text-sky-400' },
+  CLOSED:   { label: 'Closed',   dot: 'bg-slate-300',   cls: 'bg-slate-100 text-slate-500 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-400' },
 };
 
 export default function AdminSupport() {
@@ -79,7 +79,10 @@ export default function AdminSupport() {
   useEffect(() => {
     if (!socket) return;
     socket.on('support-new', (payload: { conversation: Conversation }) => {
-      setConversations((prev) => [payload.conversation, ...prev]);
+      setConversations((prev) => {
+        if (prev.some((c) => c.id === payload.conversation.id)) return prev;
+        return [payload.conversation, ...prev];
+      });
     });
     socket.on('support-message', (payload: { conversationId: number; message: SupportMessage }) => {
       if (selected && payload.conversationId === selected.id) {
@@ -104,8 +107,7 @@ export default function AdminSupport() {
   const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    setShowScrollBtn(distFromBottom > 120);
+    setShowScrollBtn(el.scrollHeight - el.scrollTop - el.clientHeight > 120);
   };
 
   const fetchConversations = async () => {
@@ -138,11 +140,7 @@ export default function AdminSupport() {
       setTimeout(() => inputRef.current?.focus(), 100);
     } catch (error: unknown) {
       const err = error as { message?: string };
-      toast({
-        variant: 'destructive',
-        title: 'Failed to open conversation',
-        description: err?.message || 'Please try again.',
-      });
+      toast({ variant: 'destructive', title: 'Failed to open conversation', description: err?.message || 'Please try again.' });
     } finally {
       setLoadingMsgs(false);
     }
@@ -153,17 +151,12 @@ export default function AdminSupport() {
     const text = newMsg.trim();
     setNewMsg('');
     try {
-      const res = await api.post(`/admin/support/conversations/${selected.id}/messages`, { message: text });
-      setMessages((prev) => [...prev, res.data]);
-      toast({ title: 'Message sent' });
+      await api.post(`/admin/support/conversations/${selected.id}/messages`, { message: text });
+      // socket 'support-message' event will add the message to messages list
     } catch (err: unknown) {
       const error = err as { message?: string };
-      setNewMsg(text); // restore message on error
-      toast({
-        variant: 'destructive',
-        title: 'Failed to send message',
-        description: error?.message || 'Please try again.',
-      });
+      setNewMsg(text);
+      toast({ variant: 'destructive', title: 'Failed to send message', description: error?.message || 'Please try again.' });
     }
   };
 
@@ -171,39 +164,34 @@ export default function AdminSupport() {
     const q = search.toLowerCase();
     if (!q) return conversations;
     return conversations.filter(
-      (c) =>
-        c.userName?.toLowerCase().includes(q) ||
-        c.userEmail?.toLowerCase().includes(q) ||
-        String(c.id).includes(q),
+      (c) => c.userName?.toLowerCase().includes(q) || c.userEmail?.toLowerCase().includes(q) || String(c.id).includes(q),
     );
   }, [conversations, search]);
 
-  // Group messages by date for dividers
   const groupedMessages = useMemo(() => {
     const groups: { date: string; messages: SupportMessage[] }[] = [];
     for (const msg of messages) {
-      const d = new Date(msg.createdAt).toLocaleDateString('en-US', {
-        weekday: 'short', month: 'short', day: 'numeric',
-      });
+      const d = new Date(msg.createdAt).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
       const last = groups[groups.length - 1];
-      if (last?.date === d) {
-        last.messages.push(msg);
-      } else {
-        groups.push({ date: d, messages: [msg] });
-      }
+      if (last?.date === d) last.messages.push(msg);
+      else groups.push({ date: d, messages: [msg] });
     }
     return groups;
   }, [messages]);
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] min-h-[480px] rounded-2xl border border-border bg-card overflow-hidden shadow-md">
-      {/* ── Left sidebar ─────────────────────────────────────────── */}
-      <aside className={`${mobileChatOpen ? 'hidden sm:flex' : 'flex'} w-full sm:w-80 flex-shrink-0 flex-col border-r border-border bg-muted/10`}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm text-foreground">Support Chat</span>
+    <div className="flex h-[calc(100vh-7rem)] min-h-[480px] rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+
+      {/* ── Sidebar ───────────────────────────────────────────────── */}
+      <aside className={`${mobileChatOpen ? 'hidden sm:flex' : 'flex'} w-full sm:w-[300px] flex-shrink-0 flex-col border-r border-border bg-white dark:bg-slate-900`}>
+
+        {/* Sidebar header */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+              <MessageSquare className="h-4 w-4 text-sky-500" />
+            </div>
+            <span className="font-semibold text-[15px] text-foreground">Support Chat</span>
           </div>
           <button
             type="button"
@@ -217,8 +205,8 @@ export default function AdminSupport() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2.5 border-b border-border">
-          <div className="flex items-center gap-2 bg-muted/60 rounded-xl px-3 py-2">
+        <div className="px-3 py-2.5 border-b border-border/60">
+          <div className="flex items-center gap-2 bg-muted/50 rounded-xl px-3 py-2">
             <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <input
               value={search}
@@ -229,34 +217,28 @@ export default function AdminSupport() {
           </div>
         </div>
 
-        {/* Count */}
-        <div className="px-4 py-2">
-          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
+        {/* Count label */}
+        <div className="px-4 pt-3 pb-1">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
             {filtered.length} conversation{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
 
-        {/* List */}
+        {/* Conversation list */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {loading ? (
-            <div className="flex items-center justify-center py-10 text-muted-foreground gap-2 text-sm">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              Loading…
+            <div className="flex items-center justify-center py-12 text-muted-foreground gap-2 text-sm">
+              <RefreshCw className="h-4 w-4 animate-spin" /> Loading…
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-10 px-4 text-center text-muted-foreground gap-2">
-              <MessageSquare className="h-8 w-8 opacity-30" />
-              {search ? (
-                <>
-                  <p className="text-sm font-medium">No results for "{search}"</p>
-                  <p className="text-xs">Try a different name or email.</p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-medium">No conversations</p>
-                  <p className="text-xs">Customers using live chat will appear here.</p>
-                </>
-              )}
+            <div className="flex flex-col items-center justify-center py-12 px-4 text-center text-muted-foreground gap-3">
+              <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center">
+                <Inbox className="h-5 w-5 opacity-50" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">{search ? `No results for "${search}"` : 'No conversations'}</p>
+                <p className="text-xs mt-0.5 opacity-70">{search ? 'Try a different name or email.' : 'Customers using live chat will appear here.'}</p>
+              </div>
             </div>
           ) : (
             <div className="py-1">
@@ -271,36 +253,30 @@ export default function AdminSupport() {
                     key={c.id}
                     type="button"
                     onClick={() => selectConversation(c)}
-                    className={`w-full text-left px-3 py-3 mx-0 flex items-center gap-3 transition-all hover:bg-muted/50 ${
+                    className={`w-full text-left px-3 py-3 flex items-center gap-3 transition-all duration-150 border-l-[3px] ${
                       isActive
-                        ? 'bg-primary/8 border-l-[3px] border-l-primary pl-[9px]'
-                        : 'border-l-[3px] border-l-transparent'
+                        ? 'bg-sky-50 dark:bg-sky-950/30 border-l-sky-500'
+                        : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border-l-transparent'
                     }`}
                   >
-                    {/* Avatar */}
                     <div className={`w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm`}>
                       {initials}
                     </div>
-                    {/* Info */}
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1 mb-0.5">
-                        <span className={`text-sm font-semibold truncate ${isActive ? 'text-primary' : 'text-foreground'}`}>
+                      <div className="flex items-center justify-between gap-1 mb-1">
+                        <span className={`text-sm font-semibold truncate ${isActive ? 'text-sky-600 dark:text-sky-400' : 'text-foreground'}`}>
                           {displayName}
                         </span>
-                        <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-0.5">
-                          <Clock className="h-2.5 w-2.5" />
-                          {formatDate(c.lastMessageAt)}
-                        </span>
+                        <span className="text-[10px] text-muted-foreground shrink-0">{formatDate(c.lastMessageAt)}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${meta.cls}`}>
+                        <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${meta.cls}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${meta.dot}`} />
                           {meta.label}
                         </span>
                         <span className="text-[11px] text-muted-foreground truncate">
                           #{c.id}
-                          {c.assignedStaffId != null && (
-                            <> · {c.assignedStaffId === user?.id ? 'You' : `Staff #${c.assignedStaffId}`}</>
-                          )}
+                          {c.assignedStaffId != null && <> · {c.assignedStaffId === user?.id ? 'You' : `Staff #${c.assignedStaffId}`}</>}
                         </span>
                       </div>
                     </div>
@@ -312,29 +288,31 @@ export default function AdminSupport() {
         </div>
       </aside>
 
-      {/* ── Main chat area ────────────────────────────────────────── */}
-      <main className={`${mobileChatOpen ? 'flex' : 'hidden sm:flex'} flex-col flex-1 min-w-0 bg-background`}>
+      {/* ── Main chat ─────────────────────────────────────────────── */}
+      <main className={`${mobileChatOpen ? 'flex' : 'hidden sm:flex'} flex-col flex-1 min-w-0 bg-slate-50/50 dark:bg-slate-900/50 relative`}>
+
         {/* Chat header */}
         {selected ? (
-          <header className="flex items-center gap-3 px-5 py-3 border-b border-border bg-background/95 backdrop-blur shrink-0 shadow-sm">
+          <header className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-white dark:bg-slate-900 shrink-0">
             <button
               type="button"
               onClick={() => setMobileChatOpen(false)}
-              className="sm:hidden p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-              aria-label="Back to conversations"
+              className="sm:hidden p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+              aria-label="Back"
             >
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <div className={`w-10 h-10 rounded-full ${getAvatarColor(selected.userId)} flex items-center justify-center text-white text-sm font-bold shrink-0 shadow`}>
+            <div className={`w-10 h-10 rounded-full ${getAvatarColor(selected.userId)} flex items-center justify-center text-white text-sm font-bold shrink-0 shadow-sm`}>
               {getInitials(selected.userName, selected.userEmail)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-foreground truncate">
+              <p className="text-sm font-semibold text-foreground truncate leading-tight">
                 {selected.userName?.trim() || selected.userEmail || `Customer #${selected.userId}`}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_META[selected.status]?.cls ?? ''}`}>
-                  {STATUS_META[selected.status]?.label ?? selected.status}
+                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_META[selected.status]?.cls}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${STATUS_META[selected.status]?.dot}`} />
+                  {STATUS_META[selected.status]?.label}
                 </span>
                 {selected.userEmail && (
                   <span className="text-[11px] text-muted-foreground truncate">{selected.userEmail}</span>
@@ -343,52 +321,49 @@ export default function AdminSupport() {
             </div>
           </header>
         ) : (
-          <header className="flex items-center gap-3 px-5 py-3 border-b border-border bg-background/95 shrink-0">
+          <header className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-white dark:bg-slate-900 shrink-0">
             <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">Select a conversation</p>
-              <p className="text-[11px] text-muted-foreground">Pick one from the list</p>
+              <p className="text-[11px] text-muted-foreground">Pick one from the list on the left</p>
             </div>
           </header>
         )}
 
         {/* Messages */}
-        <div
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto min-h-0 px-5 py-4"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, hsl(var(--border) / 0.4) 1px, transparent 0)', backgroundSize: '24px 24px' }}
-        >
+        <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto min-h-0 px-5 py-4">
           {loadingMsgs ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
               <RefreshCw className="h-5 w-5 animate-spin" />
               <span className="text-sm">Loading messages…</span>
             </div>
           ) : !selected ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
-                <MessageSquare className="h-7 w-7 opacity-50" />
+            <div className="flex flex-col items-center justify-center h-full gap-4 text-muted-foreground">
+              <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-border shadow-sm flex items-center justify-center">
+                <MessageSquare className="h-7 w-7 opacity-30" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium">Pick a conversation to view and reply.</p>
-                <p className="text-xs mt-1 opacity-70">Select one from the list on the left.</p>
+                <p className="text-sm font-medium">No conversation selected</p>
+                <p className="text-xs mt-1 opacity-70">Select one from the list to start replying.</p>
               </div>
             </div>
           ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-2 text-muted-foreground">
-              <MessageSquare className="h-8 w-8 opacity-30" />
-              <p className="text-sm">No messages yet. Send the first reply below.</p>
+            <div className="flex flex-col items-center justify-center h-full gap-3 text-muted-foreground">
+              <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 border border-border flex items-center justify-center">
+                <MessageSquare className="h-5 w-5 opacity-30" />
+              </div>
+              <p className="text-sm">No messages yet. Send the first reply.</p>
             </div>
           ) : (
             <div className="space-y-1">
               {groupedMessages.map((group) => (
                 <div key={group.date}>
                   {/* Date divider */}
-                  <div className="flex items-center gap-3 my-4">
+                  <div className="flex items-center gap-3 my-5">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-[11px] text-muted-foreground font-medium px-2 py-0.5 bg-muted rounded-full">
+                    <span className="text-[11px] text-muted-foreground font-medium px-3 py-1 bg-white dark:bg-slate-800 border border-border rounded-full shadow-sm">
                       {group.date}
                     </span>
                     <div className="flex-1 h-px bg-border" />
@@ -396,42 +371,37 @@ export default function AdminSupport() {
 
                   {group.messages.map((m, idx) => {
                     const isCustomer = m.senderRole === 'CUSTOMER';
-                    const isConsecutive =
-                      idx > 0 && group.messages[idx - 1].senderRole === m.senderRole;
-                    const senderName =
+                    const isConsecutive = idx > 0 && group.messages[idx - 1].senderRole === m.senderRole;
+                    const senderLabel =
                       m.senderRole === 'CUSTOMER'
                         ? selected.userName?.trim() || 'Customer'
-                        : m.senderRole === 'STAFF'
-                        ? user?.role === 'STAFF' ? 'You (Staff)' : 'Staff'
-                        : 'Admin';
+                        : m.senderRole === 'ADMIN'
+                        ? 'Admin'
+                        : 'Staff';
 
                     return (
                       <div
                         key={m.id}
-                        className={`flex ${isCustomer ? 'justify-start' : 'justify-end'} ${isConsecutive ? 'mt-0.5' : 'mt-3'}`}
+                        className={`flex ${isCustomer ? 'justify-start' : 'justify-end'} ${isConsecutive ? 'mt-0.5' : 'mt-4'}`}
                       >
-                        {/* Customer avatar placeholder */}
+                        {/* Customer avatar */}
                         {isCustomer && (
-                          <div className={`w-7 h-7 rounded-full shrink-0 mr-2 mt-auto ${isConsecutive ? 'invisible' : getAvatarColor(selected.userId)} flex items-center justify-center text-white text-[10px] font-bold`}>
+                          <div className={`w-7 h-7 rounded-full shrink-0 mr-2 mt-auto text-[10px] font-bold flex items-center justify-center text-white ${isConsecutive ? 'invisible' : getAvatarColor(selected.userId)}`}>
                             {!isConsecutive && getInitials(selected.userName, selected.userEmail)}
                           </div>
                         )}
 
-                        <div className={`max-w-[70%] flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}>
+                        <div className={`max-w-[65%] flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}>
                           {!isConsecutive && (
-                            <span className="text-[10px] text-muted-foreground mb-1 px-1">
-                              {senderName}
-                            </span>
+                            <span className="text-[10px] text-muted-foreground mb-1 px-1 font-medium">{senderLabel}</span>
                           )}
-                          <div
-                            className={`px-3.5 py-2.5 shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words ${
-                              isCustomer
-                                ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 border border-border rounded-2xl rounded-bl-sm'
-                                : m.senderRole === 'ADMIN'
-                                ? 'bg-violet-600 text-white rounded-2xl rounded-br-sm'
-                                : 'bg-sky-500 text-white rounded-2xl rounded-br-sm'
-                            }`}
-                          >
+                          <div className={`px-4 py-2.5 shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words ${
+                            isCustomer
+                              ? 'bg-white dark:bg-slate-800 text-foreground border border-border rounded-2xl rounded-bl-sm'
+                              : m.senderRole === 'ADMIN'
+                              ? 'bg-violet-600 text-white rounded-2xl rounded-br-sm'
+                              : 'bg-sky-500 text-white rounded-2xl rounded-br-sm'
+                          }`}>
                             {m.message}
                           </div>
                           <div className={`flex items-center gap-1 mt-1 px-1 ${isCustomer ? '' : 'flex-row-reverse'}`}>
@@ -440,9 +410,11 @@ export default function AdminSupport() {
                           </div>
                         </div>
 
-                        {/* Staff/Admin avatar placeholder */}
+                        {/* Staff/Admin avatar */}
                         {!isCustomer && (
-                          <div className={`w-7 h-7 rounded-full shrink-0 ml-2 mt-auto ${isConsecutive ? 'invisible' : m.senderRole === 'ADMIN' ? 'bg-violet-600' : 'bg-sky-500'} flex items-center justify-center text-white text-[10px] font-bold`}>
+                          <div className={`w-7 h-7 rounded-full shrink-0 ml-2 mt-auto text-[10px] font-bold flex items-center justify-center text-white ${
+                            isConsecutive ? 'invisible' : m.senderRole === 'ADMIN' ? 'bg-violet-600' : 'bg-sky-500'
+                          }`}>
                             {!isConsecutive && (user?.name ? getInitials(user.name) : 'S')}
                           </div>
                         )}
@@ -458,20 +430,20 @@ export default function AdminSupport() {
 
         {/* Scroll-to-bottom button */}
         {showScrollBtn && (
-          <div className="absolute bottom-20 right-8">
+          <div className="absolute bottom-24 right-6">
             <button
               type="button"
               onClick={scrollToBottom}
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all"
+              className="flex items-center justify-center w-8 h-8 rounded-full bg-sky-500 text-white shadow-lg hover:bg-sky-600 transition-all"
             >
               <ChevronDown className="h-4 w-4" />
             </button>
           </div>
         )}
 
-        {/* Input bar */}
-        <div className="px-4 py-3 border-t border-border bg-background shrink-0">
-          <div className="flex items-end gap-2.5 bg-muted/40 border border-border rounded-2xl px-3 py-2 focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/50 transition-all">
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-border bg-white dark:bg-slate-900 shrink-0">
+          <div className="flex items-end gap-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-2xl px-3.5 py-2.5 focus-within:ring-2 focus-within:ring-sky-400/40 focus-within:border-sky-400 transition-all">
             <textarea
               ref={inputRef}
               value={newMsg}
@@ -481,13 +453,10 @@ export default function AdminSupport() {
                 e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
               }}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  sendMessage();
-                }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
               }}
               rows={1}
-              className="flex-1 min-w-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed disabled:opacity-50 py-1"
+              className="flex-1 min-w-0 bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none resize-none leading-relaxed disabled:opacity-50 py-0.5"
               placeholder={selected ? 'Type a reply… (Enter to send, Shift+Enter for newline)' : 'Select a conversation first'}
               disabled={!selected}
               style={{ maxHeight: '120px', overflowY: 'auto' }}
@@ -496,7 +465,7 @@ export default function AdminSupport() {
               size="icon"
               onClick={sendMessage}
               disabled={!newMsg.trim() || !selected}
-              className="shrink-0 rounded-xl h-8 w-8 bg-primary hover:bg-primary/90 shadow-sm"
+              className="shrink-0 rounded-xl h-8 w-8 bg-sky-500 hover:bg-sky-600 shadow-sm disabled:opacity-40"
               aria-label="Send"
             >
               <Send className="h-3.5 w-3.5" />

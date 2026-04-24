@@ -148,12 +148,14 @@ export const adminProductModel = {
 
       // Get reviews with user info
       const reviews = await query(
-        `SELECT 
+        `SELECT
           r.id,
           r.rating,
           r.title,
           r.comment,
           r.isVerified,
+          r.adminReply,
+          r.adminRepliedAt,
           r.createdAt,
           cl.id as user_id,
           cl.name as user_name
@@ -196,6 +198,8 @@ export const adminProductModel = {
           title: r.title,
           comment: r.comment,
           isVerified: Boolean(r.isVerified),
+          adminReply: r.adminReply ?? null,
+          adminRepliedAt: r.adminRepliedAt ?? null,
           createdAt: r.createdAt,
           user: r.user_id ? {
             id: r.user_id,
@@ -227,12 +231,14 @@ export const adminProductModel = {
 
       // Get reviews with user info
       const reviews = await query(
-        `SELECT 
+        `SELECT
           r.id,
           r.rating,
           r.title,
           r.comment,
           r.isVerified,
+          r.adminReply,
+          r.adminRepliedAt,
           r.createdAt,
           cl.id as user_id,
           cl.name as user_name
@@ -274,6 +280,8 @@ export const adminProductModel = {
           title: r.title,
           comment: r.comment,
           isVerified: Boolean(r.isVerified),
+          adminReply: r.adminReply ?? null,
+          adminRepliedAt: r.adminRepliedAt ?? null,
           createdAt: r.createdAt,
           user: r.user_id ? {
             id: r.user_id,

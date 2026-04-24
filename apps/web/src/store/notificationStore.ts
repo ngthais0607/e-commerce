@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 export type NotificationType = 'new-order' | 'new-review' | 'low-stock';
 
@@ -20,28 +21,42 @@ interface NotificationState {
   clear: () => void;
 }
 
-export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: [],
+export const useNotificationStore = create<NotificationState>()(
+  persist(
+    (set) => ({
+      notifications: [],
 
-  addNotification: (n) =>
-    set((state) => ({
-      notifications: [
-        { ...n, id: `${Date.now()}-${Math.random()}`, read: false },
-        ...state.notifications,
-      ].slice(0, 50),
-    })),
+      addNotification: (n) =>
+        set((state) => {
+          const isDuplicate = state.notifications.some(
+            (existing) =>
+              existing.type === n.type &&
+              existing.message === n.message &&
+              Math.abs(new Date(existing.createdAt).getTime() - new Date(n.createdAt).getTime()) < 5000,
+          );
+          if (isDuplicate) return state;
+          return {
+            notifications: [
+              { ...n, id: `${Date.now()}-${Math.random()}`, read: false },
+              ...state.notifications,
+            ].slice(0, 50),
+          };
+        }),
 
-  markRead: (id) =>
-    set((state) => ({
-      notifications: state.notifications.map((n) =>
-        n.id === id ? { ...n, read: true } : n,
-      ),
-    })),
+      markRead: (id) =>
+        set((state) => ({
+          notifications: state.notifications.map((n) =>
+            n.id === id ? { ...n, read: true } : n,
+          ),
+        })),
 
-  markAllRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map((n) => ({ ...n, read: true })),
-    })),
+      markAllRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map((n) => ({ ...n, read: true })),
+        })),
 
-  clear: () => set({ notifications: [] }),
-}));
+      clear: () => set({ notifications: [] }),
+    }),
+    { name: 'admin-notifications' },
+  ),
+);

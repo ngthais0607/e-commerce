@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Clock,
   Calendar,
+  UserPlus,
 } from 'lucide-react';
 
 interface Statistics {
@@ -37,6 +38,8 @@ interface Statistics {
     pendingOrders: number;
     todayRevenue: number;
     monthRevenue: number;
+    newUsersToday: number;
+    newUsersThisMonth: number;
   };
   salesByPeriod: {
     data: Array<{
@@ -313,7 +316,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Additional Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="bg-card dark:bg-slate-900/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground">
@@ -341,6 +344,25 @@ export default function AdminDashboard() {
             <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
               {formatNumber(overview.pendingOrders)}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card dark:bg-slate-900/50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground dark:text-foreground">
+              <UserPlus className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+              New Registrations
+            </CardTitle>
+            <CardDescription className="text-muted-foreground dark:text-muted-foreground/80">New accounts created</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-sky-600 dark:text-sky-400">
+              {formatNumber(overview.newUsersToday)}
+            </div>
+            <p className="text-xs text-muted-foreground dark:text-muted-foreground/80 mt-1 flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" />
+              This month: {formatNumber(overview.newUsersThisMonth)}
+            </p>
           </CardContent>
         </Card>
       </div>

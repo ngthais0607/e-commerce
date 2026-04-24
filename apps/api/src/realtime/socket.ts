@@ -3,6 +3,7 @@ import { Server } from 'socket.io';
 import { config } from '../config/index.js';
 import { log } from '../utils/logger.js';
 import { verifyToken } from '../utils/jwt.js';
+import { authClientModel } from '../models/client/auth.model.js';
 
 export function initSocket(server: HttpServer): Server {
   const io = new Server(server, {
@@ -13,7 +14,7 @@ export function initSocket(server: HttpServer): Server {
     },
   });
 
-  io.use((socket, next) => {
+  io.use(async (socket, next) => {
     const token = socket.handshake.auth?.token || socket.handshake.query?.token;
 
     if (!token || typeof token !== 'string') {
@@ -23,7 +24,8 @@ export function initSocket(server: HttpServer): Server {
     try {
       const decoded = verifyToken(token.replace('Bearer ', ''));
       socket.data.userId = decoded.userId;
-      socket.data.role = (decoded as { userId: number; role?: string }).role;
+      const user = await authClientModel.findById(decoded.userId);
+      socket.data.role = user?.role;
       next();
     } catch {
       next(new Error('Authentication error'));
@@ -73,8 +75,7 @@ export function emitOrderMessage(io: Server, orderId: number, message: unknown):
 }
 
 export function emitSupportMessage(io: Server, conversationId: number, message: unknown): void {
-  io.to(`support:conv:${conversationId}`).emit('support-message', { conversationId, message });
-  io.to('support:staff').emit('support-message', { conversationId, message });
+  io.to(`support:conv:${conversationId}`).to('support:staff').emit('support-message', { conversationId, message });
 }
 
 export function emitSupportAssignment(io: Server, conversationId: number, conversation: Record<string, unknown>): void {
