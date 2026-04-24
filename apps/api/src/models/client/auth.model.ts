@@ -46,6 +46,7 @@ export const authClientModel = {
       name: client.name,
       phone: client.phone,
       role: client.role,
+      isActive: Boolean(client.isActive),
       customerCode: client.customerCode,
       createdAt: client.createdAt,
     };
